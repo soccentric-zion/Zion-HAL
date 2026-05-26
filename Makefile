@@ -1,4 +1,4 @@
-# Master Makefile for Acadia HAL
+# Master Makefile for Zion HAL
 # Supports both native and Docker-based builds with Ninja
 
 .PHONY: all build configure clean test format cppcheck doc help
@@ -13,13 +13,13 @@ CROSS_BUILD_DIR := build/cross
 
 # Parallel jobs (override with make JOBS=N)
 JOBS := $(shell nproc)
-DOCKER_IMAGE := acadia
+DOCKER_IMAGE := zion
 DOCKER_CROSS_BUILD_DIR := /workspace/build/cross
 
 # Host architecture as shown by file(1) (e.g. x86-64, aarch64)
 HOST_ARCH := $(shell uname -m | sed 's/x86_64/x86-64/')
 
-# IP addresses for Raspberry Pi 5 target devices
+# IP addresses for Zynq UltraScale+ MPSoC target devices
 # Override on the command line: make deploy IP_A=<addr> IP_B=<addr>
 IP_A := 192.168.1.3
 IP_B := 192.168.1.13
@@ -220,17 +220,17 @@ doc: configure
 package-deb: build
 	@echo "Generating DEB package..."
 	cd $(NATIVE_BUILD_DIR) && cpack -G DEB
-	@echo "Package: $$(ls $(NATIVE_BUILD_DIR)/acadia-hal_*.deb 2>/dev/null | head -1)"
+	@echo "Package: $$(ls $(NATIVE_BUILD_DIR)/zion-hal_*.deb 2>/dev/null | head -1)"
 
 package-rpm: build
 	@echo "Generating RPM package (requires rpmbuild: sudo apt-get install rpm)..."
 	cd $(NATIVE_BUILD_DIR) && cpack -G RPM
-	@echo "Package: $$(ls $(NATIVE_BUILD_DIR)/acadia-hal-*.rpm 2>/dev/null | head -1)"
+	@echo "Package: $$(ls $(NATIVE_BUILD_DIR)/zion-hal-*.rpm 2>/dev/null | head -1)"
 
 package-ipk: build
 	@echo "Generating IPK package..."
 	cd $(NATIVE_BUILD_DIR) && cmake --build . --target package_ipk
-	@echo "Package: $$(ls $(NATIVE_BUILD_DIR)/acadia-hal_*.ipk 2>/dev/null | head -1)"
+	@echo "Package: $$(ls $(NATIVE_BUILD_DIR)/zion-hal_*.ipk 2>/dev/null | head -1)"
 
 package: package-deb package-ipk
 	@echo "All packages generated in $(NATIVE_BUILD_DIR)/"

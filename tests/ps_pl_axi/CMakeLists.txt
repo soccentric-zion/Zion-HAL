@@ -1,0 +1,6 @@
+add_executable(test_ps_pl_axi main.cpp)
+target_link_libraries(test_ps_pl_axi PRIVATE ps_pl_backend)
+target_include_directories(test_ps_pl_axi PRIVATE ${CMAKE_SOURCE_DIR}/src)
+add_test(NAME test_ps_pl_axi COMMAND test_ps_pl_axi)
+set_tests_properties(test_ps_pl_axi PROPERTIES TIMEOUT 60)
+install(TARGETS test_ps_pl_axi RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

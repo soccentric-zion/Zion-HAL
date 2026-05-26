@@ -5,7 +5,7 @@
  * @copyright (C) Soccentric LLC */
 
 #include "lib_base.h"
-#include "platform_rpi5.h"
+#include "platform_zynq.h"
 #include <chrono>
 #include <iostream>
 #include <stdexcept>

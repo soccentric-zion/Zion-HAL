@@ -1,6 +1,6 @@
 /**
  * @file reliability_lib.cpp
- * @brief Reliability tests for Raspberry Pi 5 (BCM2712).
+ * @brief Reliability tests for Zynq UltraScale+ MPSoC (Zynq PS).
  *        Tests characterise the long-term health of the board by examining
  *        system uptime, thermal headroom, power-supply stability indicators,
  *        and storage health metrics accessible via kernel sysfs/procfs.
@@ -11,7 +11,7 @@
  */
 
 #include "reliability_lib.h"
-#include "../platform_rpi5.h"
+#include "../platform_zynq.h"
 
 #include <array>
 #include <cstdio>
@@ -72,7 +72,7 @@ ReliabilityTesting::~ReliabilityTesting()
 TestOutput ReliabilityTesting::testBurninTesting()
 {
     std::vector<std::string> data;
-    data.push_back("=== Burn-In Proxy (5-second stress, Pi5) ===");
+    data.push_back("=== Burn-In Proxy (5-second stress, Zion platform) ===");
 
     std::string throttlePre = relRunCmd("vcgencmd get_throttled 2>/dev/null");
     data.push_back("[INFO] Throttle before: " + (throttlePre.empty() ? "N/A" : throttlePre));
@@ -89,7 +89,7 @@ TestOutput ReliabilityTesting::testBurninTesting()
     {
         double tempC = std::stod(tempStr) / 1000.0;
         data.push_back("[INFO] SoC temp after stress: " + std::to_string(tempC) + " °C");
-        data.push_back(tempC < static_cast<double>(RPI5_THERMAL_THROTTLE_C)
+        data.push_back(tempC < static_cast<double>(ZYNQ_THERMAL_THROTTLE_C)
                            ? "[PASS] Below throttle threshold"
                            : "[WARN] At/above throttle threshold");
     }
@@ -114,7 +114,7 @@ TestOutput ReliabilityTesting::testBurninTesting()
 TestOutput ReliabilityTesting::testPowerCycling()
 {
     std::vector<std::string> data;
-    data.push_back("=== Power Cycling Resilience (Pi5) ===");
+    data.push_back("=== Power Cycling Resilience (Zion platform) ===");
 
     std::string uptime = relReadFile("/proc/uptime");
     if (!uptime.empty())
@@ -151,8 +151,8 @@ TestOutput ReliabilityTesting::testPowerCycling()
 TestOutput ReliabilityTesting::testThermalCycling()
 {
     std::vector<std::string> data;
-    data.push_back("=== Thermal Cycling Proxy (Pi5) ===");
-    data.push_back("[INFO] Pi5 BCM2712 rated: 0–85 °C junction");
+    data.push_back("=== Thermal Cycling Proxy (Zion platform) ===");
+    data.push_back("[INFO] Zion platform Zynq PS rated: 0–85 °C junction");
 
     bool allOk = true;
     for (int zone = 0; zone <= 1; zone++)
@@ -162,7 +162,7 @@ TestOutput ReliabilityTesting::testThermalCycling()
         std::string type    = relReadFile(base + "/type");
         if (tempStr.empty()) continue;
         double tempC = std::stod(tempStr) / 1000.0;
-        bool ok      = tempC >= 0.0 && tempC < static_cast<double>(RPI5_THERMAL_SHUTDOWN_C);
+        bool ok      = tempC >= 0.0 && tempC < static_cast<double>(ZYNQ_THERMAL_SHUTDOWN_C);
         data.push_back((ok ? "[PASS] " : "[WARN] ") + type + ": " +
                        std::to_string(tempC) + " °C " + (ok ? "(in spec)" : "(out of spec!)"));
         if (!ok) allOk = false;
@@ -185,13 +185,13 @@ TestOutput ReliabilityTesting::testThermalCycling()
 TestOutput ReliabilityTesting::testMtbf()
 {
     std::vector<std::string> data;
-    data.push_back("=== MTBF Proxy (Pi5) ===");
+    data.push_back("=== MTBF Proxy (Zion platform) ===");
 
     std::string uptimeStr = relReadFile("/proc/uptime");
     if (!uptimeStr.empty())
         data.push_back("[INFO] Uptime: " + std::to_string(static_cast<long>(std::stod(uptimeStr))) + "s");
 
-    data.push_back("[INFO] Pi5 has no on-die ECC DRAM; MTBF via hardware fault counters only");
+    data.push_back("[INFO] Zion platform has no on-die ECC DRAM; MTBF via hardware fault counters only");
 
     std::string pstoreCount = relRunCmd("ls /sys/fs/pstore/ 2>/dev/null | wc -l");
     bool pstoreOops = std::stoi(pstoreCount.empty() ? "0" : pstoreCount) > 0;
@@ -219,7 +219,7 @@ TestOutput ReliabilityTesting::testMtbf()
 TestOutput ReliabilityTesting::testComponentAging()
 {
     std::vector<std::string> data;
-    data.push_back("=== Component Aging Proxy (Pi5) ===");
+    data.push_back("=== Component Aging Proxy (Zion platform) ===");
 
     std::string mmcStat = relReadFile("/sys/block/mmcblk0/stat");
     if (!mmcStat.empty())
@@ -257,7 +257,7 @@ TestOutput ReliabilityTesting::testComponentAging()
 TestOutput ReliabilityTesting::testSolderJointIntegrity()
 {
     std::vector<std::string> data;
-    data.push_back("=== Solder Joint Integrity Proxy (Pi5) ===");
+    data.push_back("=== Solder Joint Integrity Proxy (Zion platform) ===");
     data.push_back("[INFO] Physical testing requires X-ray / thermal imaging");
 
     std::string pcieLinks = relRunCmd(

@@ -1,6 +1,6 @@
 // Source: src/cpu_lib/cpu_lib.h  (class CpuTesting : public TestBase)
 //
-// Raspberry Pi 5 target: BCM2712 quad-core Cortex-A76 @ 2.4 GHz.
+// Zynq UltraScale+ MPSoC target: Zynq PS quad-core Cortex-A76 @ 2.4 GHz.
 //
 // Field-numbering rules: numbers start at 1, never renumber, mark removed fields reserved.
 

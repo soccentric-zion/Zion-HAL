@@ -1,13 +1,13 @@
 /**
  * @file storage_lib.cpp
- * @brief Implementation file for StorageTesting class — Raspberry Pi 5
+ * @brief Implementation file for StorageTesting class — Zynq UltraScale+ MPSoC
  *        Tests the SD card (mmcblk0) and optional NVMe SSD (nvme0n1)
  *        attached via the PCIe Gen 3 x1 M.2 slot.
  * @author sandesh ghimire
  * @copyright (C) Soccentric LLC */
 
 #include "storage_lib.h"
-#include "../platform_rpi5.h"
+#include "../platform_zynq.h"
 
 #include <algorithm>
 #include <chrono>
@@ -26,15 +26,15 @@
 #include <vector>
 
 // ---------------------------------------------------------------------------
-// Pi5 storage constants
+// Zion platform storage constants
 // ---------------------------------------------------------------------------
-static constexpr const char* MMCBLK_DEV        = RPI5_MMCBLK_PATH;   // /dev/mmcblk0
-static constexpr const char* NVME_DEV          = RPI5_NVME_PATH;      // /dev/nvme0n1
+static constexpr const char* MMCBLK_DEV        = ZYNQ_MMCBLK_PATH;   // /dev/mmcblk0
+static constexpr const char* NVME_DEV          = ZYNQ_NVME_PATH;      // /dev/nvme0n1
 static constexpr const char* MMCBLK_SYSFS      = "/sys/block/mmcblk0";
 static constexpr const char* NVME_SYSFS        = "/sys/block/nvme0n1";
 static constexpr const char* NVME_HWMON        = "/sys/class/nvme/nvme0/hwmon1/temp1_input";
 
-// Performance thresholds — conservative minimums for Pi5 SD / NVMe
+// Performance thresholds — conservative minimums for Zion platform SD / NVMe
 static constexpr double SD_MIN_SEQ_READ_MBS    = 20.0;   // MB/s minimum SD seq read
 static constexpr double SD_MIN_SEQ_WRITE_MBS   = 10.0;   // MB/s minimum SD seq write
 static constexpr double NVME_MIN_SEQ_READ_MBS  = 200.0;  // MB/s minimum NVMe seq read
@@ -159,7 +159,7 @@ StorageTesting::~StorageTesting()
 
 // ---------------------------------------------------------------------------
 // 1. testEmmc51InterfaceFunctionality
-//    On Pi5 the "eMMC" is actually a microSD via an SD 3.0 / UHS-I controller.
+//    On Zion platform the "eMMC" is actually a microSD via an SD 3.0 / UHS-I controller.
 //    Verify the block device node and sysfs attributes are present.
 // ---------------------------------------------------------------------------
 TestOutput StorageTesting::testEmmc51InterfaceFunctionality()
@@ -167,7 +167,7 @@ TestOutput StorageTesting::testEmmc51InterfaceFunctionality()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Pi5 storage: microSD via SD 3.0 controller (not eMMC 5.1)");
+    data.push_back("Zion platform storage: microSD via SD 3.0 controller (not eMMC 5.1)");
     data.push_back("SD device node: " + std::string(MMCBLK_DEV));
 
     bool devPresent = pathExists(MMCBLK_DEV);
@@ -554,7 +554,7 @@ TestOutput StorageTesting::testEmmcWearLeveling()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("SD/microSD wear leveling check (Pi5 uses microSD, not eMMC)");
+    data.push_back("SD/microSD wear leveling check (Zion platform uses microSD, not eMMC)");
 
     // CID contains manufacturing date — proxy for "new" card
     std::string cid = storReadFile(MMCBLK_SYSFS + std::string("/device/cid"));
@@ -651,9 +651,9 @@ TestOutput StorageTesting::testPowerLossProtection()
     std::string e2fsck = storRunCmd("tune2fs -l /dev/mmcblk0p2 2>/dev/null | grep -i 'journal\\|has_journal'");
     if (!e2fsck.empty()) data.push_back("ext4 journal: " + e2fsck);
 
-    // Check Pi5 PMIC UPS/power-good
+    // Check Zion platform PMIC UPS/power-good
     std::string psu = storReadFile("/sys/class/power_supply/rpi-psu/online");
-    if (!psu.empty()) data.push_back("Pi5 PSU online: " + psu);
+    if (!psu.empty()) data.push_back("Zion platform PSU online: " + psu);
 
     {
         TestOutput _out;
@@ -674,13 +674,13 @@ TestOutput StorageTesting::testEmmcTemperatureMonitoring()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Storage temperature monitoring (Pi5)");
+    data.push_back("Storage temperature monitoring (Zion platform)");
 
     // SD card temperature is not normally exposed; report SoC temperature instead
     long long socTempMC = storReadInt("/sys/class/thermal/thermal_zone0/temp");
     if (socTempMC > 0) {
         double socC = socTempMC / 1000.0;
-        data.push_back("BCM2712 SoC temperature: " + std::to_string(socC) + " °C");
+        data.push_back("Zynq PS SoC temperature: " + std::to_string(socC) + " °C");
         if (socC > 80.0) {
             passed = false;
             data.push_back("WARNING: SoC temperature above 80°C — may affect storage.");
@@ -729,7 +729,7 @@ TestOutput StorageTesting::testNvmeSsdDetection()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("NVMe SSD detection (Pi5 PCIe Gen3 x1 M.2 M-key)");
+    data.push_back("NVMe SSD detection (Zion platform PCIe Gen3 x1 M.2 M-key)");
 
     bool nvmeDev    = pathExists(NVME_DEV);
     bool nvmeSysfs  = pathExists(NVME_SYSFS);
@@ -743,7 +743,7 @@ TestOutput StorageTesting::testNvmeSsdDetection()
         data.push_back("INFO: No NVMe detected. Install NVMe in PCIe M.2 slot and enable:");
         data.push_back("      dtparam=pciex1_gen=3  in /boot/firmware/config.txt");
         data.push_back("      Reboot required after config change.");
-        // Not a hard failure — NVMe is optional on Pi5
+        // Not a hard failure — NVMe is optional on Zion platform
         {
             TestOutput _out;
             _out.status = hal::Status::PASS;
@@ -930,7 +930,7 @@ TestOutput StorageTesting::testHotplugCapability()
 
     data.push_back("Storage hotplug capability check");
 
-    // SD card hotplug: Pi5 has a push-push SD slot with detection
+    // SD card hotplug: Zion platform has a push-push SD slot with detection
     std::string sdDetect = storReadFile(MMCBLK_SYSFS + std::string("/device/uevent"));
     if (!sdDetect.empty()) {
         data.push_back("SD uevent: available (hotplug supported via mmc driver)");
@@ -946,8 +946,8 @@ TestOutput StorageTesting::testHotplugCapability()
     bool udevPresent = pathExists("/usr/bin/udevadm") || pathExists("/bin/udevadm");
     data.push_back("udevadm (hotplug manager): " + std::string(udevPresent ? "present" : "not found"));
 
-    // NVMe hotplug: PCIe Gen3 on Pi5 does not support native hotplug
-    data.push_back("INFO: Pi5 NVMe/PCIe does not support hot-plug in RP1 implementation.");
+    // NVMe hotplug: PCIe Gen3 on Zion platform does not support native hotplug
+    data.push_back("INFO: Zion platform NVMe/PCIe does not support hot-plug in PL fabric implementation.");
     data.push_back("      SD card supports software-initiated remove/insert detection.");
 
     {
@@ -969,7 +969,7 @@ TestOutput StorageTesting::testStorageEncryptionSupport()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Storage encryption support check (Pi5 — software encryption via dm-crypt)");
+    data.push_back("Storage encryption support check (Zion platform — software encryption via dm-crypt)");
 
     // Check dm-crypt kernel module
     std::string dmCrypt = storRunCmd("lsmod 2>/dev/null | grep dm_crypt");
@@ -984,7 +984,7 @@ TestOutput StorageTesting::testStorageEncryptionSupport()
     if (!luksDevs.empty()) data.push_back("Active LUKS/encrypted volumes: " + luksDevs);
     else data.push_back("Active LUKS volumes: none detected");
 
-    // Check hardware AES (BCM2712 Cortex-A76 has AES-NI equivalent)
+    // Check hardware AES (Zynq PS Cortex-A76 has AES-NI equivalent)
     std::string cpuAes = storRunCmd("grep -m1 aes /proc/cpuinfo 2>/dev/null");
     if (!cpuAes.empty()) data.push_back("CPU AES acceleration: " + cpuAes);
 
@@ -994,9 +994,9 @@ TestOutput StorageTesting::testStorageEncryptionSupport()
 
     // Check TPM for key storage
     bool tpmPresent = pathExists("/dev/tpm0") || pathExists("/dev/tpmrm0");
-    data.push_back("TPM device: " + std::string(tpmPresent ? "present" : "not found (Pi5 has no onboard TPM)"));
+    data.push_back("TPM device: " + std::string(tpmPresent ? "present" : "not found (Zion platform has no onboard TPM)"));
 
-    data.push_back("NOTE: Pi5 BCM2712 provides AES via ARMv8 crypto extensions.");
+    data.push_back("NOTE: Zion platform Zynq PS provides AES via ARMv8 crypto extensions.");
     data.push_back("      Full disk encryption requires LUKS2 + cryptsetup on Pi OS.");
 
     if (!cryptSetup && dmCrypt.empty()) {

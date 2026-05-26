@@ -5,4 +5,4 @@ install(TARGETS camera_module3_lib
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
-install(FILES camera_module3_lib.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/acadia_hal)
+install(FILES camera_module3_lib.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/zion_hal)

@@ -5,4 +5,4 @@ install(TARGETS display_interfaces
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
-install(FILES display_interfaces.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/acadia_hal)
+install(FILES display_interfaces.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/zion_hal)

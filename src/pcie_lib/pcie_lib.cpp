@@ -5,7 +5,7 @@
  * @copyright (C) Soccentric LLC */
 
 #include "pcie_lib.h"
-#include "../platform_rpi5.h"
+#include "../platform_zynq.h"
 #include <algorithm>
 #include <cerrno>
 #include <chrono>
@@ -283,9 +283,9 @@ TestOutput PcieTesting::testPcieLinkWidth()
 TestOutput PcieTesting::testPcieLaneReversal()
 {
     std::vector<std::string> data;
-    data.push_back("=== PCIe Lane Reversal Check (Pi5) ===");
+    data.push_back("=== PCIe Lane Reversal Check (Zion platform) ===");
 
-    // Pi5 PCIe controller DT base addresses
+    // Zion platform PCIe controller DT base addresses
     static const std::vector<std::string> orionControllers = {"pcie@1f00000000",
                                                               "pcie@141a0000"};
 
@@ -363,16 +363,16 @@ TestOutput PcieTesting::testPcieLaneReversal()
 /**
  * @brief Implementation of testPcieHotplugSupport
  * @details Scans /sys/bus/pci/slots for OS-managed hotplug slots and inspects
- *          PCI bridge class devices for hotplug capability on Pi5.
- *          Pi5 uses a fixed embedded topology; hotplug GPIO control is
+ *          PCI bridge class devices for hotplug capability on Zion platform.
+ *          Zion platform uses a fixed embedded topology; hotplug GPIO control is
  *          platform-specific.
  * @return TestOutput with pass/fail and data
  */
 TestOutput PcieTesting::testPcieHotplugSupport()
 {
     std::vector<std::string> data;
-    data.push_back("=== PCIe Hotplug Support (Pi5) ===");
-    data.push_back("[INFO] Pi5 uses fixed-endpoint PCIe topology; hotplug handled via GPIO");
+    data.push_back("=== PCIe Hotplug Support (Zion platform) ===");
+    data.push_back("[INFO] Zion platform uses fixed-endpoint PCIe topology; hotplug handled via GPIO");
 
     // Enumerate kernel-managed hotplug slots
     int slotCount = 0;
@@ -419,7 +419,7 @@ TestOutput PcieTesting::testPcieHotplugSupport()
     }
 
     if (slotCount == 0 && hotplugBridges == 0) {
-        data.push_back("[INFO] No OS-managed hotplug slots (expected on Pi5 embedded PCIe)");
+        data.push_back("[INFO] No OS-managed hotplug slots (expected on Zion platform embedded PCIe)");
         data.push_back("[INFO] Physical hotplug is handled by platform firmware/GPIO");
     } else {
         data.push_back("Found " + std::to_string(slotCount) + " slot(s), " + std::to_string(hotplugBridges) + " hotplug-capable bridge(s)");
@@ -438,7 +438,7 @@ TestOutput PcieTesting::testPcieHotplugSupport()
 /**
  * @brief Implementation of testPcieReadBandwidth
  * @details Reports theoretical peak read bandwidth per device based on negotiated
- *          link speed and width (PCIe Gen3 x1 = ~1 GB/s on Pi5).
+ *          link speed and width (PCIe Gen3 x1 = ~1 GB/s on Zion platform).
  *          Also measures sysfs config-space read latency as an access sanity check.
  * @return TestOutput with pass/fail and data
  */
@@ -458,8 +458,8 @@ TestOutput PcieTesting::testPcieReadBandwidth()
         }
     }
 
-    data.push_back("=== PCIe Read Bandwidth (Pi5) ===");
-    data.push_back("[INFO] Pi5 supports PCIe Gen3 x1 = ~1 GB/s (single lane via RP1)");
+    data.push_back("=== PCIe Read Bandwidth (Zion platform) ===");
+    data.push_back("[INFO] Zion platform supports PCIe Gen3 x1 = ~1 GB/s (single lane via PL fabric)");
 
     // Theoretical bandwidth: BW(GB/s) = GTps * efficiency * lanes / 8
     auto theoreticalBW = [](const std::string& speed, int width) -> double {
@@ -534,7 +534,7 @@ TestOutput PcieTesting::testPcieReadBandwidth()
  * @brief Implementation of testPcieWriteBandwidth
  * @details Reports theoretical peak write bandwidth per device and performs a
  *          practical sequential-write throughput measurement to /dev/shm as a
- *          memory-subsystem sanity check on Pi5.
+ *          memory-subsystem sanity check on Zion platform.
  * @return TestOutput with pass/fail and data
  */
 TestOutput PcieTesting::testPcieWriteBandwidth()
@@ -553,8 +553,8 @@ TestOutput PcieTesting::testPcieWriteBandwidth()
         }
     }
 
-    data.push_back("=== PCIe Write Bandwidth (Pi5) ===");
-    data.push_back("[INFO] Pi5 supports PCIe Gen3 x1 = ~1 GB/s (single lane via RP1)");
+    data.push_back("=== PCIe Write Bandwidth (Zion platform) ===");
+    data.push_back("[INFO] Zion platform supports PCIe Gen3 x1 = ~1 GB/s (single lane via PL fabric)");
 
     auto theoreticalBW = [](const std::string& speed, int width) -> double {
         double gtps = 0.0;
@@ -641,7 +641,7 @@ TestOutput PcieTesting::testPcieWriteBandwidth()
 
 /**
  * @brief Implementation of testPcieLatency
- * @details Measures PCIe config-space access latency on Pi5 by timing
+ * @details Measures PCIe config-space access latency on Zion platform by timing
  *          repeated sysfs vendor-register reads (500 samples per device).
  *          Reports min/avg/max latency and flags devices with anomalous latency.
  * @return TestOutput with pass/fail and data
@@ -661,7 +661,7 @@ TestOutput PcieTesting::testPcieLatency()
         }
     }
 
-    data.push_back("=== PCIe Config-Space Access Latency (Pi5) ===");
+    data.push_back("=== PCIe Config-Space Access Latency (Zion platform) ===");
     data.push_back("[INFO] Sampling sysfs vendor register read (500 samples per device)");
 
     bool anyMeasured = false;
@@ -733,7 +733,7 @@ TestOutput PcieTesting::testPcieLatency()
  * @brief Implementation of testPcieErrorHandling
  * @details Reads AER (Advanced Error Reporting) sysfs counters for correctable,
  *          non-fatal, and fatal PCIe errors on each device.  Falls back to a
- *          dmesg scan when AER sysfs is unavailable.  Pi5 PCIe Gen3
+ *          dmesg scan when AER sysfs is unavailable.  Zion platform PCIe Gen3
  *          controllers support AER when CONFIG_PCIEAER=y.
  * @return TestOutput with pass/fail and data
  */
@@ -753,7 +753,7 @@ TestOutput PcieTesting::testPcieErrorHandling()
         }
     }
 
-    data.push_back("=== PCIe AER Error Handling (Pi5) ===");
+    data.push_back("=== PCIe AER Error Handling (Zion platform) ===");
     data.push_back("[INFO] Checking AER correctable / non-fatal / fatal counters");
 
     int checkedDevices = 0;
@@ -858,8 +858,8 @@ TestOutput PcieTesting::testPciePowerManagement()
         }
     }
 
-    data.push_back("=== PCIe Power Management (Pi5) ===");
-    data.push_back("[INFO] Pi5 supports PCIe Gen3 ASPM L0s/L1/L1.1/L1.2 and D0/D3hot/D3cold");
+    data.push_back("=== PCIe Power Management (Zion platform) ===");
+    data.push_back("[INFO] Zion platform supports PCIe Gen3 ASPM L0s/L1/L1.1/L1.2 and D0/D3hot/D3cold");
 
     int d0Count = 0, suspendCount = 0, unknownCount = 0;
 
@@ -900,10 +900,10 @@ TestOutput PcieTesting::testPciePowerManagement()
         }
     }
 
-    // Check RP1 PCIe debug FS if available
+    // Check PL fabric PCIe debug FS if available
     std::string rp1Info = executeCommand("cat /sys/kernel/debug/rp1_pciefw/info 2>/dev/null | head -10");
     if (!rp1Info.empty()) {
-        data.push_back("=== RP1 PCIe Firmware Status ===");
+        data.push_back("=== PL fabric PCIe Firmware Status ===");
         std::istringstream iss(rp1Info);
         std::string line;
         while (std::getline(iss, line))
@@ -933,7 +933,7 @@ TestOutput PcieTesting::testPciePowerManagement()
  * @brief Implementation of testSecondaryPcieLinkTraining
  * @details Filters PCIe devices resident on secondary buses (bus number > 0)
  *          and verifies each has a trained link.  Also captures the lspci tree
- *          to show the full Pi5 PCIe topology.
+ *          to show the full Zion platform PCIe topology.
  * @return TestOutput with pass/fail and data
  */
 TestOutput PcieTesting::testSecondaryPcieLinkTraining()
@@ -944,7 +944,7 @@ TestOutput PcieTesting::testSecondaryPcieLinkTraining()
     int trainedCount = 0;
     int totalSecondary = 0;
 
-    data.push_back("=== Secondary PCIe Link Training (Pi5) ===");
+    data.push_back("=== Secondary PCIe Link Training (Zion platform) ===");
     data.push_back("[INFO] Orin has up to 5 independent PCIe root port controllers");
 
     for (const auto& device : devices) {
@@ -1013,7 +1013,7 @@ TestOutput PcieTesting::testSecondaryPcieLinkTraining()
 /**
  * @brief Implementation of testPcieX4Bandwidth
  * @details Enumerates all PCIe devices running at x4 or wider lane width and
- *          reports theoretical bandwidth.  Pi5 AGX supports PCIe Gen3 x4
+ *          reports theoretical bandwidth.  Zion platform AGX supports PCIe Gen3 x4
  *          on one controller providing ~8 GB/s.
  * @return TestOutput with pass/fail and data
  */
@@ -1023,8 +1023,8 @@ TestOutput PcieTesting::testPcieX4Bandwidth()
     std::vector<std::string> data;
     bool found = false;
 
-    data.push_back("=== PCIe x1 Bandwidth (Pi5) ===");
-    data.push_back("[INFO] Pi5 Gen3 x4: ~8 GB/s theoretical (128b/130b encoding)");
+    data.push_back("=== PCIe x1 Bandwidth (Zion platform) ===");
+    data.push_back("[INFO] Zion platform Gen3 x4: ~8 GB/s theoretical (128b/130b encoding)");
 
     for (const auto& device : devices) {
         std::string devName = device.substr(device.find_last_of('/') + 1);
@@ -1103,7 +1103,7 @@ TestOutput PcieTesting::testPcieX4LaneFunctionality()
     bool overallPass = true;
     bool anyX4 = false;
 
-    data.push_back("=== PCIe x1 Lane Functionality (Pi5) ===");
+    data.push_back("=== PCIe x1 Lane Functionality (Zion platform) ===");
     data.push_back("[INFO] Verifying all x4 PCIe lanes are functional and at max speed");
 
     for (const auto& device : devices) {
@@ -1170,7 +1170,7 @@ TestOutput PcieTesting::testPcieX4LaneFunctionality()
 
 /**
  * @brief Implementation of testConcurrentPcieX8AndX4Operation
- * @details Verifies that Pi5's independent PCIe root port controllers
+ * @details Verifies that Zion platform's independent PCIe root port controllers
  *          can operate simultaneously.  Enumerates all active x1/x4/x8 devices
  *          and checks the kernel log for PCIe errors during concurrent operation.
  * @return TestOutput with pass/fail and data
@@ -1180,8 +1180,8 @@ TestOutput PcieTesting::testConcurrentPcieX8AndX4Operation()
     std::vector<std::string> devices = getPcieDevices();
     std::vector<std::string> data;
 
-    data.push_back("=== Concurrent PCIe x1 + x4 Operation (Pi5) ===");
-    data.push_back("[INFO] Pi5 has independent root port controllers - concurrency is by design");
+    data.push_back("=== Concurrent PCIe x1 + x4 Operation (Zion platform) ===");
+    data.push_back("[INFO] Zion platform has independent root port controllers - concurrency is by design");
 
     std::vector<std::string> x1devs_wide, x4devs, x1devs;
 
@@ -1426,7 +1426,7 @@ TestOutput PcieTesting::testPcieSwitchCompatibility()
     int bridgeCount = 0;
     int switchCount = 0;
 
-    data.push_back("=== PCIe Switch/Bridge Compatibility (Pi5) ===");
+    data.push_back("=== PCIe Switch/Bridge Compatibility (Zion platform) ===");
 
     // Known 3rd-party PCIe switch vendor IDs (hex, lower-case)
     static const std::vector<std::string> switchVendors = {
@@ -1492,7 +1492,7 @@ TestOutput PcieTesting::testPcieSwitchCompatibility()
                    " identified 3rd-party PCIe switch chip(s)");
 
     if (bridgeCount == 0) {
-        data.push_back("[INFO] No PCI bridges detected - Pi5 using direct endpoint connections");
+        data.push_back("[INFO] No PCI bridges detected - Zion platform using direct endpoint connections");
         data.push_back("[INFO] This is the expected embedded configuration");
     } else {
         data.push_back("[PASS] PCI bridge(s) enumerated and accessible");

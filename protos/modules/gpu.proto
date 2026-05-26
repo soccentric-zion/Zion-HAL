@@ -1,6 +1,6 @@
 // Source: src/gpu_lib/gpu_lib.h  (class GpuTesting : public TestBase)
 //
-// Raspberry Pi 5 target: VideoCore VII (no CUDA / NVENC — tests probe VC7 paths).
+// Zynq UltraScale+ MPSoC target: VideoCore VII (no CUDA / NVENC — tests probe VC7 paths).
 //
 // Field-numbering rules: numbers start at 1, never renumber, mark removed fields reserved.
 

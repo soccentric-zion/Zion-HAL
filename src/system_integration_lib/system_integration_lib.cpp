@@ -1,16 +1,16 @@
 /**
  * @file system_integration_lib.cpp
- * @brief System integration tests for Raspberry Pi 5.
+ * @brief System integration tests for Zynq UltraScale+ MPSoC.
  *        Exercises concurrent subsystem load, resource contention,
  *        end-to-end latency (POSIX clocks), system throughput (memcpy
- *        bandwidth + storage), and Pi5-specific AI/sensor-fusion pipelines
+ *        bandwidth + storage), and Zion platform-specific AI/sensor-fusion pipelines
  *        using libcamera, GStreamer, TFLite, and OpenCV.
  * @author sandesh ghimire
  * @copyright (C) Lucid Motors
  */
 
 #include "system_integration_lib.h"
-#include "../platform_rpi5.h"
+#include "../platform_zynq.h"
 
 #include <array>
 #include <chrono>
@@ -78,7 +78,7 @@ SystemIntegrationTesting::~SystemIntegrationTesting()
 TestOutput SystemIntegrationTesting::testConcurrentOperationOfAllSubsystems()
 {
     std::vector<std::string> data;
-    data.push_back("=== Concurrent Subsystem Operation (Pi5 BCM2712) ===");
+    data.push_back("=== Concurrent Subsystem Operation (Zion platform Zynq PS) ===");
 
     // Start background stress on all 4 cores for 3 s (non-blocking)
     bool stressOk = system("stress-ng --cpu 4 --timeout 3s --quiet 2>/dev/null &") == 0;
@@ -128,7 +128,7 @@ TestOutput SystemIntegrationTesting::testConcurrentOperationOfAllSubsystems()
 TestOutput SystemIntegrationTesting::testResourceContentionHandling()
 {
     std::vector<std::string> data;
-    data.push_back("=== Resource Contention (Pi5 LPDDR4X-4267) ===");
+    data.push_back("=== Resource Contention (Zion platform LPDDR4X-4267) ===");
 
     // Memory pressure
     std::string vmPressure = siReadFile("/proc/pressure/memory");
@@ -167,7 +167,7 @@ TestOutput SystemIntegrationTesting::testResourceContentionHandling()
 TestOutput SystemIntegrationTesting::testSystemBottleneckIdentification()
 {
     std::vector<std::string> data;
-    data.push_back("=== System Bottleneck Identification (Pi5) ===");
+    data.push_back("=== System Bottleneck Identification (Zion platform) ===");
 
     // Load average
     std::string loadavg = siReadFile("/proc/loadavg");
@@ -213,7 +213,7 @@ TestOutput SystemIntegrationTesting::testSystemBottleneckIdentification()
 TestOutput SystemIntegrationTesting::testEndtoendLatency()
 {
     std::vector<std::string> data;
-    data.push_back("=== End-to-End Latency (Pi5 POSIX clocks) ===");
+    data.push_back("=== End-to-End Latency (Zion platform POSIX clocks) ===");
 
     // Measure round-trip time of a popen("cat /proc/version") call
     struct timespec t0 {}, t1 {};
@@ -234,7 +234,7 @@ TestOutput SystemIntegrationTesting::testEndtoendLatency()
     data.push_back("[PASS] 1 MB memcpy latency: " + std::to_string(memNs / 1000) + " µs");
 
     // GPIO latency proxy via /sys/class/gpio or kernel event
-    data.push_back("[INFO] GPIO toggle latency (Pi5 gpiod): typically 1-5 µs via libgpiod");
+    data.push_back("[INFO] GPIO toggle latency (Zion platform gpiod): typically 1-5 µs via libgpiod");
     data.push_back("[INFO] CSI-2 frame latency: approx 1 frame = " +
                    std::to_string(1000 / 30) + " ms at 30 fps");
 
@@ -255,7 +255,7 @@ TestOutput SystemIntegrationTesting::testEndtoendLatency()
 TestOutput SystemIntegrationTesting::testSystemThroughput()
 {
     std::vector<std::string> data;
-    data.push_back("=== System Throughput (Pi5 BCM2712) ===");
+    data.push_back("=== System Throughput (Zion platform Zynq PS) ===");
 
     // Memory bandwidth: 128 MB copy
     static constexpr size_t MB128 = 128ULL * 1024 * 1024;
@@ -277,7 +277,7 @@ TestOutput SystemIntegrationTesting::testSystemThroughput()
 
     // Network throughput (theoretical)
     data.push_back("[INFO] GbE (eth0) throughput: up to " +
-                   std::to_string(RPI5_ETH_SPEED_MBPS) + " Mbps");
+                   std::to_string(ZYNQ_ETH_SPEED_MBPS) + " Mbps");
 
     bool ok = gbps > 0.5;
     {
@@ -291,14 +291,14 @@ TestOutput SystemIntegrationTesting::testSystemThroughput()
 }
 
 /**
- * @brief Test multimodal AI workload on Pi5 (TFLite + libcamera + ALSA).
- * @details Pi5 has no dedicated AI accelerator.  TFLite with XNNPACK uses
+ * @brief Test multimodal AI workload on Zion platform (TFLite + libcamera + ALSA).
+ * @details Zion platform has no dedicated AI accelerator.  TFLite with XNNPACK uses
  *          NEON SIMD on the Cortex-A76.  Hailo-8 HAT adds 26 TOPS.
  */
 TestOutput SystemIntegrationTesting::testMultimodalAiWorkloads()
 {
     std::vector<std::string> data;
-    data.push_back("=== Multimodal AI (Pi5 TFLite / Hailo-8 HAT) ===");
+    data.push_back("=== Multimodal AI (Zion platform TFLite / Hailo-8 HAT) ===");
 
     // TFLite
     std::string tflite = siRunCmd("python3 -c 'import tflite_runtime; print(tflite_runtime.__version__)' 2>/dev/null");
@@ -331,13 +331,13 @@ TestOutput SystemIntegrationTesting::testMultimodalAiWorkloads()
 }
 
 /**
- * @brief Autonomous driving stack check (Pi5 proxy: ROS2, libcamera, TFLite pipeline).
+ * @brief Autonomous driving stack check (Zion platform proxy: ROS2, libcamera, TFLite pipeline).
  */
 TestOutput SystemIntegrationTesting::testAutonomousDrivingStack()
 {
     std::vector<std::string> data;
-    data.push_back("=== Autonomous Driving Stack (Pi5 proxy) ===");
-    data.push_back("[INFO] Pi5 supports autonomous stack via ROS2 Humble / Pi OS Bookworm");
+    data.push_back("=== Autonomous Driving Stack (Zion platform proxy) ===");
+    data.push_back("[INFO] Zion platform supports autonomous stack via ROS2 Humble / Pi OS Bookworm");
 
     // ROS2
     std::string ros = siRunCmd("ros2 --version 2>/dev/null");
@@ -369,7 +369,7 @@ TestOutput SystemIntegrationTesting::testAutonomousDrivingStack()
 TestOutput SystemIntegrationTesting::testSensorFusionPipeline()
 {
     std::vector<std::string> data;
-    data.push_back("=== Sensor Fusion Pipeline (Pi5 CSI-2 + IIO + GPSD) ===");
+    data.push_back("=== Sensor Fusion Pipeline (Zion platform CSI-2 + IIO + GPSD) ===");
 
     // Camera
     bool camOk = !siRunCmd("ls /dev/video0 2>/dev/null").empty();

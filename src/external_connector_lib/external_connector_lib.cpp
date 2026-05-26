@@ -1,8 +1,8 @@
 /**
  * @file external_connector_lib.cpp
- * @brief External connector tests for Raspberry Pi 5.
+ * @brief External connector tests for Zynq UltraScale+ MPSoC.
  *        Most methods reference automotive connector designators (J703-J712,
- *        KL15, BCM-CAN, VCU-CAN) from an OEM carrier board.  Pi5 maps these
+ *        KL15, BCM-CAN, VCU-CAN) from an OEM carrier board.  Zion platform maps these
  *        to its 40-pin GPIO header, USB-C power, CSI-2, DSI, and USB ports.
  *        CAN tests use SocketCAN (can0) if a MCP2515 or SN65HVD230 HAT is fitted.
  * @author sandesh ghimire
@@ -10,7 +10,7 @@
  */
 
 #include "external_connector_lib.h"
-#include "../platform_rpi5.h"
+#include "../platform_zynq.h"
 
 #include <array>
 #include <cstdio>
@@ -86,15 +86,15 @@ ExternalConnectorTesting::~ExternalConnectorTesting()
 }
 
 /**
- * @brief KL15 power input (ignition line) — Pi5 USB-C 5V proxy.
- * @details Automotive KL15 = ignition-switched 12V.  Pi5 is powered via USB-C.
+ * @brief KL15 power input (ignition line) — Zion platform USB-C 5V proxy.
+ * @details Automotive KL15 = ignition-switched 12V.  Zion platform is powered via USB-C.
  *          Checks for under-voltage throttle flag (proxy for KL15 brownout).
  */
 TestOutput ExternalConnectorTesting::testKl15PowerInput()
 {
     std::vector<std::string> data;
-    data.push_back("=== KL15 Power Input (Pi5 USB-C 5V proxy) ===");
-    data.push_back("[INFO] Automotive KL15 (ignition 12V) → Pi5 maps to USB-C 5V input");
+    data.push_back("=== KL15 Power Input (Zion platform USB-C 5V proxy) ===");
+    data.push_back("[INFO] Automotive KL15 (ignition 12V) → Zion platform maps to USB-C 5V input");
 
     std::string throttle = ecRunCmd("vcgencmd get_throttled 2>/dev/null");
     bool uvOk = !throttle.empty() && throttle == "throttled=0x0";
@@ -121,11 +121,11 @@ TestOutput ExternalConnectorTesting::testKl15PowerInput()
 TestOutput ExternalConnectorTesting::testAdenlrSignals()
 {
     std::vector<std::string> data;
-    data.push_back("=== ADENLR Signals (Pi5 GPIO proxy) ===");
-    data.push_back("[INFO] ADENLR digital enable signals map to Pi5 GPIO header (40-pin)");
+    data.push_back("=== ADENLR Signals (Zion platform GPIO proxy) ===");
+    data.push_back("[INFO] ADENLR digital enable signals map to Zion platform GPIO header (40-pin)");
 
-    bool gpioOk = ecPathExists(RPI5_GPIOCHIP_PATH);
-    data.push_back(gpioOk ? "[PASS] GPIO chip " + std::string(RPI5_GPIOCHIP_PATH) + " present"
+    bool gpioOk = ecPathExists(ZYNQ_GPIOCHIP_PATH);
+    data.push_back(gpioOk ? "[PASS] GPIO chip " + std::string(ZYNQ_GPIOCHIP_PATH) + " present"
                           : "[WARN] GPIO chip not found");
 
     std::string gpioInfo = ecRunCmd("gpioinfo 2>/dev/null | head -6");
@@ -147,7 +147,7 @@ TestOutput ExternalConnectorTesting::testAdenlrSignals()
 TestOutput ExternalConnectorTesting::testBcmCanInterface()
 {
     std::vector<std::string> data;
-    data.push_back("=== BCM CAN Interface (Pi5 SocketCAN can0) ===");
+    data.push_back("=== BCM CAN Interface (Zion platform SocketCAN can0) ===");
     data.push_back("[INFO] BCM-CAN requires MCP2515 HAT or SN65HVD230 on SPI bus");
 
     bool can0 = ecIfaceExists("can0");
@@ -176,7 +176,7 @@ TestOutput ExternalConnectorTesting::testBcmCanInterface()
 TestOutput ExternalConnectorTesting::testVcuCanInterface()
 {
     std::vector<std::string> data;
-    data.push_back("=== VCU CAN Interface (Pi5 SocketCAN can1) ===");
+    data.push_back("=== VCU CAN Interface (Zion platform SocketCAN can1) ===");
     data.push_back("[INFO] VCU-CAN maps to second CAN interface (can1) if dual CAN HAT fitted");
 
     bool can1 = ecIfaceExists("can1");
@@ -202,7 +202,7 @@ TestOutput ExternalConnectorTesting::testVcuCanInterface()
 TestOutput ExternalConnectorTesting::testAllConnectorPinsContinuity()
 {
     std::vector<std::string> data;
-    data.push_back("=== Connector Pin Continuity (Pi5 I2C/SPI scan proxy) ===");
+    data.push_back("=== Connector Pin Continuity (Zion platform I2C/SPI scan proxy) ===");
     data.push_back("[INFO] Hardware pin continuity requires bed-of-nails fixture; software proxy used");
 
     // I2C bus scan as proxy for physical connectivity
@@ -230,9 +230,9 @@ TestOutput ExternalConnectorTesting::testAllConnectorPinsContinuity()
 TestOutput ExternalConnectorTesting::testConnectorRetentionForce()
 {
     std::vector<std::string> data;
-    data.push_back("=== Connector Retention Force (Pi5) ===");
+    data.push_back("=== Connector Retention Force (Zion platform) ===");
     data.push_back("[INFO] Retention force test requires force gauge on physical connector");
-    data.push_back("[INFO] Pi5 connectors: USB-C (5 V), micro-HDMI x2 (28-AWG rated), CSI-2 FPC, USB-A x2");
+    data.push_back("[INFO] Zion platform connectors: USB-C (5 V), micro-HDMI x2 (28-AWG rated), CSI-2 FPC, USB-A x2");
     data.push_back("[INFO] 40-pin GPIO header: TE Connectivity 2x20 0.1\" friction-fit");
     data.push_back("[INFO] Test procedure: pull each connector at rated extraction force and verify no movement");
     {
@@ -251,7 +251,7 @@ TestOutput ExternalConnectorTesting::testConnectorRetentionForce()
 TestOutput ExternalConnectorTesting::testConnectorContactResistance()
 {
     std::vector<std::string> data;
-    data.push_back("=== Connector Contact Resistance (Pi5) ===");
+    data.push_back("=== Connector Contact Resistance (Zion platform) ===");
     data.push_back("[INFO] Contact resistance requires milli-ohmmeter (e.g. Keithley 2400)");
     data.push_back("[INFO] Spec: < 30 mΩ per pin at rated current for GPIO header");
     data.push_back("[INFO] USB-C: < 10 mΩ (USB PD spec); HDMI: < 15 mΩ; CSI FPC: < 50 mΩ");
@@ -273,13 +273,13 @@ TestOutput ExternalConnectorTesting::testConnectorContactResistance()
 }
 
 /**
- * @brief 12V ASIL QS-R power rail (N/A on Pi5 — proxy via vcgencmd voltages).
+ * @brief 12V ASIL QS-R power rail (N/A on Zion platform — proxy via vcgencmd voltages).
  */
 TestOutput ExternalConnectorTesting::test12vAsilQsRPower()
 {
     std::vector<std::string> data;
-    data.push_back("=== 12V ASIL QS-R Power (Pi5 proxy) ===");
-    data.push_back("[INFO] 12V ASIL QS-R rail is automotive-specific; Pi5 runs on 5V USB-C");
+    data.push_back("=== 12V ASIL QS-R Power (Zion platform proxy) ===");
+    data.push_back("[INFO] 12V ASIL QS-R rail is automotive-specific; Zion platform runs on 5V USB-C");
 
     // vcgencmd voltage readings as proxy
     static const std::vector<std::string> rails = {"core", "sdram_c", "sdram_i", "sdram_p"};
@@ -307,7 +307,7 @@ TestOutput ExternalConnectorTesting::test12vAsilQsRPower()
 TestOutput ExternalConnectorTesting::testConnectorMechanicalIntegrity()
 {
     std::vector<std::string> data;
-    data.push_back("=== Connector Mechanical Integrity (Pi5) ===");
+    data.push_back("=== Connector Mechanical Integrity (Zion platform) ===");
 
     // dmesg for USB disconnect events (sign of loose USB connector)
     std::string usbDiscon = ecRunCmd("dmesg 2>/dev/null | grep -c 'USB disconnect'");
@@ -334,14 +334,14 @@ TestOutput ExternalConnectorTesting::testConnectorMechanicalIntegrity()
 }
 
 /**
- * @brief Ethernet connector J703 (ETCL3) — maps to Pi5 eth0 GbE.
+ * @brief Ethernet connector J703 (ETCL3) — maps to Zion platform eth0 GbE.
  */
 TestOutput ExternalConnectorTesting::testEtcl3j703()
 {
     std::vector<std::string> data;
-    data.push_back("=== J703 (ETCL3) Ethernet Connector (Pi5 eth0) ===");
+    data.push_back("=== J703 (ETCL3) Ethernet Connector (Zion platform eth0) ===");
 
-    bool eth0 = ecIfaceExists(RPI5_ETH_IFACE);
+    bool eth0 = ecIfaceExists(ZYNQ_ETH_IFACE);
     data.push_back(eth0 ? "[PASS] eth0 GbE interface up" : "[WARN] eth0 not found");
 
     std::string state = ecReadFile("/sys/class/net/eth0/operstate");
@@ -366,8 +366,8 @@ TestOutput ExternalConnectorTesting::testEtcl3j703()
 TestOutput ExternalConnectorTesting::testEtcl2j704()
 {
     std::vector<std::string> data;
-    data.push_back("=== J704 (ETCL2) Ethernet Connector (Pi5 secondary NIC proxy) ===");
-    data.push_back("[INFO] Pi5 has single built-in GbE; J704 maps to USB NIC or PCIe NIC");
+    data.push_back("=== J704 (ETCL2) Ethernet Connector (Zion platform secondary NIC proxy) ===");
+    data.push_back("[INFO] Zion platform has single built-in GbE; J704 maps to USB NIC or PCIe NIC");
 
     std::string eth1 = ecRunCmd("ip link show 2>/dev/null | grep -E 'eth[1-9]|usb[0-9]|enx' | head -3");
     data.push_back(eth1.empty() ? "[INFO] No secondary NIC (J704 ETCL2 not populated)"
@@ -389,8 +389,8 @@ TestOutput ExternalConnectorTesting::testEtcl2j704()
 TestOutput ExternalConnectorTesting::testEtc3j705()
 {
     std::vector<std::string> data;
-    data.push_back("=== J705 (ETC3) Ethernet Connector (Pi5 proxy) ===");
-    data.push_back("[INFO] J705 ETC3 = third Ethernet port; Pi5 maps to USB3 NIC");
+    data.push_back("=== J705 (ETC3) Ethernet Connector (Zion platform proxy) ===");
+    data.push_back("[INFO] J705 ETC3 = third Ethernet port; Zion platform maps to USB3 NIC");
 
     std::string ifaces = ecRunCmd("ip link show 2>/dev/null | grep -c '^[0-9]'");
     data.push_back("[INFO] Total network interfaces: " + ifaces);
@@ -411,12 +411,12 @@ TestOutput ExternalConnectorTesting::testEtc3j705()
 TestOutput ExternalConnectorTesting::testAllEthernetPhyConnections()
 {
     std::vector<std::string> data;
-    data.push_back("=== All Ethernet PHY Connections (Pi5) ===");
+    data.push_back("=== All Ethernet PHY Connections (Zion platform) ===");
 
     std::string ethtool = ecRunCmd("ethtool eth0 2>/dev/null | grep -E 'Speed|Duplex|Link'");
     data.push_back(ethtool.empty() ? "[INFO] ethtool not available" : "[PASS] eth0 PHY:\n" + ethtool);
 
-    // Check BCM54213PE PHY registers via ethtool
+    // Check BZynq module4213PE PHY registers via ethtool
     std::string phyId = ecRunCmd(
         "ethtool -i eth0 2>/dev/null | grep -E 'driver|bus-info|firmware'");
     data.push_back(phyId.empty() ? "[INFO] PHY driver info not available" : "[INFO] " + phyId);
@@ -435,13 +435,13 @@ TestOutput ExternalConnectorTesting::testAllEthernetPhyConnections()
 }
 
 /**
- * @brief CC1 connector J709 — CSI-2 camera connector 1 (Pi5 CAM1/CSI-2).
+ * @brief CC1 connector J709 — CSI-2 camera connector 1 (Zion platform CAM1/CSI-2).
  */
 TestOutput ExternalConnectorTesting::testCc1j709()
 {
     std::vector<std::string> data;
-    data.push_back("=== J709 CC1 Camera Connector (Pi5 CAM1 CSI-2) ===");
-    data.push_back("[INFO] J709 CC1 = camera connector 1; Pi5 CAM1 is 22-pin FPC CSI-2");
+    data.push_back("=== J709 CC1 Camera Connector (Zion platform CAM1 CSI-2) ===");
+    data.push_back("[INFO] J709 CC1 = camera connector 1; Zion platform CAM1 is 22-pin FPC CSI-2");
 
     bool camDev = ecPathExists("/dev/video0");
     data.push_back(camDev ? "[PASS] /dev/video0 present (camera connected to CAM1)"
@@ -461,13 +461,13 @@ TestOutput ExternalConnectorTesting::testCc1j709()
 }
 
 /**
- * @brief CC2 connector J710 — CSI-2 camera connector 2 (Pi5 CAM0/CSI-2).
+ * @brief CC2 connector J710 — CSI-2 camera connector 2 (Zion platform CAM0/CSI-2).
  */
 TestOutput ExternalConnectorTesting::testCc2j710()
 {
     std::vector<std::string> data;
-    data.push_back("=== J710 CC2 Camera Connector (Pi5 CAM0 CSI-2) ===");
-    data.push_back("[INFO] J710 CC2 = camera connector 2; Pi5 CAM0 is 15-pin FPC CSI-2");
+    data.push_back("=== J710 CC2 Camera Connector (Zion platform CAM0 CSI-2) ===");
+    data.push_back("[INFO] J710 CC2 = camera connector 2; Zion platform CAM0 is 15-pin FPC CSI-2");
 
     bool cam1 = ecPathExists("/dev/video1");
     data.push_back(cam1 ? "[PASS] /dev/video1 present (camera connected to CAM0)"
@@ -484,13 +484,13 @@ TestOutput ExternalConnectorTesting::testCc2j710()
 }
 
 /**
- * @brief CC3 connector J711 — display connector (Pi5 HDMI0 / DSI).
+ * @brief CC3 connector J711 — display connector (Zion platform HDMI0 / DSI).
  */
 TestOutput ExternalConnectorTesting::testCc3j711()
 {
     std::vector<std::string> data;
-    data.push_back("=== J711 CC3 Display Connector (Pi5 HDMI0 / DSI) ===");
-    data.push_back("[INFO] J711 CC3 = display connector; Pi5 has micro-HDMI 0 + DSI FPC");
+    data.push_back("=== J711 CC3 Display Connector (Zion platform HDMI0 / DSI) ===");
+    data.push_back("[INFO] J711 CC3 = display connector; Zion platform has micro-HDMI 0 + DSI FPC");
 
     std::string hdmi0 = ecRunCmd("cat /sys/class/drm/card*/card*-HDMI-A-1/status 2>/dev/null");
     data.push_back(hdmi0.empty() ? "[INFO] HDMI-1 DRM status unavailable"
@@ -510,12 +510,12 @@ TestOutput ExternalConnectorTesting::testCc3j711()
 }
 
 /**
- * @brief CC4 connector J712 — secondary display (Pi5 HDMI1).
+ * @brief CC4 connector J712 — secondary display (Zion platform HDMI1).
  */
 TestOutput ExternalConnectorTesting::testCc4j712()
 {
     std::vector<std::string> data;
-    data.push_back("=== J712 CC4 Secondary Display (Pi5 HDMI1) ===");
+    data.push_back("=== J712 CC4 Secondary Display (Zion platform HDMI1) ===");
 
     std::string hdmi1 = ecRunCmd("cat /sys/class/drm/card*/card*-HDMI-A-2/status 2>/dev/null");
     data.push_back(hdmi1.empty() ? "[INFO] HDMI-2 DRM status unavailable"
@@ -537,8 +537,8 @@ TestOutput ExternalConnectorTesting::testCc4j712()
 TestOutput ExternalConnectorTesting::testSv()
 {
     std::vector<std::string> data;
-    data.push_back("=== SV (Surround View) Connector (Pi5 CSI-2 / USB cameras) ===");
-    data.push_back("[INFO] SV = surround-view camera array; Pi5 supports 2 CSI-2 cameras + USB cameras");
+    data.push_back("=== SV (Surround View) Connector (Zion platform CSI-2 / USB cameras) ===");
+    data.push_back("[INFO] SV = surround-view camera array; Zion platform supports 2 CSI-2 cameras + USB cameras");
 
     std::string videoDevs = ecRunCmd("ls /dev/video* 2>/dev/null");
     data.push_back(videoDevs.empty() ? "[INFO] No video devices found" : "[PASS] Video devices: " + videoDevs);
@@ -563,7 +563,7 @@ TestOutput ExternalConnectorTesting::testSv()
 TestOutput ExternalConnectorTesting::testGnssAntCon()
 {
     std::vector<std::string> data;
-    data.push_back("=== GNSS Antenna Connector (Pi5 UART/USB GNSS) ===");
+    data.push_back("=== GNSS Antenna Connector (Zion platform UART/USB GNSS) ===");
     data.push_back("[INFO] GNSS antenna connector feeds external u-blox module via UART/USB");
 
     // Check ttyAMA0 for GNSS receiver
@@ -596,8 +596,8 @@ TestOutput ExternalConnectorTesting::testGnssAntCon()
 TestOutput ExternalConnectorTesting::testEthdebugCon()
 {
     std::vector<std::string> data;
-    data.push_back("=== Ethernet Debug Connector (Pi5) ===");
-    data.push_back("[INFO] Debug Ethernet maps to eth0 (only NIC on Pi5) or USB-NIC for isolated debug");
+    data.push_back("=== Ethernet Debug Connector (Zion platform) ===");
+    data.push_back("[INFO] Debug Ethernet maps to eth0 (only NIC on Zion platform) or USB-NIC for isolated debug");
 
     bool eth0 = ecIfaceExists("eth0");
     data.push_back(eth0 ? "[PASS] eth0 present for Ethernet debug"
@@ -624,8 +624,8 @@ TestOutput ExternalConnectorTesting::testEthdebugCon()
 TestOutput ExternalConnectorTesting::testAllConnectorPinAssignments()
 {
     std::vector<std::string> data;
-    data.push_back("=== All Connector Pin Assignments (Pi5 40-pin GPIO header) ===");
-    data.push_back("[INFO] Pi5 J8 40-pin header follows Raspberry Pi standard pinout");
+    data.push_back("=== All Connector Pin Assignments (Zion platform 40-pin GPIO header) ===");
+    data.push_back("[INFO] Zion platform J8 40-pin header follows Zynq standard pinout");
 
     // Enumerate GPIO lines and compare against expected count (27 user-accessible GPIOs)
     std::string gpioCount = ecRunCmd("gpioinfo 2>/dev/null | grep -c 'line'");

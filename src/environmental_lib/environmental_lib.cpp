@@ -1,6 +1,6 @@
 /**
  * @file environmental_lib.cpp
- * @brief Environmental / physical-environment tests for Raspberry Pi 5.
+ * @brief Environmental / physical-environment tests for Zynq UltraScale+ MPSoC.
  *        Verifies that the hardware is operating within its rated environmental
  *        envelope using sysfs thermal, hwmon, and power-supply interfaces.
  *        Physical tests (humidity chamber, vibration table, EMI/EMC lab) are
@@ -10,7 +10,7 @@
  */
 
 #include "environmental_lib.h"
-#include "../platform_rpi5.h"
+#include "../platform_zynq.h"
 
 #include <array>
 #include <cstdio>
@@ -69,15 +69,15 @@ EnvironmentalTesting::~EnvironmentalTesting()
 }
 
 /**
- * @brief Verify SoC and board temperatures are within the Pi5 rated range.
- * @details Pi5 BCM2712 rated operating range: 0 °C to 85 °C junction.
- *          Reads thermal_zone0 (cpu-thermal) and thermal_zone1 (rp1-thermal)
+ * @brief Verify SoC and board temperatures are within the Zion platform rated range.
+ * @details Zion platform Zynq PS rated operating range: 0 °C to 85 °C junction.
+ *          Reads thermal_zone0 (cpu-thermal) and thermal_zone1 (plio-thermal)
  *          and checks they are within 0–80 °C nominal operating band.
  */
 TestOutput EnvironmentalTesting::testTemperatureRange()
 {
     std::vector<std::string> data;
-    data.push_back("=== Operating Temperature Range (Pi5 BCM2712) ===");
+    data.push_back("=== Operating Temperature Range (Zion platform Zynq PS) ===");
     data.push_back("[INFO] Rated: 0–85 °C junction, nominal operating: 0–80 °C");
 
     bool allOk = true;
@@ -88,7 +88,7 @@ TestOutput EnvironmentalTesting::testTemperatureRange()
         std::string type    = envReadFile(base + "/type");
         if (tempStr.empty()) continue;
         double tempC = std::stod(tempStr) / 1000.0;
-        bool ok      = tempC >= 0.0 && tempC < static_cast<double>(RPI5_THERMAL_THROTTLE_C);
+        bool ok      = tempC >= 0.0 && tempC < static_cast<double>(ZYNQ_THERMAL_THROTTLE_C);
         data.push_back((ok ? "[PASS] " : "[WARN] ") + (type.empty() ? "zone" + std::to_string(z) : type) +
                        ": " + std::to_string(tempC) + " °C (" + (ok ? "nominal" : "at throttle limit!") + ")");
         if (!ok) allOk = false;
@@ -110,7 +110,7 @@ TestOutput EnvironmentalTesting::testTemperatureRange()
 
 /**
  * @brief Humidity resistance — software-visible proxy test.
- * @details No on-board humidity sensor on Pi5.  Test checks for moisture /
+ * @details No on-board humidity sensor on Zion platform.  Test checks for moisture /
  *          condensation indicators: abnormal leakage currents show up as
  *          under-voltage events; clock instability manifests as CPU frequency
  *          dips.  Documents IEC 60068-2-78 test requirements.
@@ -118,9 +118,9 @@ TestOutput EnvironmentalTesting::testTemperatureRange()
 TestOutput EnvironmentalTesting::testHumidityResistance()
 {
     std::vector<std::string> data;
-    data.push_back("=== Humidity Resistance (Pi5 Proxy) ===");
+    data.push_back("=== Humidity Resistance (Zion platform Proxy) ===");
     data.push_back("[INFO] IEC 60068-2-78: 40 °C / 93% RH — requires humidity chamber");
-    data.push_back("[INFO] Pi5 has no on-board humidity sensor; checking electrical proxies");
+    data.push_back("[INFO] Zion platform has no on-board humidity sensor; checking electrical proxies");
 
     // Under-voltage flag (condensation → leakage → UV)
     std::string throttle = envRunCmd("vcgencmd get_throttled 2>/dev/null");
@@ -160,7 +160,7 @@ TestOutput EnvironmentalTesting::testHumidityResistance()
 TestOutput EnvironmentalTesting::testVibrationResistance()
 {
     std::vector<std::string> data;
-    data.push_back("=== Vibration Resistance Proxy (Pi5) ===");
+    data.push_back("=== Vibration Resistance Proxy (Zion platform) ===");
     data.push_back("[INFO] IEC 60068-2-6 testing requires vibration table");
 
     // PCIe link stability
@@ -197,7 +197,7 @@ TestOutput EnvironmentalTesting::testVibrationResistance()
 TestOutput EnvironmentalTesting::testShockResistance()
 {
     std::vector<std::string> data;
-    data.push_back("=== Shock Resistance Proxy (Pi5) ===");
+    data.push_back("=== Shock Resistance Proxy (Zion platform) ===");
     data.push_back("[INFO] IEC 60068-2-27 testing requires mechanical shock equipment");
 
     // pstore crash records
@@ -234,10 +234,10 @@ TestOutput EnvironmentalTesting::testShockResistance()
 TestOutput EnvironmentalTesting::testEmiemcCompliance()
 {
     std::vector<std::string> data;
-    data.push_back("=== EMI/EMC Compliance Proxy (Pi5) ===");
+    data.push_back("=== EMI/EMC Compliance Proxy (Zion platform) ===");
     data.push_back("[INFO] CISPR 32 / EN 55032 testing requires an RF shielded test lab");
 
-    // Pi5 spread-spectrum: BCM2712 supports SSC; check config.txt
+    // Zion platform spread-spectrum: Zynq PS supports SSC; check config.txt
     std::string ssc = envRunCmd("grep -i 'spread_spectrum\\|ssc' /boot/firmware/config.txt 2>/dev/null");
     data.push_back(ssc.empty() ? "[INFO] No explicit spread-spectrum config in config.txt"
                                : "[INFO] SSC config: " + ssc);
@@ -252,7 +252,7 @@ TestOutput EnvironmentalTesting::testEmiemcCompliance()
         "cat /proc/device-tree/compatible 2>/dev/null | tr '\\0' '\\n' | head -3");
     data.push_back("[INFO] Device-tree compatible: " + dtComp);
 
-    data.push_back("[PASS] Pi5 CM is designed to meet CE/FCC Class B (board-level)");
+    data.push_back("[PASS] Zion platform CM is designed to meet CE/FCC Class B (board-level)");
     {
         TestOutput _out;
         _out.status = hal::Status::PASS;
@@ -272,13 +272,13 @@ TestOutput EnvironmentalTesting::testEmiemcCompliance()
 TestOutput EnvironmentalTesting::testEsdProtection()
 {
     std::vector<std::string> data;
-    data.push_back("=== ESD Protection Proxy (Pi5) ===");
+    data.push_back("=== ESD Protection Proxy (Zion platform) ===");
     data.push_back("[INFO] IEC 61000-4-2 ESD testing requires ESD gun; using software proxy");
 
     // GPIO driver presence
-    bool gpioPresent = envPathExists(RPI5_GPIOCHIP_PATH);
-    data.push_back(gpioPresent ? "[PASS] GPIO chip " + std::string(RPI5_GPIOCHIP_PATH) + " present"
-                               : "[WARN] GPIO chip not found at " + std::string(RPI5_GPIOCHIP_PATH));
+    bool gpioPresent = envPathExists(ZYNQ_GPIOCHIP_PATH);
+    data.push_back(gpioPresent ? "[PASS] GPIO chip " + std::string(ZYNQ_GPIOCHIP_PATH) + " present"
+                               : "[WARN] GPIO chip not found at " + std::string(ZYNQ_GPIOCHIP_PATH));
 
     // GPIO driver errors in dmesg
     std::string gpioErr = envRunCmd("dmesg 2>/dev/null | grep -c -i 'gpio.*error\\|gpiochip.*fail'");
@@ -290,7 +290,7 @@ TestOutput EnvironmentalTesting::testEsdProtection()
     data.push_back(i2cErr == "0" ? "[PASS] No I2C errors in dmesg"
                                  : "[WARN] I2C errors: " + i2cErr);
 
-    data.push_back("[INFO] Pi5 header pins have TPD2E2U06 (or equiv) TVS protection");
+    data.push_back("[INFO] Zion platform header pins have TPD2E2U06 (or equiv) TVS protection");
     {
         TestOutput _out;
         _out.status = gpioPresent ? hal::Status::PASS : hal::Status::FAIL;
@@ -304,26 +304,26 @@ TestOutput EnvironmentalTesting::testEsdProtection()
 /**
  * @brief Salt-spray resistance — hardware documentation check.
  * @details IEC 60068-2-11 salt-spray testing requires a salt-fog chamber.
- *          Pi5 bare board is not rated for salt-spray environments; this test
+ *          Zion platform bare board is not rated for salt-spray environments; this test
  *          documents the requirement and checks for a conformal coating
  *          indicator file if present (custom industrial carrier board).
  */
 TestOutput EnvironmentalTesting::testSaltSprayResistance()
 {
     std::vector<std::string> data;
-    data.push_back("=== Salt-Spray Resistance (Pi5) ===");
+    data.push_back("=== Salt-Spray Resistance (Zion platform) ===");
     data.push_back("[INFO] IEC 60068-2-11: salt-spray test requires dedicated chamber");
-    data.push_back("[INFO] Bare Pi5 PCB is NOT rated for salt-spray (no conformal coating)");
+    data.push_back("[INFO] Bare Zion platform PCB is NOT rated for salt-spray (no conformal coating)");
     data.push_back("[INFO] Industrial carrier boards may add protection — check board spec");
 
-    // Check if board is a CM5 (Compute Module) — slightly better environmental rating
+    // Check if board is a Zynq module (Zynq module) — slightly better environmental rating
     std::string model = envReadFile("/proc/device-tree/model");
     if (!model.empty())
     {
         data.push_back("[INFO] Board model: " + model);
-        bool isCM = model.find("Compute Module") != std::string::npos;
-        data.push_back(isCM ? "[INFO] Compute Module variant — check carrier board for IP rating"
-                            : "[INFO] Standard Pi5 — no IP/salt-spray rating");
+        bool isCM = model.find("Zynq module") != std::string::npos;
+        data.push_back(isCM ? "[INFO] Zynq module variant — check carrier board for IP rating"
+                            : "[INFO] Standard Zion platform — no IP/salt-spray rating");
     }
 
     // Corrosion indicators: elevated I2C/SPI errors over time

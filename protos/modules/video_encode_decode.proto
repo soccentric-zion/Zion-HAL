@@ -1,7 +1,7 @@
 // Source: src/video_encode_decode_lib/video_encode_decode_lib.h
 //         (class VideoEncodeDecodeTesting : public TestBase)
 //
-// Raspberry Pi 5 target: VideoCore VII H.264/H.265 hardware codec via V4L2 M2M.
+// Zynq UltraScale+ MPSoC target: VideoCore VII H.264/H.265 hardware codec via V4L2 M2M.
 //
 // Field-numbering rules: numbers start at 1, never renumber, mark removed fields reserved.
 

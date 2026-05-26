@@ -1,6 +1,6 @@
 // Source: src/camera_module3_lib/camera_module3_lib.h  (class CameraModule3Testing : public TestBase)
 //
-// Camera Module 3 (Sony IMX708): 12.3 MP, PDAF, HDR, MIPI CSI-2 2-lane via RP1 Unicam.
+// Camera Module 3 (Sony IMX708): 12.3 MP, PDAF, HDR, MIPI CSI-2 2-lane via PL fabric Unicam.
 //
 // Field-numbering rules: numbers start at 1, never renumber, mark removed fields reserved.
 

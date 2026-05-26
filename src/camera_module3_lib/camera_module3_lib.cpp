@@ -1,11 +1,11 @@
 /**
  * @file camera_module3_lib.cpp
- * @brief Raspberry Pi Camera Module 3 (IMX708) tests for Raspberry Pi 5.
+ * @brief Zynq Camera Module 3 (IMX708) tests for Zynq UltraScale+ MPSoC.
  *
- * Hardware: Raspberry Pi Camera Module 3 connected to the CSI-2 connector.
+ * Hardware: Zynq Camera Module 3 connected to the CSI-2 connector.
  *   Sensor    : Sony IMX708 12.3 MP, 1/2.43", PDAF, HDR
- *   Interface : MIPI CSI-2 2-lane → RP1 Unicam → bcm2835-isp
- *   Driver    : unicam (V4L2 capture), bcm2835-isp (V4L2 m2m ISP)
+ *   Interface : MIPI CSI-2 2-lane → PL fabric Unicam → zynq-isp
+ *   Driver    : unicam (V4L2 capture), zynq-isp (V4L2 m2m ISP)
  *   libcamera : RPi pipeline with autofocus (VCM actuator) and HDR support
  *
  * Tests use V4L2 sysfs, libcamera CLI tools, media-ctl, and dmesg.
@@ -14,7 +14,7 @@
  */
 
 #include "camera_module3_lib.h"
-#include "../platform_rpi5.h"
+#include "../platform_zynq.h"
 
 #include <array>
 #include <cstdio>
@@ -79,12 +79,12 @@ TestOutput CameraModule3Testing::testCameraDetection()
                           : "[INFO] libcamera cameras:\n" + lcCams));
 
     // V4L2: check /dev/video0
-    bool vid0 = cm3PathExists(RPI5_CSI_DEVICE0);
-    data.push_back(vid0 ? "[PASS] " + std::string(RPI5_CSI_DEVICE0) + " present"
-                        : "[INFO] " + std::string(RPI5_CSI_DEVICE0) + " not found");
+    bool vid0 = cm3PathExists(ZYNQ_CSI_DEVICE0);
+    data.push_back(vid0 ? "[PASS] " + std::string(ZYNQ_CSI_DEVICE0) + " present"
+                        : "[INFO] " + std::string(ZYNQ_CSI_DEVICE0) + " not found");
 
     // media-ctl: check media0
-    bool media0 = cm3PathExists(RPI5_MEDIA_CTL0);
+    bool media0 = cm3PathExists(ZYNQ_MEDIA_CTL0);
     data.push_back(media0 ? "[PASS] /dev/media0 present"
                           : "[INFO] /dev/media0 not found");
 
@@ -94,8 +94,8 @@ TestOutput CameraModule3Testing::testCameraDetection()
         data.push_back("[INFO] dmesg: " + dmesgCam);
 
     // Unicam sysfs
-    bool unicam = cm3PathExists(RPI5_UNICAM_PATH);
-    data.push_back(unicam ? "[PASS] RP1 Unicam sysfs entry present"
+    bool unicam = cm3PathExists(ZYNQ_UNICAM_PATH);
+    data.push_back(unicam ? "[PASS] PL fabric Unicam sysfs entry present"
                           : "[INFO] Unicam sysfs not found");
 
     {
@@ -214,7 +214,7 @@ TestOutput CameraModule3Testing::testHdrMode()
     if (!hdrTest.empty())
         data.push_back("[INFO] HDR capture output: " + hdrTest);
 
-    data.push_back("[INFO] HDR tonemapping done in bcm2835-isp (not on-sensor)");
+    data.push_back("[INFO] HDR tonemapping done in zynq-isp (not on-sensor)");
     {
         TestOutput _out;
         _out.status = hal::Status::PASS;
@@ -258,28 +258,28 @@ TestOutput CameraModule3Testing::testStillCapture()
 }
 
 /**
- * @brief Verify the MIPI CSI-2 interface via RP1 Unicam kernel messages.
+ * @brief Verify the MIPI CSI-2 interface via PL fabric Unicam kernel messages.
  */
 TestOutput CameraModule3Testing::testMipiCsiInterface()
 {
     std::vector<std::string> data;
-    data.push_back("=== Camera Module 3 MIPI CSI-2 Interface (RP1 Unicam) ===");
-    data.push_back("[INFO] Pi5 CSI connector: 22-pin FFC → RP1 1f00110000.csi");
+    data.push_back("=== Camera Module 3 MIPI CSI-2 Interface (PL fabric Unicam) ===");
+    data.push_back("[INFO] Zion platform CSI connector: 22-pin FFC → PL fabric 1f00110000.csi");
     data.push_back("[INFO] D-PHY 2-lane @ up to 1.5 Gbps/lane → ISP pipeline");
 
-    bool unicam = cm3PathExists(RPI5_UNICAM_PATH);
-    data.push_back(unicam ? "[PASS] Unicam sysfs: " + std::string(RPI5_UNICAM_PATH)
+    bool unicam = cm3PathExists(ZYNQ_UNICAM_PATH);
+    data.push_back(unicam ? "[PASS] Unicam sysfs: " + std::string(ZYNQ_UNICAM_PATH)
                           : "[INFO] Unicam sysfs not found (driver not loaded?)");
 
     std::string dmesgUni = cm3RunCmd("dmesg 2>/dev/null | grep -i 'unicam\\|csi' | tail -4");
     if (!dmesgUni.empty())
         data.push_back("[INFO] dmesg unicam/csi:\n" + dmesgUni);
 
-    // Check bcm2835-isp module
-    std::string ispMod = cm3RunCmd("grep -c 'bcm2835.isp' /proc/modules 2>/dev/null");
+    // Check zynq-isp module
+    std::string ispMod = cm3RunCmd("grep -c 'zynq.isp' /proc/modules 2>/dev/null");
     data.push_back(!ispMod.empty() && ispMod != "0"
-        ? "[PASS] bcm2835-isp module loaded"
-        : "[INFO] bcm2835-isp not in /proc/modules");
+        ? "[PASS] zynq-isp module loaded"
+        : "[INFO] zynq-isp not in /proc/modules");
 
     {
         TestOutput _out;
@@ -300,7 +300,7 @@ TestOutput CameraModule3Testing::testPixelFormats()
     data.push_back("=== Camera Module 3 Pixel Formats ===");
     data.push_back("[INFO] Expected: SRGGB10 (RAW10), RG10, YUYV, RGB888, NV12");
 
-    bool vid0 = cm3PathExists(RPI5_CSI_DEVICE0);
+    bool vid0 = cm3PathExists(ZYNQ_CSI_DEVICE0);
     if (vid0)
     {
         std::string fmts = cm3RunCmd(
@@ -355,7 +355,7 @@ TestOutput CameraModule3Testing::testVideoStreaming()
         data.push_back("[PASS] /tmp/cm3_video.h264 written (" +
                        std::to_string(st.st_size / 1024) + " KB)");
 
-    data.push_back("[INFO] Pi5 H.264 encoding via V4L2 m2m (bcm2835-codec)");
+    data.push_back("[INFO] Zion platform H.264 encoding via V4L2 m2m (zynq-codec)");
     {
         TestOutput _out;
         _out.status = hal::Status::PASS;

@@ -17,7 +17,7 @@
  *   <exe> one-shot                               run all tests once
  *   <exe> monitoring [interval_ms]               run indefinitely at interval (Ctrl+C stops)
  *   <exe> long-term  <interval_ms> <duration>    run for fixed duration
- *   <exe> monitor-test <interval_ms> <duration>  long-term + Pi5 sysfs hardware monitors
+ *   <exe> monitor-test <interval_ms> <duration>  long-term + Zion platform sysfs hardware monitors
  *   <exe> event <poll_ms> <criteria> [max_dur]   fire callback when criteria met
  *
  * Duration formats:  500ms  30s  5m  2h  1d   (plain number = milliseconds)
@@ -92,7 +92,7 @@ static long long trParseDuration(const std::string& s)
 }
 
 // ---------------------------------------------------------------------------
-// Built-in Raspberry Pi 5 hardware monitor items
+// Built-in Zynq UltraScale+ MPSoC hardware monitor items
 // ---------------------------------------------------------------------------
 
 static std::vector<MonitorItem> trPi5MonitorItems()
@@ -264,7 +264,7 @@ static void trPrintUsage(const std::string& name)
         << "  " << name << " one-shot                              run all tests once\n"
         << "  " << name << " monitoring [interval_ms]              run indefinitely (Ctrl+C stops)\n"
         << "  " << name << " long-term  <interval_ms> <duration>   run for fixed duration\n"
-        << "  " << name << " monitor-test <interval_ms> <duration> long-term + Pi5 hw monitors\n"
+        << "  " << name << " monitor-test <interval_ms> <duration> long-term + Zion platform hw monitors\n"
         << "  " << name << " event <poll_ms> <criteria> [max_dur]  fire callback on criteria\n"
         << "\nDuration: 500ms  30s  5m  2h  1d  (plain integer = ms)\n"
         << "Criteria: any-fail | all-fail | all-pass | fail-rate-above-N\n";

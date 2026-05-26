@@ -1,12 +1,12 @@
 /**
  * @file cpu_lib.cpp
- * @brief Implementation file for CpuTesting class — Raspberry Pi 5 (BCM2712)
+ * @brief Implementation file for CpuTesting class — Zynq UltraScale+ MPSoC (Zynq PS)
  * @details Tests the quad-core Cortex-A76 CPU running at up to 2.4 GHz.
  * @author sandesh ghimire
  * @copyright (C) Soccentric LLC */
 
 #include "cpu_lib.h"
-#include "../platform_rpi5.h"
+#include "../platform_zynq.h"
 
 #include <algorithm>
 #include <atomic>
@@ -27,12 +27,12 @@
 #include <vector>
 
 // ---------------------------------------------------------------------------
-// Raspberry Pi 5 (BCM2712 Cortex-A76) constants — from platform_rpi5.h
+// Zynq UltraScale+ MPSoC (Zynq PS Cortex-A76) constants — from platform_zynq.h
 // ---------------------------------------------------------------------------
-static constexpr int    CPU_CORES          = RPI5_CPU_CORES;        // 4
-static constexpr double CPU_MAX_FREQ_MHZ   = RPI5_CPU_MAX_FREQ_MHZ; // 2400 MHz
-static constexpr double CPU_MIN_FREQ_MHZ   = RPI5_CPU_MIN_FREQ_MHZ; // 1500 MHz
-static constexpr double CPU_TEMP_WARNING_C = RPI5_CPU_TEMP_MAX_C;   // 85 °C
+static constexpr int    CPU_CORES          = ZYNQ_CPU_CORES;        // 4
+static constexpr double CPU_MAX_FREQ_MHZ   = ZYNQ_CPU_MAX_FREQ_MHZ; // 2400 MHz
+static constexpr double CPU_MIN_FREQ_MHZ   = ZYNQ_CPU_MIN_FREQ_MHZ; // 1500 MHz
+static constexpr double CPU_TEMP_WARNING_C = ZYNQ_CPU_TEMP_MAX_C;   // 85 °C
 
 // ---------------------------------------------------------------------------
 // Helper utilities
@@ -107,7 +107,7 @@ CpuTesting::~CpuTesting()
 
 // ---------------------------------------------------------------------------
 // 1. testAll12CpuCoresFunctionality
-//    Verify all CPU cores (Cortex-A76 × 4 on Raspberry Pi 5) are online.
+//    Verify all CPU cores (Cortex-A76 × 4 on Zynq UltraScale+ MPSoC) are online.
 // ---------------------------------------------------------------------------
 TestOutput CpuTesting::testAll12CpuCoresFunctionality()
 {
@@ -349,15 +349,15 @@ TestOutput CpuTesting::testMulticoreSynchronization()
 
 // ---------------------------------------------------------------------------
 // 5. testCpuClusterCommunication
-//    Verify shared-memory writes are visible across BCM2712 Cortex-A76 cores.
-//    Pi5 has a single cluster of 4 cores; we test two pairs: {0,1} and {2,3}.
+//    Verify shared-memory writes are visible across Zynq PS Cortex-A76 cores.
+//    Zion platform has a single cluster of 4 cores; we test two pairs: {0,1} and {2,3}.
 // ---------------------------------------------------------------------------
 TestOutput CpuTesting::testCpuClusterCommunication()
 {
     std::vector<std::string> data;
     bool passed = true;
 
-    // Two logical groups of cores (single physical cluster on BCM2712)
+    // Two logical groups of cores (single physical cluster on Zynq PS)
     const std::vector<int> clusterCores = {0, 2}; // representative core per pair
     const int MAGIC = 0xBC272;
     std::vector<std::atomic<int>> mailbox(clusterCores.size());
@@ -388,7 +388,7 @@ TestOutput CpuTesting::testCpuClusterCommunication()
     }
 
     if (passed)
-        data.push_back("Inter-core communication verified (BCM2712 unified cache domain).");
+        data.push_back("Inter-core communication verified (Zynq PS unified cache domain).");
     {
         TestOutput _out;
         _out.status = passed ? hal::Status::PASS : hal::Status::FAIL;
@@ -467,10 +467,10 @@ TestOutput CpuTesting::testCpuThermalThrottling()
         oss << "Zone " << zone << " (" << type << "): " << tempC << " C";
         data.push_back(oss.str());
         foundAny = true;
-        // BCM2712 thermal zone types on Pi5: "cpu-thermal", "bcm2712", etc.
+        // Zynq PS thermal zone types on Zion platform: "cpu-thermal", "zynq_ps", etc.
         bool isCpu = type.find("CPU") != std::string::npos || type.find("cpu") != std::string::npos ||
-                     type.find("A76") != std::string::npos || type.find("bcm2712") != std::string::npos ||
-                     type.find("rp1") != std::string::npos || type.find("soc") != std::string::npos;
+                     type.find("A76") != std::string::npos || type.find("zynq_ps") != std::string::npos ||
+                     type.find("plio") != std::string::npos || type.find("soc") != std::string::npos;
         if (isCpu && tempC >= CPU_TEMP_WARNING_C) {
             passed = false;
             data.push_back("  FAIL: " + std::to_string(tempC) + " C exceeds warning threshold.");
@@ -601,14 +601,14 @@ TestOutput CpuTesting::testL1Cache()
 // ---------------------------------------------------------------------------
 // 10. testL2Cache
 //     Measure L2 cache performance with a 512 KB buffer.
-//     BCM2712 Cortex-A76: 512 KB L2 per core.
+//     Zynq PS Cortex-A76: 512 KB L2 per core.
 // ---------------------------------------------------------------------------
 TestOutput CpuTesting::testL2Cache()
 {
     std::vector<std::string> data;
     bool passed = true;
 
-    const size_t L2_SIZE = 512 * 1024;  // 512 KB — Pi5 Cortex-A76 L2
+    const size_t L2_SIZE = 512 * 1024;  // 512 KB — Zion platform Cortex-A76 L2
     const size_t STRIDE = 64;
     const uint64_t ITERATIONS = 500'000;
 
@@ -648,7 +648,7 @@ TestOutput CpuTesting::testL2Cache()
 // ---------------------------------------------------------------------------
 // 11. testL3Cache
 //     Measure system-level cache / DRAM performance with a 4 MB buffer.
-//     BCM2712 Cortex-A76: no on-die L3; 4 MB exercises DRAM path.
+//     Zynq PS Cortex-A76: no on-die L3; 4 MB exercises DRAM path.
 // ---------------------------------------------------------------------------
 TestOutput CpuTesting::testL3Cache()
 {
@@ -742,7 +742,7 @@ TestOutput CpuTesting::testSystemCache()
 // ---------------------------------------------------------------------------
 // 13. testCacheCoherencyBetweenClusters
 //     Writer (core 0) -> Reader (core 3); 1000 rounds.
-//     Pi5 BCM2712: single cluster — coherency is via shared L2 / AMBA bus.
+//     Zion platform Zynq PS: single cluster — coherency is via shared L2 / AMBA bus.
 // ---------------------------------------------------------------------------
 TestOutput CpuTesting::testCacheCoherencyBetweenClusters()
 {
@@ -763,7 +763,7 @@ TestOutput CpuTesting::testCacheCoherencyBetweenClusters()
             writerDone.store(true, std::memory_order_release);
         });
         std::thread reader([&]() {
-            pinThreadToCore(CPU_CORES - 1); // last core (core 3 on Pi5)
+            pinThreadToCore(CPU_CORES - 1); // last core (core 3 on Zion platform)
             while (!writerDone.load(std::memory_order_acquire))
                 std::this_thread::yield();
             if (sharedValue.load(std::memory_order_acquire) != round + 1)
@@ -775,7 +775,7 @@ TestOutput CpuTesting::testCacheCoherencyBetweenClusters()
 
     data.push_back("Cache coherency rounds: " + std::to_string(ROUNDS));
     data.push_back("Writer: core 0  Reader: core " + std::to_string(CPU_CORES - 1) +
-                   "  (BCM2712 unified AMBA coherency domain)");
+                   "  (Zynq PS unified AMBA coherency domain)");
     data.push_back(passed ? "All rounds passed - cache coherency verified."
                           : "FAIL: Cache coherency violation detected.");
     {
@@ -884,7 +884,7 @@ TestOutput CpuTesting::testCacheBandwidthAndLatency()
         passed = false;
         data.push_back("FAIL: Bandwidth " + std::to_string(bestBW) + " GB/s below 5 GB/s threshold.");
     } else {
-        data.push_back("Memory bandwidth is acceptable (Pi5 LPDDR4X-4267 theoretical: ~17 GB/s).");
+        data.push_back("Memory bandwidth is acceptable (Zion platform LPDDR4X-4267 theoretical: ~17 GB/s).");
     }
     {
         TestOutput _out;

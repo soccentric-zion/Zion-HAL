@@ -5,4 +5,4 @@ install(TARGETS serializer_deserializer_lib
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
-install(FILES serializer_deserializer_lib.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/acadia_hal)
+install(FILES serializer_deserializer_lib.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/zion_hal)

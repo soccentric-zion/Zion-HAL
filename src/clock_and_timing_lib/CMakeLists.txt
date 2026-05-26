@@ -5,4 +5,4 @@ install(TARGETS clock_and_timing_lib
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
-install(FILES clock_and_timing_lib.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/acadia_hal)
+install(FILES clock_and_timing_lib.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/zion_hal)

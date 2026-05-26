@@ -1,6 +1,6 @@
 // Source: src/system_memory_lib/system_memory_lib.h  (class SystemMemoryTesting : public TestBase)
 //
-// Raspberry Pi 5 target: 4 GB or 8 GB LPDDR4X-4267, 64-bit interface.
+// Zynq UltraScale+ MPSoC target: 4 GB or 8 GB LPDDR4X-4267, 64-bit interface.
 //
 // Field-numbering rules: numbers start at 1, never renumber, mark removed fields reserved.
 

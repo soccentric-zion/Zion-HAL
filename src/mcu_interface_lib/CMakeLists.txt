@@ -5,4 +5,4 @@ install(TARGETS mcu_interface_lib
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
-install(FILES mcu_interface_lib.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/acadia_hal)
+install(FILES mcu_interface_lib.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/zion_hal)

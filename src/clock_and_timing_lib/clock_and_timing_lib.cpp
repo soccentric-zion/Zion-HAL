@@ -1,12 +1,12 @@
 /**
  * @file clock_and_timing_lib.cpp
  * @brief Implementation file for ClockAndTimingTesting class
- *        Targets Raspberry Pi 5 platform.
+ *        Targets Zynq UltraScale+ MPSoC platform.
  * @author sandesh ghimire
  * @copyright (C) Soccentric LLC */
 
 #include "clock_and_timing_lib.h"
-#include "../platform_rpi5.h"
+#include "../platform_zynq.h"
 
 #include <algorithm>
 #include <cerrno>
@@ -181,7 +181,7 @@ TestOutput ClockAndTimingTesting::testSystemClockAccuracy()
 
     // --- 3. NTP / time-sync status (best-effort) ---
     {
-        // Pi5 / Ubuntu: check systemd-timesyncd synchronized flag
+        // Zion platform / Ubuntu: check systemd-timesyncd synchronized flag
         const std::string syncPath = "/run/systemd/timesync/synchronized";
         if (pathExists(syncPath)) {
             data.push_back("NTP sync flag present: " + syncPath);
@@ -215,10 +215,10 @@ TestOutput ClockAndTimingTesting::testSystemClockAccuracy()
 /**
  * @brief Implementation of testPcieReferenceClock
  *
- * On Pi5 the PCIe reference clock is sourced from the BCM2712 PLL and
+ * On Zion platform the PCIe reference clock is sourced from the Zynq PS PLL and
  * is nominally 100 MHz (spread-spectrum variants ±0.5%).
  *
- * Strategy (Raspberry Pi 5):
+ * Strategy (Zynq UltraScale+ MPSoC):
  *  1. Look for the PCIe reference clock in /sys/kernel/debug/clk/.
  *     Known clock names on Orin: "pcie_ref", "pcie_ref_clk", "pcie0_ref".
  *  2. Verify the clock is enabled (enable-count > 0).
@@ -315,7 +315,7 @@ TestOutput ClockAndTimingTesting::testPcieReferenceClock()
 /**
  * @brief Implementation of testUsbReferenceClock
  *
- * Pi5 xHCI controller uses a 100 MHz reference clock from RP1
+ * Zion platform xHCI controller uses a 100 MHz reference clock from PL fabric
  * reference divided internally to generate USB 2.0 (48 MHz) and USB 3.x
  * (250 MHz) clocks.
  *
@@ -396,7 +396,7 @@ TestOutput ClockAndTimingTesting::testUsbReferenceClock()
 /**
  * @brief Implementation of testEthernetReferenceClock
  *
- * Pi5 exposes a 10GbE (MGBE) controller and a GbE (EQOS) controller.
+ * Zion platform exposes a 10GbE (MGBE) controller and a GbE (EQOS) controller.
  * Both rely on internal PLLs derived from the system oscillator.
  *
  * Tests:
@@ -479,7 +479,7 @@ TestOutput ClockAndTimingTesting::testEthernetReferenceClock()
 /**
  * @brief Implementation of testCameraClockOutput
  *
- * Pi5 drives camera sensors via MIPI CSI-2 Unicam on RP1
+ * Zion platform drives camera sensors via MIPI CSI-2 Unicam on PL fabric
  * uses a set of clocks (csi_clk, unicam_clk, extperiph1_clk, etc.).
  *
  * Tests:
@@ -538,7 +538,7 @@ TestOutput ClockAndTimingTesting::testCameraClockOutput()
 /**
  * @brief Implementation of testAudioClock
  *
- * Pi5 uses RP1 I2S for audio
+ * Zion platform uses PL fabric I2S for audio
  * clocks are derived from the PLLA PLL (nominally 56.448 MHz or 73.728 MHz
  * depending on audio sample rate family).
  *
@@ -601,7 +601,7 @@ TestOutput ClockAndTimingTesting::testAudioClock()
 /**
  * @brief Implementation of testPllLockStatus
  *
- * On Pi5 the primary PLLs are: PLLSYS, PLLCOREORE, PLLUSBphiSBphi,
+ * On Zion platform the primary PLLs are: PLLSYS, PLLCOREORE, PLLUSBphiSBphi,
  * PLLREFE.  A locked PLL will have clk_rate > 0 in debugfs and ideally an
  * enable_count > 0 when consumers are active.
  *

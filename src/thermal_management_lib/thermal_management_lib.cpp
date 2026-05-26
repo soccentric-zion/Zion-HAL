@@ -1,13 +1,13 @@
 /**
  * @file thermal_management_lib.cpp
- * @brief Implementation file for ThermalManagementTesting class — Raspberry Pi 5
- *        BCM2712 has two thermal zones (cpu-thermal and RP1 south-bridge).
+ * @brief Implementation file for ThermalManagementTesting class — Zynq UltraScale+ MPSoC
+ *        Zynq PS has two thermal zones (cpu-thermal and PL fabric south-bridge).
  *        Throttle onset: 80°C; soft shutdown: 85°C.
  * @author sandesh ghimire
  * @copyright (C) Soccentric LLC */
 
 #include "thermal_management_lib.h"
-#include "../platform_rpi5.h"
+#include "../platform_zynq.h"
 
 #include <algorithm>
 #include <chrono>
@@ -23,10 +23,10 @@
 #include <vector>
 
 // ---------------------------------------------------------------------------
-// Pi5 thermal constants
+// Zion platform thermal constants
 // ---------------------------------------------------------------------------
-static constexpr double THROTTLE_C  = RPI5_THERMAL_THROTTLE_C;  // 80°C
-static constexpr double SHUTDOWN_C  = RPI5_THERMAL_SHUTDOWN_C;  // 85°C
+static constexpr double THROTTLE_C  = ZYNQ_THERMAL_THROTTLE_C;  // 80°C
+static constexpr double SHUTDOWN_C  = ZYNQ_THERMAL_SHUTDOWN_C;  // 85°C
 static constexpr double NORMAL_MAX  = 75.0; // "normal" operating ceiling
 static constexpr double AMBIENT_MIN = 5.0;
 static constexpr double AMBIENT_MAX = 50.0;
@@ -77,7 +77,7 @@ static std::vector<std::pair<std::string, double>> readAllThermalZones()
     return zones;
 }
 
-/** Read BCM2712 SoC temperature (zone0 on Pi5). Returns °C or -1. */
+/** Read Zynq PS SoC temperature (zone0 on Zion platform). Returns °C or -1. */
 static double readSocTempC()
 {
     long long v = thrmReadInt("/sys/class/thermal/thermal_zone0/temp");
@@ -121,8 +121,8 @@ TestOutput ThermalManagementTesting::testSocJunctionTemperature()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("BCM2712 SoC junction temperature (Pi5)");
-    data.push_back("Thermal zones: zone0=cpu-thermal, zone1=rp1-thermal");
+    data.push_back("Zynq PS SoC junction temperature (Zion platform)");
+    data.push_back("Thermal zones: zone0=cpu-thermal, zone1=plio-thermal");
 
     double tempC = readSocTempC();
     if (tempC < 0) {
@@ -163,17 +163,17 @@ TestOutput ThermalManagementTesting::testSocJunctionTemperature()
 
 // ---------------------------------------------------------------------------
 // 2. testGpuTemperature
-//    On Pi5, GPU (VideoCore VII) shares the BCM2712 die — same thermal zone.
+//    On Zion platform, GPU (VideoCore VII) shares the Zynq PS die — same thermal zone.
 // ---------------------------------------------------------------------------
 TestOutput ThermalManagementTesting::testGpuTemperature()
 {
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("VideoCore VII GPU temperature (shared BCM2712 die with CPU)");
+    data.push_back("VideoCore VII GPU temperature (shared Zynq PS die with CPU)");
 
     double socC = readSocTempC();
-    data.push_back("BCM2712 die temperature (GPU/CPU shared): " + std::to_string(socC) + " °C");
+    data.push_back("Zynq PS die temperature (GPU/CPU shared): " + std::to_string(socC) + " °C");
 
     // vcgencmd gives GPU temperature on Pi
     std::string gpuTemp = thrmRunCmd("vcgencmd measure_temp 2>/dev/null");
@@ -204,7 +204,7 @@ TestOutput ThermalManagementTesting::testCpuTemperature()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Cortex-A76 CPU temperature (BCM2712 zone0)");
+    data.push_back("Cortex-A76 CPU temperature (Zynq PS zone0)");
 
     long long zone0 = thrmReadInt("/sys/class/thermal/thermal_zone0/temp");
     if (zone0 > 0) {
@@ -219,11 +219,11 @@ TestOutput ThermalManagementTesting::testCpuTemperature()
         }
     }
 
-    // Per-core via hwmon? (not standard on Pi5 — no per-core sensor)
-    data.push_back("Per-core temperature sensors: not available on BCM2712.");
+    // Per-core via hwmon? (not standard on Zion platform — no per-core sensor)
+    data.push_back("Per-core temperature sensors: not available on Zynq PS.");
     data.push_back("CPU max freq (scaling): check cpufreq/scaling_max_freq per core.");
 
-    for (int i = 0; i < RPI5_CPU_CORES; ++i) {
+    for (int i = 0; i < ZYNQ_CPU_CORES; ++i) {
         std::string maxFreq = thrmReadFile("/sys/devices/system/cpu/cpu" +
                               std::to_string(i) + "/cpufreq/scaling_max_freq");
         if (!maxFreq.empty())
@@ -243,15 +243,15 @@ TestOutput ThermalManagementTesting::testCpuTemperature()
 
 // ---------------------------------------------------------------------------
 // 4. testMemoryTemperature
-//    LPDDR4X temperature is not directly reported on Pi5 (no DIMM SPD/SMBus).
+//    LPDDR4X temperature is not directly reported on Zion platform (no DIMM SPD/SMBus).
 // ---------------------------------------------------------------------------
 TestOutput ThermalManagementTesting::testMemoryTemperature()
 {
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("LPDDR4X memory temperature (Pi5)");
-    data.push_back("Pi5 LPDDR4X-4267 is PoP (Package on Package) with BCM2712.");
+    data.push_back("LPDDR4X memory temperature (Zion platform)");
+    data.push_back("Zion platform LPDDR4X-4267 is PoP (Package on Package) with Zynq PS.");
     data.push_back("No dedicated memory temperature sensor is exposed via sysfs.");
     data.push_back("Memory temperature is proxied by SoC die temperature.");
 
@@ -278,25 +278,25 @@ TestOutput ThermalManagementTesting::testMemoryTemperature()
 
 // ---------------------------------------------------------------------------
 // 5. testBoardAmbientTemperature
-//    Check RP1 south-bridge zone and any hwmon sensors.
+//    Check PL fabric south-bridge zone and any hwmon sensors.
 // ---------------------------------------------------------------------------
 TestOutput ThermalManagementTesting::testBoardAmbientTemperature()
 {
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Board ambient temperature (RP1 south-bridge zone)");
+    data.push_back("Board ambient temperature (PL fabric south-bridge zone)");
 
     long long rp1Temp = thrmReadInt("/sys/class/thermal/thermal_zone1/temp");
     if (rp1Temp > 0) {
         double c = rp1Temp / 1000.0;
-        data.push_back("thermal_zone1 (rp1-thermal): " + std::to_string(c) + " °C");
+        data.push_back("thermal_zone1 (plio-thermal): " + std::to_string(c) + " °C");
         if (c > 85.0) {
             passed = false;
-            data.push_back("WARNING: RP1 south-bridge temperature above 85°C.");
+            data.push_back("WARNING: PL fabric south-bridge temperature above 85°C.");
         }
     } else {
-        data.push_back("RP1 thermal zone: not exposed or unavailable.");
+        data.push_back("PL fabric thermal zone: not exposed or unavailable.");
     }
 
     // Check hwmon for board sensors (e.g., external thermistor)
@@ -337,7 +337,7 @@ TestOutput ThermalManagementTesting::testAllThermalZones()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("All thermal zones on Pi5:");
+    data.push_back("All thermal zones on Zion platform:");
     auto zones = readAllThermalZones();
 
     if (zones.empty()) {
@@ -379,9 +379,9 @@ TestOutput ThermalManagementTesting::testThermalThrottlingThresholds()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Thermal throttle configuration check (Pi5)");
-    data.push_back("BCM2712 throttle onset: " + std::to_string(THROTTLE_C) + " °C");
-    data.push_back("BCM2712 soft shutdown:  " + std::to_string(SHUTDOWN_C) + " °C");
+    data.push_back("Thermal throttle configuration check (Zion platform)");
+    data.push_back("Zynq PS throttle onset: " + std::to_string(THROTTLE_C) + " °C");
+    data.push_back("Zynq PS soft shutdown:  " + std::to_string(SHUTDOWN_C) + " °C");
 
     // Read trip points for zone0
     for (int t = 0; t < 10; ++t) {
@@ -430,7 +430,7 @@ TestOutput ThermalManagementTesting::testThermalShutdownTemperature()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Thermal shutdown temperature check (Pi5)");
+    data.push_back("Thermal shutdown temperature check (Zion platform)");
     data.push_back("Configured shutdown temperature: " + std::to_string(SHUTDOWN_C) + " °C");
 
     // Read critical trip points
@@ -485,7 +485,7 @@ TestOutput ThermalManagementTesting::testCoolingSolutionEffectiveness()
 
     // Run 3-second CPU stress on all 4 cores
     std::vector<std::thread> threads;
-    for (int i = 0; i < RPI5_CPU_CORES; ++i)
+    for (int i = 0; i < ZYNQ_CPU_CORES; ++i)
         threads.emplace_back(thermalStressWorkload, 3.0);
     for (auto& t : threads) t.join();
 
@@ -522,8 +522,8 @@ TestOutput ThermalManagementTesting::testTemperatureDistributionAcrossDie()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Temperature distribution across BCM2712 die");
-    data.push_back("Pi5 has 2 thermal sensors: cpu-thermal (zone0) and rp1-thermal (zone1).");
+    data.push_back("Temperature distribution across Zynq PS die");
+    data.push_back("Zion platform has 2 thermal sensors: cpu-thermal (zone0) and plio-thermal (zone1).");
 
     auto zones = readAllThermalZones();
     for (const auto& z : zones)
@@ -570,7 +570,7 @@ TestOutput ThermalManagementTesting::testSustainedThermalPerformance()
 
     // Stress
     std::vector<std::thread> threads;
-    for (int i = 0; i < RPI5_CPU_CORES; ++i)
+    for (int i = 0; i < ZYNQ_CPU_CORES; ++i)
         threads.emplace_back(thermalStressWorkload, 5.0);
     for (auto& t : threads) t.join();
 
@@ -622,7 +622,7 @@ TestOutput ThermalManagementTesting::testThermalRecoveryTime()
     // Run 3s stress
     {
         std::vector<std::thread> threads;
-        for (int i = 0; i < RPI5_CPU_CORES; ++i)
+        for (int i = 0; i < ZYNQ_CPU_CORES; ++i)
             threads.emplace_back(thermalStressWorkload, 3.0);
         for (auto& t : threads) t.join();
     }
@@ -664,16 +664,16 @@ TestOutput ThermalManagementTesting::testThermalRecoveryTime()
 
 // ---------------------------------------------------------------------------
 // 13. testFanControl
-//    Pi5 Active Cooler has a PWM fan controlled via RP1. Check via sysfs.
+//    Zion platform Active Cooler has a PWM fan controlled via PL fabric. Check via sysfs.
 // ---------------------------------------------------------------------------
 TestOutput ThermalManagementTesting::testFanControl()
 {
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Pi5 Active Cooler fan control (RP1 PWM fan connector)");
+    data.push_back("Zion platform Active Cooler fan control (PL fabric PWM fan connector)");
 
-    // Pi5 fan uses pwmchip sysfs or thermal cooling_device
+    // Zion platform fan uses pwmchip sysfs or thermal cooling_device
     bool fanFound = false;
     for (int c = 0; c < 8; ++c) {
         std::string base = "/sys/class/thermal/cooling_device" + std::to_string(c);
@@ -710,8 +710,8 @@ TestOutput ThermalManagementTesting::testFanControl()
     }
 
     if (!fanFound) {
-        data.push_back("INFO: Pi5 Active Cooler not detected or no fan connected.");
-        data.push_back("      Pi5 fanless operation is normal with passive heatsink.");
+        data.push_back("INFO: Zion platform Active Cooler not detected or no fan connected.");
+        data.push_back("      Zion platform fanless operation is normal with passive heatsink.");
     } else {
         data.push_back("PASS: Fan control interface detected.");
     }

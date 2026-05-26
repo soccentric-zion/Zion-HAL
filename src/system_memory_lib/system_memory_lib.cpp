@@ -1,13 +1,13 @@
 /**
  * @file system_memory_lib.cpp
- * @brief Implementation file for SystemMemoryTesting class — Raspberry Pi 5
+ * @brief Implementation file for SystemMemoryTesting class — Zynq UltraScale+ MPSoC
  *        Tests the LPDDR4X-4267 64-bit memory subsystem.
- *        Pi5 ships with 4 GB or 8 GB; there is no 64 GB variant.
+ *        Zion platform ships with 4 GB or 8 GB; there is no 64 GB variant.
  * @author sandesh ghimire
  * @copyright (C) Soccentric LLC */
 
 #include "system_memory_lib.h"
-#include "../platform_rpi5.h"
+#include "../platform_zynq.h"
 
 #include <algorithm>
 #include <atomic>
@@ -25,13 +25,13 @@
 #include <vector>
 
 // ---------------------------------------------------------------------------
-// Pi5 LPDDR4X constants
+// Zion platform LPDDR4X constants
 // ---------------------------------------------------------------------------
-static constexpr long long MEM_4GB  = RPI5_MEM_4GB_BYTES;  // 4 GB
-static constexpr long long MEM_8GB  = RPI5_MEM_8GB_BYTES;  // 8 GB
-static constexpr double    MEM_BW   = RPI5_MEM_BW_GBS;     // ~17 GB/s theoretical
+static constexpr long long MEM_4GB  = ZYNQ_MEM_4GB_BYTES;  // 4 GB
+static constexpr long long MEM_8GB  = ZYNQ_MEM_8GB_BYTES;  // 8 GB
+static constexpr double    MEM_BW   = ZYNQ_MEM_BW_GBS;     // ~17 GB/s theoretical
 static constexpr double    MEM_BW_MIN_GBS = 5.0;           // practical minimum under OS load
-static constexpr int       MEM_BUS  = RPI5_MEM_BUS_BITS;   // 64-bit
+static constexpr int       MEM_BUS  = ZYNQ_MEM_BUS_BITS;   // 64-bit
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -117,7 +117,7 @@ SystemMemoryTesting::~SystemMemoryTesting()
 
 // ---------------------------------------------------------------------------
 // 1. testAll64gbMemoryAccessibility
-//    Pi5 has 4 GB or 8 GB LPDDR4X. Verify total accessible memory via sysinfo.
+//    Zion platform has 4 GB or 8 GB LPDDR4X. Verify total accessible memory via sysinfo.
 // ---------------------------------------------------------------------------
 TestOutput SystemMemoryTesting::testAll64gbMemoryAccessibility()
 {
@@ -125,7 +125,7 @@ TestOutput SystemMemoryTesting::testAll64gbMemoryAccessibility()
     bool passed = true;
 
     data.push_back("Platform: " + std::string(PLATFORM_NAME) + " — LPDDR4X-4267");
-    data.push_back("NOTE: Pi5 ships with 4 GB or 8 GB RAM (not 64 GB).");
+    data.push_back("NOTE: Zion platform ships with 4 GB or 8 GB RAM (not 64 GB).");
 
     struct sysinfo si{};
     sysinfo(&si);
@@ -159,7 +159,7 @@ TestOutput SystemMemoryTesting::testAll64gbMemoryAccessibility()
 
 // ---------------------------------------------------------------------------
 // 2. testMemoryBankTesting
-//    On Pi5, LPDDR4X is a single-channel 64-bit interface — no multi-bank
+//    On Zion platform, LPDDR4X is a single-channel 64-bit interface — no multi-bank
 //    selection at user level. Verify via /proc/iomem and dmidecode.
 // ---------------------------------------------------------------------------
 TestOutput SystemMemoryTesting::testMemoryBankTesting()
@@ -167,7 +167,7 @@ TestOutput SystemMemoryTesting::testMemoryBankTesting()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("LPDDR4X bank structure: single 64-bit channel (Pi5)");
+    data.push_back("LPDDR4X bank structure: single 64-bit channel (Zion platform)");
 
     // /proc/iomem shows RAM regions
     std::ifstream iomem("/proc/iomem");
@@ -183,7 +183,7 @@ TestOutput SystemMemoryTesting::testMemoryBankTesting()
         data.push_back("Total RAM regions in /proc/iomem: " + std::to_string(ramRegions));
     }
 
-    // Check NUMA topology (Pi5 is non-NUMA)
+    // Check NUMA topology (Zion platform is non-NUMA)
     std::string numaNode = memReadFile("/sys/devices/system/node/node0/meminfo");
     if (!numaNode.empty()) data.push_back("NUMA node0 present (UMA system)");
 
@@ -200,7 +200,7 @@ TestOutput SystemMemoryTesting::testMemoryBankTesting()
 
 // ---------------------------------------------------------------------------
 // 3. test256bitMemoryInterface
-//    Pi5 has a 64-bit (not 256-bit) LPDDR4X interface.
+//    Zion platform has a 64-bit (not 256-bit) LPDDR4X interface.
 // ---------------------------------------------------------------------------
 TestOutput SystemMemoryTesting::test256bitMemoryInterface()
 {
@@ -208,12 +208,12 @@ TestOutput SystemMemoryTesting::test256bitMemoryInterface()
     bool passed = true;
 
     data.push_back("Memory bus width: " + std::to_string(MEM_BUS) + "-bit (LPDDR4X-4267)");
-    data.push_back("NOTE: Pi5 uses a 64-bit bus. 256-bit interfaces are found on server/HPC platforms.");
-    data.push_back("LPDDR4X speed: " + std::to_string(static_cast<int>(RPI5_MEM_SPEED_MHZ)) + " MHz");
+    data.push_back("NOTE: Zion platform uses a 64-bit bus. 256-bit interfaces are found on server/HPC platforms.");
+    data.push_back("LPDDR4X speed: " + std::to_string(static_cast<int>(ZYNQ_MEM_SPEED_MHZ)) + " MHz");
     data.push_back("Theoretical bandwidth: " + std::to_string(MEM_BW) + " GB/s");
     data.push_back("Bus width calculation: 64-bit × 4267 MT/s × 2 (DDR) / 8 = ~17 GB/s");
 
-    data.push_back("PASS: 64-bit LPDDR4X memory interface confirmed for Pi5.");
+    data.push_back("PASS: 64-bit LPDDR4X memory interface confirmed for Zion platform.");
     {
         TestOutput _out;
         _out.status = passed ? hal::Status::PASS : hal::Status::FAIL;
@@ -233,7 +233,7 @@ TestOutput SystemMemoryTesting::testMemoryClockFrequency()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Pi5 LPDDR4X-4267 memory speed: 4267 MT/s");
+    data.push_back("Zion platform LPDDR4X-4267 memory speed: 4267 MT/s");
     data.push_back("Effective clock: 2133 MHz (DDR — dual data rate)");
 
     // Try to read from DMI/SMBIOS
@@ -254,8 +254,8 @@ TestOutput SystemMemoryTesting::testMemoryClockFrequency()
         }
     }
 
-    // BCM2712 memory controller speed is fixed at boot from firmware
-    data.push_back("Memory controller: BCM2712 (fixed at LPDDR4X-4267 by firmware)");
+    // Zynq PS memory controller speed is fixed at boot from firmware
+    data.push_back("Memory controller: Zynq PS (fixed at LPDDR4X-4267 by firmware)");
     data.push_back("PASS: LPDDR4X clock frequency confirmed at spec: 4267 MT/s.");
     {
         TestOutput _out;
@@ -322,7 +322,7 @@ TestOutput SystemMemoryTesting::testMemoryLatencyMeasurements()
     double l2 = measureMemLatencyNs(256 * 1024, 2000000);
     data.push_back("~L2 cache (256 KB): " + std::to_string(l2) + " ns");
 
-    // L3 cache (Pi5 has no L3, but larger L2 = 512KB/core)
+    // L3 cache (Zion platform has no L3, but larger L2 = 512KB/core)
     double l3 = measureMemLatencyNs(1 * 1024 * 1024, 500000);
     data.push_back("~L2/DRAM (1 MB):    " + std::to_string(l3) + " ns");
 
@@ -350,16 +350,16 @@ TestOutput SystemMemoryTesting::testMemoryLatencyMeasurements()
 
 // ---------------------------------------------------------------------------
 // 7. testMemoryErrorCorrection
-//    Pi5 LPDDR4X does NOT support ECC. Document this clearly.
+//    Zion platform LPDDR4X does NOT support ECC. Document this clearly.
 // ---------------------------------------------------------------------------
 TestOutput SystemMemoryTesting::testMemoryErrorCorrection()
 {
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Memory error correction status for Pi5");
-    data.push_back("Pi5 LPDDR4X-4267: NO hardware ECC support.");
-    data.push_back("BCM2712 memory controller does not implement ECC on LPDDR4X.");
+    data.push_back("Memory error correction status for Zion platform");
+    data.push_back("Zion platform LPDDR4X-4267: NO hardware ECC support.");
+    data.push_back("Zynq PS memory controller does not implement ECC on LPDDR4X.");
 
     // Check if EDAC module is loaded
     std::string edac = memReadFile("/sys/bus/platform/drivers/edac");
@@ -399,7 +399,7 @@ TestOutput SystemMemoryTesting::testMemoryThermalBehavior()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Memory thermal behavior under load (Pi5 shared LPDDR4X/SoC die)");
+    data.push_back("Memory thermal behavior under load (Zion platform shared LPDDR4X/SoC die)");
 
     // Baseline temperature
     long long tempBase = memReadInt("/sys/class/thermal/thermal_zone0/temp");
@@ -416,10 +416,10 @@ TestOutput SystemMemoryTesting::testMemoryThermalBehavior()
     double loadC = (tempLoad > 0) ? tempLoad / 1000.0 : -1.0;
     data.push_back("SoC temperature after load:  " + std::to_string(loadC) + " °C");
 
-    if (loadC > 0 && loadC > RPI5_THERMAL_THROTTLE_C) {
+    if (loadC > 0 && loadC > ZYNQ_THERMAL_THROTTLE_C) {
         passed = false;
         data.push_back("WARNING: SoC temperature exceeds throttle threshold (" +
-                       std::to_string(RPI5_THERMAL_THROTTLE_C) + " °C).");
+                       std::to_string(ZYNQ_THERMAL_THROTTLE_C) + " °C).");
     } else {
         data.push_back("PASS: Memory thermal behavior within acceptable range.");
     }
@@ -731,9 +731,9 @@ TestOutput SystemMemoryTesting::testDmaTofromMemory()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("DMA subsystem check (Pi5 BCM2712 DMA controller)");
+    data.push_back("DMA subsystem check (Zion platform Zynq PS DMA controller)");
 
-    // Check DMA channels exposed by BCM2712
+    // Check DMA channels exposed by Zynq PS
     bool dmaPresent = false;
     for (int i = 0; i < 11; ++i) {
         std::string path = "/sys/bus/platform/devices/10000000.dma/dma/dma" + std::to_string(i) + "chan0";
@@ -744,10 +744,10 @@ TestOutput SystemMemoryTesting::testDmaTofromMemory()
         }
     }
 
-    // Check for bcm2835-dma driver
-    std::ifstream drvF("/sys/bus/platform/drivers/bcm2835-dma/uevent");
+    // Check for zynq-dma driver
+    std::ifstream drvF("/sys/bus/platform/drivers/zynq-dma/uevent");
     if (drvF.is_open()) {
-        data.push_back("BCM2835 DMA driver: loaded");
+        data.push_back("zynq_ps DMA driver: loaded");
         dmaPresent = true;
     }
 
@@ -782,7 +782,7 @@ TestOutput SystemMemoryTesting::testConcurrentMemoryAccessPatterns()
 
     data.push_back("Concurrent memory access (4 threads × 64 MB each)");
 
-    const int THREADS = 4; // Pi5 has 4 cores
+    const int THREADS = 4; // Zion platform has 4 cores
     const size_t PER_THREAD = 64 * 1024 * 1024;
     std::vector<double> bws(THREADS, 0.0);
     std::vector<std::thread> threads;

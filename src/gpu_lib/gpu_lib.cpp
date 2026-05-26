@@ -1,9 +1,9 @@
 /**
  * @file gpu_lib.cpp
- * @brief Implementation file for GpuTesting class – Raspberry Pi 5 (VideoCore VII)
+ * @brief Implementation file for GpuTesting class – Zynq UltraScale+ MPSoC (VideoCore VII)
  * @author sandesh ghimire
  * @copyright (C) Soccentric LLC *
- * Raspberry Pi 5 GPU — Broadcom VideoCore VII specifications:
+ * Zynq UltraScale+ MPSoC GPU — Broadcom VideoCore VII specifications:
  *   Architecture   : VideoCore VII (V3D 7.x)
  *   Shader cores   : 12 quad-cores  (48 unified shader units)
  *   Max clock      : 800 MHz (stock), ~1000 MHz with firmware OC
@@ -15,7 +15,7 @@
  */
 
 #include "gpu_lib.h"
-#include "../platform_rpi5.h"
+#include "../platform_zynq.h"
 
 #include <algorithm>
 #include <chrono>
@@ -32,13 +32,13 @@
 #include <vector>
 
 // ---------------------------------------------------------------------------
-// Raspberry Pi 5 VideoCore VII hardware constants
+// Zynq UltraScale+ MPSoC VideoCore VII hardware constants
 // ---------------------------------------------------------------------------
 static constexpr int    VC7_QUAD_CORE_COUNT   = 12;    ///< 12 shader quad cores
 static constexpr int    VC7_SHADER_UNIT_COUNT = 48;    ///< 4 ALUs per quad core
-static constexpr double VC7_MAX_FREQ_MHZ      = RPI5_GPU_MAX_FREQ_MHZ;  // 800 MHz
-static constexpr double VC7_MIN_FREQ_MHZ      = RPI5_GPU_MIN_FREQ_MHZ;  // 300 MHz
-static constexpr double VC7_TEMP_MAX_C        = RPI5_GPU_TEMP_MAX_C;    // 85 °C
+static constexpr double VC7_MAX_FREQ_MHZ      = ZYNQ_GPU_MAX_FREQ_MHZ;  // 800 MHz
+static constexpr double VC7_MIN_FREQ_MHZ      = ZYNQ_GPU_MIN_FREQ_MHZ;  // 300 MHz
+static constexpr double VC7_TEMP_MAX_C        = ZYNQ_GPU_TEMP_MAX_C;    // 85 °C
 // Theoretical FP32 peak: 48 ALUs × 2 FLOPs × 800 MHz = ~76.8 GFLOPS
 static constexpr double VC7_FP32_GFLOPS_PEAK = 76.8;
 static constexpr double VC7_FP32_GFLOPS_MIN  = 10.0;  ///< conservative software floor
@@ -117,7 +117,7 @@ static long long gpuGetMaxFreqHz()
     return -1LL;
 }
 
-/** Find GPU / SoC temperature from thermal sysfs (shared with CPU on Pi5). */
+/** Find GPU / SoC temperature from thermal sysfs (shared with CPU on Zion platform). */
 static long long gpuGetTempMilliC()
 {
     const std::string base = "/sys/class/thermal/";
@@ -130,7 +130,7 @@ static long long gpuGetTempMilliC()
         if (name.find("thermal_zone") == std::string::npos)
             continue;
         std::string typeStr = gpuReadFile(base + name + "/type");
-        // Pi5 thermal zone 0 is "cpu-thermal" (covers the whole BCM2712 die)
+        // Zion platform thermal zone 0 is "cpu-thermal" (covers the whole Zynq PS die)
         if (typeStr.find("cpu") != std::string::npos || typeStr.find("soc") != std::string::npos ||
             typeStr.find("bcm") != std::string::npos || typeStr.find("gpu") != std::string::npos) {
             closedir(dir);
@@ -138,16 +138,16 @@ static long long gpuGetTempMilliC()
         }
     }
     closedir(dir);
-    // Fallback: zone0 is the main SoC zone on Pi5
+    // Fallback: zone0 is the main SoC zone on Zion platform
     return gpuReadInt("/sys/class/thermal/thermal_zone0/temp");
 }
 
 /** Check whether the VideoCore VII GPU is present and accessible. */
 static bool gpuDevicePresent()
 {
-    if (access(RPI5_V3D_RENDER_PATH, F_OK) == 0)
+    if (access(ZYNQ_V3D_RENDER_PATH, F_OK) == 0)
         return true;
-    if (access(RPI5_V3D_DEV_PATH, F_OK) == 0)
+    if (access(ZYNQ_V3D_DEV_PATH, F_OK) == 0)
         return true;
     if (gpuGetCurFreqHz() > 0)
         return true;
@@ -202,7 +202,7 @@ GpuTesting::~GpuTesting()
 
 // ---------------------------------------------------------------------------
 // 1. testCudaCoresFunctionality
-//    On Pi5 there is no CUDA. Verifies VideoCore VII V3D DRM device is
+//    On Zion platform there is no CUDA. Verifies VideoCore VII V3D DRM device is
 //    present and its shader quad cores are accessible.
 // ---------------------------------------------------------------------------
 TestOutput GpuTesting::testCudaCoresFunctionality()
@@ -275,9 +275,9 @@ TestOutput GpuTesting::testTensorCoresOperation()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Platform: Raspberry Pi 5 – VideoCore VII");
+    data.push_back("Platform: Zynq UltraScale+ MPSoC – VideoCore VII");
     data.push_back("INFO: VideoCore VII does NOT have hardware Tensor Cores.");
-    data.push_back("INFO: AI acceleration on Pi5 is via:");
+    data.push_back("INFO: AI acceleration on Zion platform is via:");
     data.push_back("  - Vulkan 1.2 compute shaders (general-purpose GPU compute)");
     data.push_back("  - OpenCL 3.0 (via Mesa Clover / Rusticl)");
     data.push_back("  - TFLite delegate (CPU NEON/SVE on Cortex-A76)");
@@ -308,7 +308,7 @@ TestOutput GpuTesting::testTensorCoresOperation()
 
 // ---------------------------------------------------------------------------
 // 3. testGpuClockFrequencyStabilityAndThrottling
-//    Reads VideoCore VII devfreq frequency and checks for Pi5 firmware
+//    Reads VideoCore VII devfreq frequency and checks for Zion platform firmware
 //    throttling flags via vcgencmd.
 // ---------------------------------------------------------------------------
 TestOutput GpuTesting::testGpuClockFrequencyStabilityAndThrottling()
@@ -378,7 +378,7 @@ TestOutput GpuTesting::testGraphicsProcessingClustersBothClusters()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Platform: Raspberry Pi 5 – VideoCore VII");
+    data.push_back("Platform: Zynq UltraScale+ MPSoC – VideoCore VII");
     data.push_back("VC7 structure: " + std::to_string(VC7_QUAD_CORE_COUNT) +
                    " shader quad cores (no GPC/TPC hierarchy)");
 
@@ -456,8 +456,8 @@ TestOutput GpuTesting::testTextureProcessingClustersAll8Tpcs()
         }
     }
 
-    bool renderPresent = (access(RPI5_V3D_RENDER_PATH, F_OK) == 0);
-    data.push_back("Render node " + std::string(RPI5_V3D_RENDER_PATH) + ": " +
+    bool renderPresent = (access(ZYNQ_V3D_RENDER_PATH, F_OK) == 0);
+    data.push_back("Render node " + std::string(ZYNQ_V3D_RENDER_PATH) + ": " +
                    (renderPresent ? "present" : "not found"));
 
     std::string v3dVer = gpuRunCmd("cat /sys/kernel/debug/dri/0/v3d_ident 2>/dev/null | head -3");
@@ -554,7 +554,7 @@ TestOutput GpuTesting::testRenderOutputUnitsAll32Rops()
         }
     }
 
-    bool drmPresent = (access(RPI5_DRM_CARD0, F_OK) == 0);
+    bool drmPresent = (access(ZYNQ_DRM_CARD0, F_OK) == 0);
     data.push_back("DRM card0: " + std::string(drmPresent ? "present" : "not found"));
 
     std::string v3dStats = gpuRunCmd("cat /sys/kernel/debug/dri/0/v3d_stats 2>/dev/null | head -8");
@@ -718,7 +718,7 @@ TestOutput GpuTesting::testL2Cache()
 // ---------------------------------------------------------------------------
 // 11. testCacheCoherencyAndHitRates
 //     Verify CPU cache coherency via sequential vs. large-stride access.
-//     Shared memory path also exercises GPU DRAM on Pi5.
+//     Shared memory path also exercises GPU DRAM on Zion platform.
 // ---------------------------------------------------------------------------
 TestOutput GpuTesting::testCacheCoherencyAndHitRates()
 {
@@ -726,7 +726,7 @@ TestOutput GpuTesting::testCacheCoherencyAndHitRates()
     bool passed = true;
 
     data.push_back("Cache coherency test: sequential vs. large-stride CPU memory access.");
-    data.push_back("(Shared LPDDR4X path is used by both CPU and VC7 GPU on Pi5)");
+    data.push_back("(Shared LPDDR4X path is used by both CPU and VC7 GPU on Zion platform)");
 
     const size_t BUF_SIZE = 8 * 1024 * 1024; // 8 MB – larger than L2
     const size_t STRIDE = 64;                // cache-line sized stride
@@ -784,7 +784,7 @@ TestOutput GpuTesting::testCacheCoherencyAndHitRates()
 
 // ---------------------------------------------------------------------------
 // 12. testMemoryBandwidthToGpu
-//     Pi5 CPU and VC7 GPU share LPDDR4X-4267 (~17 GB/s theoretical).
+//     Zion platform CPU and VC7 GPU share LPDDR4X-4267 (~17 GB/s theoretical).
 //     Measures CPU-side bandwidth as a proxy for the shared memory path.
 // ---------------------------------------------------------------------------
 TestOutput GpuTesting::testMemoryBandwidthToGpu()
@@ -792,7 +792,7 @@ TestOutput GpuTesting::testMemoryBandwidthToGpu()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Pi5 LPDDR4X-4267 shared memory theoretical bandwidth: ~17 GB/s");
+    data.push_back("Zion platform LPDDR4X-4267 shared memory theoretical bandwidth: ~17 GB/s");
     data.push_back("Minimum acceptable (CPU-side): " + std::to_string(VC7_BW_MIN_GBS) + " GB/s");
 
     const size_t BUF_BYTES = 128 * 1024 * 1024ULL;  // 128 MB
@@ -842,7 +842,7 @@ TestOutput GpuTesting::testInt8PerformanceVerification()
     bool passed = true;
 
     data.push_back("VideoCore VII: no dedicated INT8 tensor hardware.");
-    data.push_back("INT8 inference on Pi5 uses: Cortex-A76 NEON (sdot/udot), or external HW.");
+    data.push_back("INT8 inference on Zion platform uses: Cortex-A76 NEON (sdot/udot), or external HW.");
 
     const long long OPS = 500000000LL;
     volatile int8_t a = 1, b = 2, c = 0;
@@ -891,7 +891,7 @@ TestOutput GpuTesting::testInt8SparsePerformance()
     bool passed = true;
 
     data.push_back("VideoCore VII: no structured sparsity hardware.");
-    data.push_back("Sparse INT8 inference on Pi5 is handled in software by TFLite/ONNX Runtime.");
+    data.push_back("Sparse INT8 inference on Zion platform is handled in software by TFLite/ONNX Runtime.");
 
     const int VEC_LEN = 1024 * 1024;
     std::vector<int8_t> weights(VEC_LEN), acts(VEC_LEN);
@@ -1017,7 +1017,7 @@ TestOutput GpuTesting::testFp16ComputePerformance()
 // ---------------------------------------------------------------------------
 // 17. testFp16TensorCorePerformance
 //     VideoCore VII has no Tensor Cores. Documents FP16 matrix-multiply
-//     paths available on Pi5 (NEON + Vulkan compute).
+//     paths available on Zion platform (NEON + Vulkan compute).
 // ---------------------------------------------------------------------------
 TestOutput GpuTesting::testFp16TensorCorePerformance()
 {
@@ -1025,7 +1025,7 @@ TestOutput GpuTesting::testFp16TensorCorePerformance()
     bool passed = true;
 
     data.push_back("VideoCore VII: NO Tensor Cores (NVIDIA-exclusive hardware).");
-    data.push_back("FP16 matrix operations on Pi5:");
+    data.push_back("FP16 matrix operations on Zion platform:");
     data.push_back("  - CPU: Cortex-A76 NEON FMLA (fused multiply-accumulate, FP16)");
     data.push_back("  - GPU: Vulkan VK_KHR_shader_float16_int8 compute shaders");
     data.push_back("  - External: Hailo-8 PCIe (~26 TOPS INT8/FP16 hybrid)");
@@ -1045,7 +1045,7 @@ TestOutput GpuTesting::testFp16TensorCorePerformance()
                    std::to_string(gflops) + " GFLOPS");
 
     if (passed)
-        data.push_back("PASS: FP16 matrix compute capability documented for Pi5.");
+        data.push_back("PASS: FP16 matrix compute capability documented for Zion platform.");
     {
         TestOutput _out;
         _out.status = passed ? hal::Status::PASS : hal::Status::FAIL;
@@ -1066,7 +1066,7 @@ TestOutput GpuTesting::testMixedPrecisionOperations()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Mixed precision on Pi5: FP16 inputs, FP32 accumulate (NEON/Vulkan)");
+    data.push_back("Mixed precision on Zion platform: FP16 inputs, FP32 accumulate (NEON/Vulkan)");
 
     const int VEC_LEN = 1024 * 1024;
     std::vector<float>  fp32Acc(VEC_LEN, 0.0f);
@@ -1102,16 +1102,16 @@ TestOutput GpuTesting::testMixedPrecisionOperations()
 
 // ---------------------------------------------------------------------------
 // 19. testGpuThermalThrottlingBehavior
-//     Reads BCM2712 die temperature (shared by CPU and VC7 GPU) and checks
-//     for Pi5 firmware throttling flags via vcgencmd.
+//     Reads Zynq PS die temperature (shared by CPU and VC7 GPU) and checks
+//     for Zion platform firmware throttling flags via vcgencmd.
 // ---------------------------------------------------------------------------
 TestOutput GpuTesting::testGpuThermalThrottlingBehavior()
 {
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Pi5 thermal throttle onset: " + std::to_string(static_cast<int>(VC7_TEMP_MAX_C)) + " °C");
-    data.push_back("BCM2712 die temperature is shared by CPU and VC7 GPU.");
+    data.push_back("Zion platform thermal throttle onset: " + std::to_string(static_cast<int>(VC7_TEMP_MAX_C)) + " °C");
+    data.push_back("Zynq PS die temperature is shared by CPU and VC7 GPU.");
 
     long long tempMC = gpuGetTempMilliC();
     if (tempMC > 0) {
@@ -1157,7 +1157,7 @@ TestOutput GpuTesting::testGpuThermalThrottlingBehavior()
 
 // ---------------------------------------------------------------------------
 // 20. testGpuPowerConsumptionAtVariousLoads
-//     Reads Pi5 SoC power via INA219 / firmware. Pi5 board TDP is ~5 W
+//     Reads Zion platform SoC power via INA219 / firmware. Zion platform board TDP is ~5 W
 //     idle, up to ~25 W under full load.
 // ---------------------------------------------------------------------------
 TestOutput GpuTesting::testGpuPowerConsumptionAtVariousLoads()
@@ -1165,10 +1165,10 @@ TestOutput GpuTesting::testGpuPowerConsumptionAtVariousLoads()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Pi5 board power: ~5 W idle, up to ~25 W full CPU+GPU load.");
+    data.push_back("Zion platform board power: ~5 W idle, up to ~25 W full CPU+GPU load.");
     data.push_back("GPU-only contribution: ~2–5 W at max frequency.");
 
-    // Pi5 uses a MXL7704 PMIC; power visible via hwmon or power_supply
+    // Zion platform uses a MXL7704 PMIC; power visible via hwmon or power_supply
     std::string hwmonPower = gpuRunCmd("cat /sys/class/hwmon/hwmon0/power1_input 2>/dev/null");
     if (!hwmonPower.empty()) {
         long long pw = 0;

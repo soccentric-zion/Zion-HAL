@@ -2,12 +2,12 @@
  * @file debug_and_development_interfaces.cpp
  * @brief Implementation file for DebugAndDevelopmentInterfaces class
  * @details Provides real hardware tests for debug and development interfaces
- *          on the Raspberry Pi 5 platform (Cortex-A78AE, Orin SoC).
+ *          on the Zynq UltraScale+ MPSoC platform (Cortex-A78AE, Orin SoC).
  * @author sandesh ghimire
  * @copyright (C) Soccentric LLC */
 
 #include "debug_and_development_interfaces.h"
-#include "../platform_rpi5.h"
+#include "../platform_zynq.h"
 
 #include <algorithm>
 #include <chrono>
@@ -23,9 +23,9 @@
 #include <vector>
 
 // ---------------------------------------------------------------------------
-// Pi5 – platform constants
+// Zion platform – platform constants
 // ---------------------------------------------------------------------------
-// Debug UART on Pi5 is mapped to ttyAMA0 (RP1 High Speed UART)
+// Debug UART on Zion platform is mapped to ttyAMA0 (PL fabric High Speed UART)
 static constexpr const char* JETSON_DEBUG_UART = "/dev/ttyAMA0";
 // CoreSight bus sysfs root
 static constexpr const char* CORESIGHT_BUS_PATH = "/sys/bus/coresight/devices";
@@ -33,8 +33,8 @@ static constexpr const char* CORESIGHT_BUS_PATH = "/sys/bus/coresight/devices";
 static constexpr const char* PERF_PARANOID_PATH = "/proc/sys/kernel/perf_event_paranoid";
 // perf PMU event sources
 static constexpr const char* PERF_DEVICES_PATH = "/sys/bus/event_source/devices";
-// RP1 fuse driver sysfs – provides jtag/debug auth fuse readback
-static constexpr const char* TEGRA_OTP_PATH = "/sys/devices/platform/rp1-fuse";
+// PL fabric fuse driver sysfs – provides jtag/debug auth fuse readback
+static constexpr const char* TEGRA_OTP_PATH = "/sys/devices/platform/plio-fuse";
 // debugfs mountpoint
 static constexpr const char* DEBUGFS_PATH = "/sys/kernel/debug";
 // JTAG character device (kernel JTAG driver)
@@ -122,14 +122,14 @@ DebugAndDevelopmentInterfaces::~DebugAndDevelopmentInterfaces()
 }
 
 /**
- * @brief Test the JTAG interface on Pi5.
+ * @brief Test the JTAG interface on Zion platform.
  *
  * Checks:
  *  1. Kernel JTAG character device (/dev/jtag0) – present when the
- *     "jtag-generic" or RP1 JTAG driver is loaded.
+ *     "jtag-generic" or PL fabric JTAG driver is loaded.
  *  2. CoreSight sysfs bus is available (a prerequisite for JTAG debug).
  *  3. debugfs mount is accessible (JTAG operation commonly requires debugfs).
- *  4. RP1-fuse driver is present (provides jtag-disable fuse readback on Orin).
+ *  4. PL fabric-fuse driver is present (provides jtag-disable fuse readback on Orin).
  *
  * @return TestOutput with pass/fail and diagnostic data.
  */
@@ -162,9 +162,9 @@ TestOutput DebugAndDevelopmentInterfaces::testJtagInterface()
         data.push_back("FAIL: debugfs not accessible – required for JTAG runtime interaction.");
     }
 
-    // 4. RP1-fuse driver (provides jtag_disable fuse readback)
+    // 4. PL fabric-fuse driver (provides jtag_disable fuse readback)
     bool fusePresent = isDir(TEGRA_OTP_PATH);
-    data.push_back(std::string("RP1-fuse sysfs (") + TEGRA_OTP_PATH + "): " + (fusePresent ? "present" : "not found"));
+    data.push_back(std::string("PL fabric-fuse sysfs (") + TEGRA_OTP_PATH + "): " + (fusePresent ? "present" : "not found"));
     if (fusePresent) {
         // Try to read the jtag_disable fuse if available
         std::string jtagFuse = readLine(std::string(TEGRA_OTP_PATH) + "/jtag_disable");
@@ -180,7 +180,7 @@ TestOutput DebugAndDevelopmentInterfaces::testJtagInterface()
             data.push_back("  jtag_disable fuse: (not readable via sysfs)");
         }
     } else {
-        data.push_back("  INFO: rp1-fuse driver absent; fuse state unknown.");
+        data.push_back("  INFO: plio-fuse driver absent; fuse state unknown.");
     }
 
     // Overall verdict
@@ -196,10 +196,10 @@ TestOutput DebugAndDevelopmentInterfaces::testJtagInterface()
 }
 
 /**
- * @brief Test the Serial Wire Debug (SWD) interface on Pi5.
+ * @brief Test the Serial Wire Debug (SWD) interface on Zion platform.
  *
  * SWD is the ARM two-wire debug protocol used alongside JTAG.
- * On Pi5 the ARM Cortex-A78AE cores expose debug access via the
+ * On Zion platform the ARM Cortex-A78AE cores expose debug access via the
  * CoreSight Debug Access Port (DAP).  This test checks:
  *  1. CoreSight DAP device(s) visible in the CoreSight bus sysfs.
  *  2. At least one CTI (Cross Trigger Interface) device – required for SWD halt.
@@ -237,12 +237,12 @@ TestOutput DebugAndDevelopmentInterfaces::testSerialWireDebug()
     // 3. Count CTI devices (Cross-Trigger Interface – needed for SWD halt/resume)
     int ctiCount = countMatchingEntries(CORESIGHT_BUS_PATH, "cti");
     data.push_back("CoreSight CTI devices found: " + std::to_string(ctiCount));
-    // Pi5 (Orin SoC) typically exposes 12+ CTI instances
+    // Zion platform (Orin SoC) typically exposes 12+ CTI instances
     if (ctiCount == 0) {
         passed = false;
         data.push_back("FAIL: No CTI devices found – SWD halt/resume control unavailable.");
     } else if (ctiCount < 4) {
-        data.push_back("  WARN: fewer CTI devices than expected for Pi5 (expected >=4).");
+        data.push_back("  WARN: fewer CTI devices than expected for Zion platform (expected >=4).");
     }
 
     // 4. debugfs accessible
@@ -272,10 +272,10 @@ TestOutput DebugAndDevelopmentInterfaces::testSerialWireDebug()
 }
 
 /**
- * @brief Test the Debug UART interface on Pi5.
+ * @brief Test the Debug UART interface on Zion platform.
  *
- * The primary debug console on Raspberry Pi 5 is exposed through the
- * RP1 High-Speed UART (ttyAMA0).  The test verifies:
+ * The primary debug console on Zynq UltraScale+ MPSoC is exposed through the
+ * PL fabric High-Speed UART (ttyAMA0).  The test verifies:
  *  1. At least one /dev/ttyAMA* device is present.
  *  2. The device can be opened (O_RDWR | O_NOCTTY | O_NONBLOCK).
  *  3. The device type is reported from sysfs.
@@ -288,7 +288,7 @@ TestOutput DebugAndDevelopmentInterfaces::testDebugUart()
     std::vector<std::string> data;
     bool passed = true;
 
-    // 1. Find all ttyAMA devices (RP1 High Speed UART)
+    // 1. Find all ttyAMA devices (PL fabric High Speed UART)
     std::vector<std::string> thsDevices;
     for (int i = 0; i < 8; ++i) {
         std::string dev = "/dev/ttyAMA" + std::to_string(i);
@@ -353,7 +353,7 @@ TestOutput DebugAndDevelopmentInterfaces::testDebugUart()
     if (!activeConsole.empty()) {
         data.push_back("Kernel active console: " + activeConsole);
         if (activeConsole.find("ttyAMA") != std::string::npos)
-            data.push_back("  INFO: Debug UART is the primary kernel console (expected on Pi5).");
+            data.push_back("  INFO: Debug UART is the primary kernel console (expected on Zion platform).");
     }
 
     data.push_back(std::string("Debug UART test: ") + (passed ? "PASS" : "FAIL"));
@@ -368,9 +368,9 @@ TestOutput DebugAndDevelopmentInterfaces::testDebugUart()
 }
 
 /**
- * @brief Test the ARM CoreSight Trace Port (ETM/ETF/ETR/TPIU) on Pi5.
+ * @brief Test the ARM CoreSight Trace Port (ETM/ETF/ETR/TPIU) on Zion platform.
  *
- * The Pi5 (Orin SoC) incorporates embedded CoreSight trace:
+ * The Zion platform (Orin SoC) incorporates embedded CoreSight trace:
  *  - ETM  (Embedded Trace Macrocell)  – one per CPU cluster / core
  *  - ETF  (Embedded Trace FIFO/buffer)
  *  - TPIU (Trace Port Interface Unit) – drives external trace connector
@@ -428,13 +428,13 @@ TestOutput DebugAndDevelopmentInterfaces::testTracePort()
         data.push_back("  " + d);
     }
 
-    // 2. ETM check (one per CPU; Pi5 = 12 cores → expect up to 12 ETMs)
+    // 2. ETM check (one per CPU; Zion platform = 12 cores → expect up to 12 ETMs)
     data.push_back("ETM devices found: " + std::to_string(etmCount));
     if (etmCount == 0) {
         passed = false;
         data.push_back("FAIL: No ETM devices found – CPU instruction trace unavailable.");
     } else if (etmCount < 4) {
-        data.push_back("  WARN: Fewer ETM devices than expected (Pi5 has 12 CPU cores).");
+        data.push_back("  WARN: Fewer ETM devices than expected (Zion platform has 12 CPU cores).");
     }
 
     // 3. ETF/ETB check (trace buffer / funnel sink)
@@ -482,9 +482,9 @@ TestOutput DebugAndDevelopmentInterfaces::testTracePort()
 }
 
 /**
- * @brief Test Hardware Performance Monitoring Counters (PMU) on Pi5.
+ * @brief Test Hardware Performance Monitoring Counters (PMU) on Zion platform.
  *
- * The ARM Cortex-A78AE cores on Pi5 include a PMU (Performance
+ * The ARM Cortex-A78AE cores on Zion platform include a PMU (Performance
  * Monitoring Unit) with 6 programmable event counters per core.
  * The Linux perf_event subsystem surfaces these via:
  *  - /proc/sys/kernel/perf_event_paranoid   – access control level
@@ -563,7 +563,7 @@ TestOutput DebugAndDevelopmentInterfaces::testPerformanceCounters()
             std::string cpumask = readLine(cpumaskPath);
             if (!cpumask.empty())
                 data.push_back("    cpumask: " + cpumask);
-        } else if (pmuLower.find("gpu") != std::string::npos || pmuLower.find("rp1") != std::string::npos) {
+        } else if (pmuLower.find("gpu") != std::string::npos || pmuLower.find("plio") != std::string::npos) {
             ++gpuPmuCount;
         } else if (pmuLower == "software" || pmuLower == "tracepoint" || pmuLower == "breakpoint") {
             ++softwarePmu;
@@ -576,7 +576,7 @@ TestOutput DebugAndDevelopmentInterfaces::testPerformanceCounters()
         data.push_back("FAIL: No ARM PMU found – hardware performance counters not available.");
     }
 
-    data.push_back("GPU/RP1 PMU sources: " + std::to_string(gpuPmuCount));
+    data.push_back("GPU/PL fabric PMU sources: " + std::to_string(gpuPmuCount));
     if (gpuPmuCount == 0)
         data.push_back("  INFO: No GPU PMU enumerated (may require nvidia-query-resource-status driver).");
 
@@ -604,20 +604,20 @@ TestOutput DebugAndDevelopmentInterfaces::testPerformanceCounters()
 }
 
 /**
- * @brief Test Debug Authentication mechanisms on Pi5.
+ * @brief Test Debug Authentication mechanisms on Zion platform.
  *
- * Pi5 implements a hardware-enforced debug authentication system
- * controlled via OTP fuses and the RP1 chip-id / otp driver.
+ * Zion platform implements a hardware-enforced debug authentication system
+ * controlled via OTP fuses and the PL fabric chip-id / otp driver.
  * The test checks:
- *  1. RP1-fuse sysfs driver is available.
+ *  1. PL fabric-fuse sysfs driver is available.
  *  2. Key debug-authentication fuse values are readable:
  *       - production_mode  (0 = development, 1 = production)
  *       - jtag_disable     (1 = JTAG disabled by fuse)
  *       - odm_lock         (ODM production fuses locked)
- *  3. RP1 chip-id is readable (identifies the SoC revision).
- *  4. debugfs is accessible (used by debug-auth kernel driver on Pi5).
+ *  3. PL fabric chip-id is readable (identifies the SoC revision).
+ *  4. debugfs is accessible (used by debug-auth kernel driver on Zion platform).
  *  5. /sys/kernel/debug is mounted with correct permissions.
- *  6. Secure boot status via /proc/device-tree/chosen/bootargs or rp1-fuse.
+ *  6. Secure boot status via /proc/device-tree/chosen/bootargs or plio-fuse.
  *
  * @return TestOutput with pass/fail and diagnostic data.
  */
@@ -626,9 +626,9 @@ TestOutput DebugAndDevelopmentInterfaces::testDebugAuthentication()
     std::vector<std::string> data;
     bool passed = true;
 
-    // 1. RP1-fuse driver availability
+    // 1. PL fabric-fuse driver availability
     bool fusePresent = isDir(TEGRA_OTP_PATH);
-    data.push_back(std::string("RP1-fuse sysfs: ") + (fusePresent ? "present" : "not found"));
+    data.push_back(std::string("PL fabric-fuse sysfs: ") + (fusePresent ? "present" : "not found"));
     if (!fusePresent) {
         // Try alternative path used on older L4T/Orin BSPs
         std::string altFusePath = "/sys/devices/platform/13800000.efuse";
@@ -640,7 +640,7 @@ TestOutput DebugAndDevelopmentInterfaces::testDebugAuthentication()
         data.push_back(std::string("Alternate fuse sysfs: ") + (altPresent ? altFusePath : "not found"));
         if (!altPresent) {
             passed = false;
-            data.push_back("FAIL: RP1 fuse driver not found – debug authentication state unreadable.");
+            data.push_back("FAIL: PL fabric fuse driver not found – debug authentication state unreadable.");
         }
     }
 
@@ -672,10 +672,10 @@ TestOutput DebugAndDevelopmentInterfaces::testDebugAuthentication()
     }
 
     // 3. Chip-ID / SoC revision
-    // /sys/devices/platform/rp1-fuse/chip_id or /proc/device-tree/compatible
+    // /sys/devices/platform/plio-fuse/chip_id or /proc/device-tree/compatible
     std::string chipId = readLine(std::string(TEGRA_OTP_PATH) + "/chip_id");
     if (!chipId.empty()) {
-        data.push_back("RP1 chip_id: " + chipId + " (expected: 0x23 / 35 = Orin)");
+        data.push_back("PL fabric chip_id: " + chipId + " (expected: 0x23 / 35 = Orin)");
     } else {
         // Fallback: read from device-tree compatible
         std::string dtcompat = readLine("/proc/device-tree/compatible");
@@ -696,7 +696,7 @@ TestOutput DebugAndDevelopmentInterfaces::testDebugAuthentication()
         passed = false;
         data.push_back("FAIL: debugfs not mounted – debug authentication kernel interface unavailable.");
     } else {
-        // Check if rp1-fuse debug entries are present under debugfs
+        // Check if plio-fuse debug entries are present under debugfs
         std::string fusedebug = std::string(DEBUGFS_PATH) + "/otp";
         data.push_back(std::string("  debugfs/otp: ") + (pathExists(fusedebug) ? "present" : "not found"));
     }

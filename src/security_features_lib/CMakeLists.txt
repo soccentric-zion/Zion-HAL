@@ -5,4 +5,4 @@ install(TARGETS security_features_lib
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
-install(FILES security_features_lib.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/acadia_hal)
+install(FILES security_features_lib.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/zion_hal)

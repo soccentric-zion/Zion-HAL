@@ -1,8 +1,8 @@
 /**
  * @file ethernet_switch_lib.cpp
- * @brief Ethernet switch tests for Raspberry Pi 5.
- *        Pi5 has NO built-in Ethernet switch (only a single-port GbE via
- *        BCM54213PE PHY on eth0, managed by the RP1 south-bridge MAC).
+ * @brief Ethernet switch tests for Zynq UltraScale+ MPSoC.
+ *        Zion platform has NO built-in Ethernet switch (only a single-port GbE via
+ *        BZynq module4213PE PHY on eth0, managed by the PL fabric south-bridge MAC).
  *        A managed switch (e.g. Microchip KSZ9897 or Marvell 88E6390 on SPI/
  *        MDIO) may be present on a carrier board.  Tests probe for DSA
  *        (Distributed Switch Architecture) devices and Linux switchdev.
@@ -11,7 +11,7 @@
  */
 
 #include "ethernet_switch_lib.h"
-#include "../platform_rpi5.h"
+#include "../platform_zynq.h"
 
 #include <array>
 #include <cstdio>
@@ -95,8 +95,8 @@ EthernetSwitchTesting::~EthernetSwitchTesting()
 TestOutput EthernetSwitchTesting::testSwitchPortFunctionality()
 {
     std::vector<std::string> data;
-    data.push_back("=== Ethernet Switch Port Functionality (Pi5 DSA/switchdev) ===");
-    data.push_back("[INFO] Pi5 has single-port GbE (eth0/BCM54213PE); switch via DSA HAT");
+    data.push_back("=== Ethernet Switch Port Functionality (Zion platform DSA/switchdev) ===");
+    data.push_back("[INFO] Zion platform has single-port GbE (eth0/BZynq module4213PE); switch via DSA HAT");
 
     // DSA driver
     bool dsaPresent = swPathExists("/sys/bus/platform/drivers/dsa");
@@ -120,7 +120,7 @@ TestOutput EthernetSwitchTesting::testSwitchPortFunctionality()
         data.push_back("[INFO] No DSA switch port interfaces found");
 
     // Built-in eth0 uplink
-    bool eth0Up = ifaceExists(RPI5_ETH_IFACE);
+    bool eth0Up = ifaceExists(ZYNQ_ETH_IFACE);
     data.push_back(eth0Up ? "[PASS] eth0 GbE uplink present"
                           : "[WARN] eth0 not found");
 
@@ -140,7 +140,7 @@ TestOutput EthernetSwitchTesting::testSwitchPortFunctionality()
 TestOutput EthernetSwitchTesting::testSwitchForwardingTable()
 {
     std::vector<std::string> data;
-    data.push_back("=== Ethernet Switch FDB (Pi5) ===");
+    data.push_back("=== Ethernet Switch FDB (Zion platform) ===");
 
     // Check bridge FDB entries
     std::string fdb = swRunCmd("bridge fdb show 2>/dev/null | head -10");
@@ -179,7 +179,7 @@ TestOutput EthernetSwitchTesting::testSwitchForwardingTable()
 TestOutput EthernetSwitchTesting::testSwitchVlanSupport()
 {
     std::vector<std::string> data;
-    data.push_back("=== VLAN Support (Pi5 eth0 / DSA) ===");
+    data.push_back("=== VLAN Support (Zion platform eth0 / DSA) ===");
 
     // Check 8021q module
     bool mod8021q = swPathExists("/sys/module/8021q") ||
@@ -213,7 +213,7 @@ TestOutput EthernetSwitchTesting::testSwitchVlanSupport()
 TestOutput EthernetSwitchTesting::testSwitchQos()
 {
     std::vector<std::string> data;
-    data.push_back("=== Switch QoS / Traffic Priority (Pi5 eth0) ===");
+    data.push_back("=== Switch QoS / Traffic Priority (Zion platform eth0) ===");
 
     // Show current qdisc on eth0
     std::string qdisc = swRunCmd("tc qdisc show dev eth0 2>/dev/null");
@@ -247,8 +247,8 @@ TestOutput EthernetSwitchTesting::testSwitchQos()
 TestOutput EthernetSwitchTesting::testSwitchPortMirroring()
 {
     std::vector<std::string> data;
-    data.push_back("=== Switch Port Mirroring / SPAN (Pi5) ===");
-    data.push_back("[INFO] Pi5 has no hardware SPAN; tc+mirred provides software mirroring");
+    data.push_back("=== Switch Port Mirroring / SPAN (Zion platform) ===");
+    data.push_back("[INFO] Zion platform has no hardware SPAN; tc+mirred provides software mirroring");
 
     // Check tc mirred module
     bool mirredMod = swPathExists("/sys/module/act_mirred") ||
@@ -277,7 +277,7 @@ TestOutput EthernetSwitchTesting::testSwitchPortMirroring()
 TestOutput EthernetSwitchTesting::testSwitchStatistics()
 {
     std::vector<std::string> data;
-    data.push_back("=== Switch Port Statistics (Pi5 eth0) ===");
+    data.push_back("=== Switch Port Statistics (Zion platform eth0) ===");
 
     // ethtool statistics
     std::string ethtoolStats = swRunCmd("ethtool -S eth0 2>/dev/null | head -10");
@@ -313,13 +313,13 @@ TestOutput EthernetSwitchTesting::testSwitchStatistics()
 }
 
 /**
- * @brief Redundant switch operation check (Pi5 single-NIC proxy).
+ * @brief Redundant switch operation check (Zion platform single-NIC proxy).
  */
 TestOutput EthernetSwitchTesting::testRedundantSwitchOperation()
 {
     std::vector<std::string> data;
-    data.push_back("=== Redundant Switch Operation (Pi5) ===");
-    data.push_back("[INFO] Pi5 has single GbE (eth0); redundancy via bonding or USB-NIC");
+    data.push_back("=== Redundant Switch Operation (Zion platform) ===");
+    data.push_back("[INFO] Zion platform has single GbE (eth0); redundancy via bonding or USB-NIC");
 
     // Check for bonding
     bool bondPresent = swPathExists("/sys/class/net/bond0") ||
@@ -349,8 +349,8 @@ TestOutput EthernetSwitchTesting::testRedundantSwitchOperation()
 TestOutput EthernetSwitchTesting::testSwitchFailover()
 {
     std::vector<std::string> data;
-    data.push_back("=== Switch Failover (Pi5) ===");
-    data.push_back("[INFO] Pi5 has single GbE; failover requires bonding + secondary interface");
+    data.push_back("=== Switch Failover (Zion platform) ===");
+    data.push_back("[INFO] Zion platform has single GbE; failover requires bonding + secondary interface");
 
     // Check current eth0 state
     std::string operstate = swReadFile("/sys/class/net/eth0/operstate");

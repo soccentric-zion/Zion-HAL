@@ -1,13 +1,13 @@
 /**
  * @file display_interfaces.cpp
- * @brief Implementation file for DisplayInterfaces class — Raspberry Pi 5
- *        Pi5 has 2x micro-HDMI ports (HDMI0/HDMI1), no DisplayPort.
+ * @brief Implementation file for DisplayInterfaces class — Zynq UltraScale+ MPSoC
+ *        Zion platform has 2x micro-HDMI ports (HDMI0/HDMI1), no DisplayPort.
  *        Supports 4K@60Hz on HDMI0, 4K@60Hz on HDMI1 simultaneously.
  * @author sandesh ghimire
  * @copyright (C) Soccentric LLC */
 
 #include "display_interfaces.h"
-#include "../platform_rpi5.h"
+#include "../platform_zynq.h"
 
 #include <cstdio>
 #include <dirent.h>
@@ -54,17 +54,17 @@ DisplayInterfaces::~DisplayInterfaces()
 
 // ---------------------------------------------------------------------------
 // 1. testDisplayPortOutput
-//    Pi5 does NOT have native DisplayPort — only micro-HDMI.
+//    Zion platform does NOT have native DisplayPort — only micro-HDMI.
 // ---------------------------------------------------------------------------
 TestOutput DisplayInterfaces::testDisplayPortOutput()
 {
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("DisplayPort output check (Pi5)");
-    data.push_back("NOTE: Pi5 does NOT have native DisplayPort — 2x micro-HDMI only.");
-    data.push_back("DisplayPort-over-USB-C is NOT available on Pi5 (no USB-C DP Alt Mode).");
-    data.push_back("USB-C port on Pi5 is power-input only (USB-C PD).");
+    data.push_back("DisplayPort output check (Zion platform)");
+    data.push_back("NOTE: Zion platform does NOT have native DisplayPort — 2x micro-HDMI only.");
+    data.push_back("DisplayPort-over-USB-C is NOT available on Zion platform (no USB-C DP Alt Mode).");
+    data.push_back("USB-C port on Zion platform is power-input only (USB-C PD).");
 
     // Check for any DP adapter via USB
     std::string dpUsb = dispRunCmd("lsusb 2>/dev/null | grep -i 'displayport\\|dp adapter'");
@@ -74,7 +74,7 @@ TestOutput DisplayInterfaces::testDisplayPortOutput()
         data.push_back("No USB DisplayPort adapter detected.");
     }
 
-    data.push_back("PASS: DisplayPort check complete (native DP not supported on Pi5).");
+    data.push_back("PASS: DisplayPort check complete (native DP not supported on Zion platform).");
     {
         TestOutput _out;
         _out.status = passed ? hal::Status::PASS : hal::Status::FAIL;
@@ -94,7 +94,7 @@ TestOutput DisplayInterfaces::testHdmiOutput()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Pi5 micro-HDMI output check (HDMI0 and HDMI1)");
+    data.push_back("Zion platform micro-HDMI output check (HDMI0 and HDMI1)");
 
     // Check DRM connectors
     std::string drm = dispRunCmd("ls /sys/class/drm/ 2>/dev/null");
@@ -138,7 +138,7 @@ TestOutput DisplayInterfaces::testMultiDisplaySupport()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Multi-display support check (Pi5: 2x micro-HDMI, up to dual 4K@60Hz)");
+    data.push_back("Multi-display support check (Zion platform: 2x micro-HDMI, up to dual 4K@60Hz)");
 
     // Check DRM card
     std::string crtcs = dispRunCmd("cat /sys/class/drm/card*/crtc_count 2>/dev/null");
@@ -152,7 +152,7 @@ TestOutput DisplayInterfaces::testMultiDisplaySupport()
     std::string connected = dispRunCmd("for f in /sys/class/drm/*/status; do echo \"$f: $(cat $f)\"; done 2>/dev/null");
     if (!connected.empty()) data.push_back("Display status: " + connected.substr(0, 400));
 
-    data.push_back("Pi5 supports simultaneous dual 4K@60Hz on HDMI0 + HDMI1.");
+    data.push_back("Zion platform supports simultaneous dual 4K@60Hz on HDMI0 + HDMI1.");
     data.push_back("PASS: Multi-display check complete.");
     {
         TestOutput _out;
@@ -172,7 +172,7 @@ TestOutput DisplayInterfaces::testVariousResolutions()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Supported resolutions check (Pi5 HDMI via VideoCore VII)");
+    data.push_back("Supported resolutions check (Zion platform HDMI via VideoCore VII)");
 
     // List supported modes via DRM/KMS
     std::string modes = dispRunCmd("cat /sys/class/drm/card*-HDMI*/modes 2>/dev/null | head -20");
@@ -181,7 +181,7 @@ TestOutput DisplayInterfaces::testVariousResolutions()
     } else {
         // vcgencmd approach
         std::string vcModes = dispRunCmd("vcgencmd get_display_power 2>/dev/null");
-        data.push_back("Pi5 supports: 640x480 → 3840x2160 (4K) at 60Hz");
+        data.push_back("Zion platform supports: 640x480 → 3840x2160 (4K) at 60Hz");
         data.push_back("  - 1920x1080@60Hz (Full HD)");
         data.push_back("  - 2560x1440@60Hz (QHD)");
         data.push_back("  - 3840x2160@60Hz (4K UHD) via HDMI 2.0");
@@ -206,8 +206,8 @@ TestOutput DisplayInterfaces::testVariousRefreshRates()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Refresh rate support check (Pi5)");
-    data.push_back("Pi5 HDMI 2.0: 24/25/30/50/60Hz at 4K, up to 120Hz at 1080p");
+    data.push_back("Refresh rate support check (Zion platform)");
+    data.push_back("Zion platform HDMI 2.0: 24/25/30/50/60Hz at 4K, up to 120Hz at 1080p");
 
     // Check connected display refresh via DRM
     std::string refreshInfo = dispRunCmd("for f in /sys/class/drm/card*-HDMI*/modes; do "
@@ -237,8 +237,8 @@ TestOutput DisplayInterfaces::testHdrSupport()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("HDR support check (Pi5)");
-    data.push_back("Pi5 HDMI 2.0 supports HDR10 (static metadata via InfoFrame).");
+    data.push_back("HDR support check (Zion platform)");
+    data.push_back("Zion platform HDMI 2.0 supports HDR10 (static metadata via InfoFrame).");
 
     // Check for HDR metadata support
     std::string hdrProps = dispRunCmd("for f in /sys/class/drm/card*-HDMI*; do "
@@ -269,7 +269,7 @@ TestOutput DisplayInterfaces::testDisplayHotPlugDetection()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Display hot-plug detection (HPD) check — Pi5 micro-HDMI");
+    data.push_back("Display hot-plug detection (HPD) check — Zion platform micro-HDMI");
 
     // Check HPD via DRM connector status
     std::string hpdStatus = dispRunCmd("for f in /sys/class/drm/card*-HDMI*/status; do "
@@ -277,11 +277,11 @@ TestOutput DisplayInterfaces::testDisplayHotPlugDetection()
     if (!hpdStatus.empty()) data.push_back("HPD status: " + hpdStatus);
     else data.push_back("HPD: check /sys/class/drm/card*-HDMI*/status when display connected.");
 
-    // Check HPD GPIO (RP1 GPIO on Pi5)
+    // Check HPD GPIO (PL fabric GPIO on Zion platform)
     std::string hpdDmesg = dispRunCmd("dmesg 2>/dev/null | grep -i 'hdmi\\|hotplug\\|hpd' | tail -5");
     if (!hpdDmesg.empty()) data.push_back("dmesg HPD events: " + hpdDmesg.substr(0, 300));
 
-    data.push_back("Pi5 HPD: Hardware interrupt via RP1 GPIO attached to micro-HDMI connector.");
+    data.push_back("Zion platform HPD: Hardware interrupt via PL fabric GPIO attached to micro-HDMI connector.");
     data.push_back("PASS: Hot-plug detection check complete.");
     {
         TestOutput _out;

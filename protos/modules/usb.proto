@@ -1,6 +1,6 @@
 // Source: src/usb_lib/usb_lib.h  (class UsbTesting : public TestBase)
 //
-// Raspberry Pi 5 target: 2× USB 3.0 + 2× USB 2.0 via RP1 xHCI controller.
+// Zynq UltraScale+ MPSoC target: 2× USB 3.0 + 2× USB 2.0 via PL fabric xHCI controller.
 //
 // Field-numbering rules: numbers start at 1, never renumber, mark removed fields reserved.
 

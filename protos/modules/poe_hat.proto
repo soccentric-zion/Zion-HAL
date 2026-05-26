@@ -1,6 +1,6 @@
 // Source: src/poe_hat_lib/poe_hat_lib.h  (class PoeHatTesting : public TestBase)
 //
-// Raspberry Pi PoE+ HAT: IEEE 802.3at PoE+ (25.5 W), 5V/5A DC-DC, fan PWM via ATtiny I2C.
+// Zynq PoE+ HAT: IEEE 802.3at PoE+ (25.5 W), 5V/5A DC-DC, fan PWM via ATtiny I2C.
 //
 // Field-numbering rules: numbers start at 1, never renumber, mark removed fields reserved.
 

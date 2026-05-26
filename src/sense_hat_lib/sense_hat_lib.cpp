@@ -1,8 +1,8 @@
 /**
  * @file sense_hat_lib.cpp
- * @brief Sense HAT tests for Raspberry Pi 5.
+ * @brief Sense HAT tests for Zynq UltraScale+ MPSoC.
  *
- * Hardware: Raspberry Pi Sense HAT (V1/V2) on 40-pin GPIO header.
+ * Hardware: Zynq Sense HAT (V1/V2) on 40-pin GPIO header.
  *   - HTS221  humidity/temp sensor  — I2C-1 @ 0x5C, IIO driver hts221
  *   - LPS25H  pressure sensor       — I2C-1 @ 0x5F, IIO driver lps25h
  *   - LSM9DS1 9-DOF IMU             — I2C-1 accel 0x1C / gyro 0x6A / mag 0x1E
@@ -16,7 +16,7 @@
  */
 
 #include "sense_hat_lib.h"
-#include "../platform_rpi5.h"
+#include "../platform_zynq.h"
 
 #include <array>
 #include <cstdio>
@@ -88,7 +88,7 @@ SenseHatTesting::~SenseHatTesting() {}
 TestOutput SenseHatTesting::testSenseHatDetection()
 {
     std::vector<std::string> data;
-    data.push_back("=== Sense HAT Detection (Pi5 I2C-1) ===");
+    data.push_back("=== Sense HAT Detection (Zion platform I2C-1) ===");
 
     bool i2c1 = shPathExists("/dev/i2c-1");
     data.push_back(i2c1 ? "[PASS] /dev/i2c-1 present"
@@ -412,7 +412,7 @@ TestOutput SenseHatTesting::testJoystick()
 
     // The Sense HAT joystick registers as EV_KEY input via ATtiny88
     std::string inputs = shRunCmd(
-        "grep -rl 'Raspberry Pi Sense HAT Joystick' /sys/class/input/*/device/name 2>/dev/null | head -2");
+        "grep -rl 'Zynq Sense HAT Joystick' /sys/class/input/*/device/name 2>/dev/null | head -2");
     if (inputs.empty())
     {
         // Fallback: list all event devices

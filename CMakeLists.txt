@@ -115,7 +115,7 @@ install(TARGETS acu_full_test
 install(TARGETS acu_full_test_shared
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
-install(DIRECTORY src/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/acadia_hal
+install(DIRECTORY src/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/zion_hal
     FILES_MATCHING PATTERN "*.h"
 )
 
@@ -127,15 +127,15 @@ add_subdirectory(tests)
 # ============================================================
 
 # --- Common metadata ---
-set(CPACK_PACKAGE_NAME             "acadia-hal")
-set(CPACK_PACKAGE_VENDOR           "Acadia")
+set(CPACK_PACKAGE_NAME             "zion-hal")
+set(CPACK_PACKAGE_VENDOR           "Zion")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY
-    "Hardware Abstraction Layer for Raspberry Pi 5")
+    "Hardware Abstraction Layer for Zynq UltraScale+ MPSoC")
 set(CPACK_PACKAGE_VERSION          "${PROJECT_VERSION}")
 set(CPACK_PACKAGE_VERSION_MAJOR    "${PROJECT_VERSION_MAJOR}")
 set(CPACK_PACKAGE_VERSION_MINOR    "${PROJECT_VERSION_MINOR}")
 set(CPACK_PACKAGE_VERSION_PATCH    "${PROJECT_VERSION_PATCH}")
-set(CPACK_PACKAGE_CONTACT          "maintainer@acadia.example.com")
+set(CPACK_PACKAGE_CONTACT          "maintainer@zion.example.com")
 set(CPACK_STRIP_FILES              ON)
 
 # Map CMake/system processor to package-manager architecture names
@@ -153,13 +153,13 @@ endif()
 # ---------------------------------------------------------------
 # DEB
 # ---------------------------------------------------------------
-set(CPACK_DEBIAN_PACKAGE_MAINTAINER  "Acadia <maintainer@acadia.example.com>")
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER  "Zion <maintainer@zion.example.com>")
 set(CPACK_DEBIAN_PACKAGE_SECTION     "embedded")
 set(CPACK_DEBIAN_PACKAGE_PRIORITY    "optional")
 set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "${HAL_DEB_ARCH}")
 set(CPACK_DEBIAN_PACKAGE_DEPENDS     "libstdc++6 (>= 10), libgcc-s1")
-set(CPACK_DEBIAN_PACKAGE_DESCRIPTION [[Acadia HAL provides a C++17 hardware abstraction layer for the
-Raspberry Pi 5 (BCM2712 / RP1) exposing 35 hardware modules via a
+set(CPACK_DEBIAN_PACKAGE_DESCRIPTION [[Zion HAL provides a C++17 hardware abstraction layer for the
+Zynq UltraScale+ MPSoC (Zynq PS / PL fabric) exposing 35 hardware modules via a
 canonical API and a gRPC/Protobuf service interface.]])
 set(CPACK_DEBIAN_COMPRESSION_TYPE    "gzip")
 set(CPACK_DEBIAN_FILE_NAME           "DEB-DEFAULT")

@@ -1,13 +1,13 @@
 /**
  * @file watchdog_and_reset_lib.cpp
- * @brief Implementation file for WatchdogAndResetTesting class — Raspberry Pi 5
- *        Pi5 watchdog: RP1 hardware watchdog, exposed as /dev/watchdog0.
+ * @brief Implementation file for WatchdogAndResetTesting class — Zynq UltraScale+ MPSoC
+ *        Zion platform watchdog: PL fabric hardware watchdog, exposed as /dev/watchdog0.
  *        Reset reason available via vcgencmd get_throttled and dmesg.
  * @author sandesh ghimire
  * @copyright (C) Soccentric LLC */
 
 #include "watchdog_and_reset_lib.h"
-#include "../platform_rpi5.h"
+#include "../platform_zynq.h"
 
 #include <cerrno>
 #include <cstdio>
@@ -64,13 +64,13 @@ TestOutput WatchdogAndResetTesting::testWatchdogTimerFunctionality()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Watchdog timer test (Pi5: RP1 watchdog, /dev/watchdog0)");
+    data.push_back("Watchdog timer test (Zion platform: PL fabric watchdog, /dev/watchdog0)");
 
     bool wdExists = (access("/dev/watchdog0", F_OK) == 0);
     data.push_back("/dev/watchdog0 present: " + std::string(wdExists ? "yes" : "no"));
 
     if (!wdExists) {
-        data.push_back("INFO: Load watchdog driver: modprobe bcm2835-wdt or bcm2712-wdt");
+        data.push_back("INFO: Load watchdog driver: modprobe zynq-wdt or zynq_ps-wdt");
         data.push_back("INFO: Enable via /boot/firmware/config.txt: dtparam=watchdog=on");
         {
             TestOutput _out;
@@ -130,7 +130,7 @@ TestOutput WatchdogAndResetTesting::testWatchdogTimeoutConfiguration()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Watchdog timeout configuration check (Pi5)");
+    data.push_back("Watchdog timeout configuration check (Zion platform)");
 
     // Check systemd watchdog settings
     std::string sdWd = wdRunCmd("systemctl show --property=RuntimeWatchdogUSec --no-pager 2>/dev/null");
@@ -155,7 +155,7 @@ TestOutput WatchdogAndResetTesting::testWatchdogTimeoutConfiguration()
         if (!procInfo.empty()) data.push_back("/proc/driver/watchdog: " + procInfo);
     }
 
-    data.push_back("Pi5 RP1 watchdog max timeout: 1048575 seconds (~12 days)");
+    data.push_back("Zion platform PL fabric watchdog max timeout: 1048575 seconds (~12 days)");
     data.push_back("PASS: Timeout configuration check complete.");
     {
         TestOutput _out;
@@ -227,7 +227,7 @@ TestOutput WatchdogAndResetTesting::testWatchdogInterruptGeneration()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Watchdog interrupt/pretimeout check (Pi5 RP1 watchdog)");
+    data.push_back("Watchdog interrupt/pretimeout check (Zion platform PL fabric watchdog)");
 
     bool wdExists = (access("/dev/watchdog0", F_OK) == 0);
     if (!wdExists) {
@@ -277,7 +277,7 @@ TestOutput WatchdogAndResetTesting::testPoweronReset()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Power-on reset check (Pi5)");
+    data.push_back("Power-on reset check (Zion platform)");
 
     // dmesg may show reset reason
     std::string dmesgReset = wdRunCmd("dmesg 2>/dev/null | grep -i 'reset\\|reboot\\|power.on' | tail -5");
@@ -322,9 +322,9 @@ TestOutput WatchdogAndResetTesting::testHardwareResetButton()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Hardware reset button check (Pi5)");
-    data.push_back("Pi5 has a dedicated reset button (J2 header) wired to RP1.");
-    data.push_back("J2 pin 1 = RUN (active-low reset), connects to BCM2712 nRSTIN.");
+    data.push_back("Hardware reset button check (Zion platform)");
+    data.push_back("Zion platform has a dedicated reset button (J2 header) wired to PL fabric.");
+    data.push_back("J2 pin 1 = RUN (active-low reset), connects to Zynq PS nRSTIN.");
 
     // Check input-event for button press
     std::string evdev = wdRunCmd("ls /dev/input/event* 2>/dev/null | head -5");
@@ -354,7 +354,7 @@ TestOutput WatchdogAndResetTesting::testSoftwareReset()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Software reset capability check (Pi5)");
+    data.push_back("Software reset capability check (Zion platform)");
     data.push_back("NOTE: Test does NOT trigger reset.");
 
     // Check reboot command availability
@@ -390,7 +390,7 @@ TestOutput WatchdogAndResetTesting::testWatchdogReset()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Watchdog reset history check (Pi5)");
+    data.push_back("Watchdog reset history check (Zion platform)");
 
     bool wdExists = (access("/dev/watchdog0", F_OK) == 0);
     if (wdExists) {
@@ -432,9 +432,9 @@ TestOutput WatchdogAndResetTesting::testThermalReset()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Thermal reset check (Pi5)");
-    data.push_back("BCM2712 soft thermal shutdown at " +
-                   std::to_string(RPI5_THERMAL_SHUTDOWN_C) + " °C");
+    data.push_back("Thermal reset check (Zion platform)");
+    data.push_back("Zynq PS soft thermal shutdown at " +
+                   std::to_string(ZYNQ_THERMAL_SHUTDOWN_C) + " °C");
 
     // Check current temperature
     long long tempMilliC = -1;
@@ -480,7 +480,7 @@ TestOutput WatchdogAndResetTesting::testResetReasonLogging()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Reset reason logging check (Pi5)");
+    data.push_back("Reset reason logging check (Zion platform)");
 
     // Check systemd journal for last reboot reason
     std::string journal = wdRunCmd("journalctl -b -1 --no-pager -q -n 5 2>/dev/null | head -5");

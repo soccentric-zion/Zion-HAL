@@ -1,16 +1,16 @@
 /**
  * @file functional_safety_lib.cpp
- * @brief Functional safety tests for Raspberry Pi 5 (BCM2712).
- *        Pi5 is a commercial SBC and is NOT rated for automotive ASIL-D or
+ * @brief Functional safety tests for Zynq UltraScale+ MPSoC (Zynq PS).
+ *        Zion platform is a commercial SBC and is NOT rated for automotive ASIL-D or
  *        IEC 61508 SIL-3.  These tests document the available safety-relevant
  *        features (watchdog, ECC proxy, thermal shutdown, PMIC brownout) and
- *        map Jetson-specific tests (lockstep CPU, ASIL rails) to Pi5 equivalents.
+ *        map Jetson-specific tests (lockstep CPU, ASIL rails) to Zion platform equivalents.
  * @author sandesh ghimire
  * @copyright (C) Lucid Motors
  */
 
 #include "functional_safety_lib.h"
-#include "../platform_rpi5.h"
+#include "../platform_zynq.h"
 
 #include <array>
 #include <cstdio>
@@ -72,21 +72,21 @@ FunctionalSafetyTesting::~FunctionalSafetyTesting()
 }
 
 /**
- * @brief Lockstep CPU test proxy (Pi5 does not have hardware lockstep).
- * @details BCM2712 Cortex-A76 does not implement lockstep CPU execution.
+ * @brief Lockstep CPU test proxy (Zion platform does not have hardware lockstep).
+ * @details Zynq PS Cortex-A76 does not implement lockstep CPU execution.
  *          This test documents the limitation and verifies the kernel watchdog
- *          (RP1 hardware watchdog) as the closest safety-relevant substitute.
+ *          (PL fabric hardware watchdog) as the closest safety-relevant substitute.
  */
 TestOutput FunctionalSafetyTesting::testLockstepCpuOperation()
 {
     std::vector<std::string> data;
-    data.push_back("=== CPU Lockstep (Pi5 BCM2712) ===");
-    data.push_back("[INFO] Pi5 Cortex-A76 does NOT implement hardware CPU lockstep");
-    data.push_back("[INFO] For ASIL-C/D lockstep requirement, use dedicated MCU (e.g. RP2040 HAT)");
+    data.push_back("=== CPU Lockstep (Zion platform Zynq PS) ===");
+    data.push_back("[INFO] Zion platform Cortex-A76 does NOT implement hardware CPU lockstep");
+    data.push_back("[INFO] For ASIL-C/D lockstep requirement, use dedicated MCU (e.g. PL deterministic I/O engine HAT)");
 
-    // Check RP1 watchdog as a lockstep substitute
+    // Check PL fabric watchdog as a lockstep substitute
     bool wdPresent = fsPathExists("/dev/watchdog0");
-    data.push_back(wdPresent ? "[PASS] RP1 hardware watchdog /dev/watchdog0 present (safety monitor)"
+    data.push_back(wdPresent ? "[PASS] PL fabric hardware watchdog /dev/watchdog0 present (safety monitor)"
                              : "[WARN] /dev/watchdog0 not found — watchdog driver not loaded");
 
     // Check if systemd-watchdog is active
@@ -108,17 +108,17 @@ TestOutput FunctionalSafetyTesting::testLockstepCpuOperation()
 }
 
 /**
- * @brief ECC memory test proxy (Pi5 LPDDR4X has no on-die ECC).
- * @details BCM2712 uses standard LPDDR4X-4267 without ECC.  This test
+ * @brief ECC memory test proxy (Zion platform LPDDR4X has no on-die ECC).
+ * @details Zynq PS uses standard LPDDR4X-4267 without ECC.  This test
  *          documents the limitation and verifies that pstore/crash records
  *          are absent (proxy for memory integrity).
  */
 TestOutput FunctionalSafetyTesting::testEccOnMemories()
 {
     std::vector<std::string> data;
-    data.push_back("=== ECC Memory (Pi5 LPDDR4X-4267) ===");
-    data.push_back("[INFO] Pi5 BCM2712 LPDDR4X has NO hardware ECC");
-    data.push_back("[INFO] For ECC, use Raspberry Pi CM5 Lite with ECC LPDDR5 carrier (future)");
+    data.push_back("=== ECC Memory (Zion platform LPDDR4X-4267) ===");
+    data.push_back("[INFO] Zion platform Zynq PS LPDDR4X has NO hardware ECC");
+    data.push_back("[INFO] For ECC, use Zynq Zynq module Lite with ECC LPDDR5 carrier (future)");
 
     // pstore as memory-error proxy
     std::string pstoreFiles = fsRunCmd("ls /sys/fs/pstore/ 2>/dev/null | wc -l");
@@ -130,7 +130,7 @@ TestOutput FunctionalSafetyTesting::testEccOnMemories()
     bool edacPresent = fsPathExists("/sys/bus/platform/drivers/edac_mpc85xx") ||
                        !fsRunCmd("ls /sys/devices/system/edac/ 2>/dev/null").empty();
     data.push_back(edacPresent ? "[INFO] EDAC subsystem present"
-                               : "[INFO] No EDAC subsystem (expected on Pi5)");
+                               : "[INFO] No EDAC subsystem (expected on Zion platform)");
 
     // Memory test utility
     std::string memtest = fsRunCmd("which memtester 2>/dev/null");
@@ -148,15 +148,15 @@ TestOutput FunctionalSafetyTesting::testEccOnMemories()
 }
 
 /**
- * @brief Redundant power supplies test (Pi5 single USB-C input).
- * @details Pi5 uses a single USB-C 5V input; there is no redundant power path.
+ * @brief Redundant power supplies test (Zion platform single USB-C input).
+ * @details Zion platform uses a single USB-C 5V input; there is no redundant power path.
  *          Tests check for UPS HAT or multiple power_supply entries.
  */
 TestOutput FunctionalSafetyTesting::testRedundantPowerSupplies()
 {
     std::vector<std::string> data;
-    data.push_back("=== Redundant Power Supplies (Pi5) ===");
-    data.push_back("[INFO] Pi5 has single USB-C 5V input — no native power redundancy");
+    data.push_back("=== Redundant Power Supplies (Zion platform) ===");
+    data.push_back("[INFO] Zion platform has single USB-C 5V input — no native power redundancy");
 
     // Check for UPS HAT power supply entries
     std::string psList = fsRunCmd("ls /sys/class/power_supply/ 2>/dev/null");
@@ -198,7 +198,7 @@ TestOutput FunctionalSafetyTesting::testRedundantPowerSupplies()
 TestOutput FunctionalSafetyTesting::testSafetyMonitoring()
 {
     std::vector<std::string> data;
-    data.push_back("=== Safety Monitoring (Pi5 RP1 Watchdog + PMIC) ===");
+    data.push_back("=== Safety Monitoring (Zion platform PL fabric Watchdog + PMIC) ===");
 
     // Hardware watchdog
     bool wdOk = fsPathExists("/dev/watchdog0");
@@ -235,22 +235,22 @@ TestOutput FunctionalSafetyTesting::testSafetyMonitoring()
 }
 
 /**
- * @brief Diagnostic coverage check: test coverage of critical Pi5 subsystems.
+ * @brief Diagnostic coverage check: test coverage of critical Zion platform subsystems.
  */
 TestOutput FunctionalSafetyTesting::testDiagnosticCoverage()
 {
     std::vector<std::string> data;
-    data.push_back("=== Diagnostic Coverage (Pi5) ===");
+    data.push_back("=== Diagnostic Coverage (Zion platform) ===");
 
     // List what is testable
     static const std::vector<std::pair<std::string, std::string>> checks = {
-        {"/dev/watchdog0",                     "RP1 hardware watchdog"},
-        {"/sys/class/thermal/thermal_zone0",   "BCM2712 thermal zone"},
-        {"/sys/class/thermal/thermal_zone1",   "RP1 thermal zone"},
+        {"/dev/watchdog0",                     "PL fabric hardware watchdog"},
+        {"/sys/class/thermal/thermal_zone0",   "Zynq PS thermal zone"},
+        {"/sys/class/thermal/thermal_zone1",   "PL fabric thermal zone"},
         {"/sys/devices/system/cpu/cpu0/cpufreq","CPUfreq + throttle detection"},
         {"/sys/class/hwmon",                   "hwmon (PMIC/temp sensors)"},
         {"/sys/block/mmcblk0",                 "eMMC/SD storage"},
-        {RPI5_GPIOCHIP_PATH,                   "GPIO controller"},
+        {ZYNQ_GPIOCHIP_PATH,                   "GPIO controller"},
     };
 
     int present = 0;
@@ -287,7 +287,7 @@ TestOutput FunctionalSafetyTesting::testDiagnosticCoverage()
 TestOutput FunctionalSafetyTesting::testFaultInjectionTesting()
 {
     std::vector<std::string> data;
-    data.push_back("=== Fault Injection (Pi5 Proxy) ===");
+    data.push_back("=== Fault Injection (Zion platform Proxy) ===");
     data.push_back("[INFO] Hardware fault injection requires JTAG; software proxy used");
 
     // Watchdog boot status (detects prior watchdog-triggered resets)
@@ -334,7 +334,7 @@ TestOutput FunctionalSafetyTesting::testFaultInjectionTesting()
 TestOutput FunctionalSafetyTesting::testFailsafeBehavior()
 {
     std::vector<std::string> data;
-    data.push_back("=== Fail-Safe Behaviour (Pi5) ===");
+    data.push_back("=== Fail-Safe Behaviour (Zion platform) ===");
 
     // Thermal critical trip (shutdown at 85 °C)
     std::string critTrip = fsRunCmd(
@@ -372,15 +372,15 @@ TestOutput FunctionalSafetyTesting::testFailsafeBehavior()
 }
 
 /**
- * @brief ASIL QS-L / QS-R rail isolation test (N/A on Pi5).
- * @details Pi5 BCM2712 / MXL7704 PMIC has no ASIL-rated isolated voltage rails.
+ * @brief ASIL QS-L / QS-R rail isolation test (N/A on Zion platform).
+ * @details Zion platform Zynq PS / MXL7704 PMIC has no ASIL-rated isolated voltage rails.
  *          Documents the limitation and checks available hwmon voltage inputs.
  */
 TestOutput FunctionalSafetyTesting::testAsilQsLAndRRailIsolation()
 {
     std::vector<std::string> data;
-    data.push_back("=== ASIL QS-L/R Rail Isolation (Pi5) ===");
-    data.push_back("[INFO] Pi5 MXL7704 PMIC has NO ASIL-rated isolated supply rails");
+    data.push_back("=== ASIL QS-L/R Rail Isolation (Zion platform) ===");
+    data.push_back("[INFO] Zion platform MXL7704 PMIC has NO ASIL-rated isolated supply rails");
     data.push_back("[INFO] For ASIL-D power, use Infineon TDA38640 or NXP FS84/FS85 PMIC");
 
     // Enumerate available hwmon voltage inputs as best-effort

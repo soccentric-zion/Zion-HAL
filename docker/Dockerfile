@@ -1,4 +1,4 @@
-# Raspberry Pi 5 (BCM2712 / RP1) build container
+# Zynq UltraScale+ MPSoC (Zynq PS / PL fabric) build container
 # Uses Ubuntu 22.04 LTS for ARM64 — runs natively on Pi5 or via QEMU on x86_64
 FROM ubuntu:22.04
 

@@ -9,9 +9,9 @@
 
 /**
  * @class PoeHatTesting
- * @brief Tests for the Raspberry Pi PoE+ HAT (or third-party PoE HAT).
+ * @brief Tests for the Zynq PoE+ HAT (or third-party PoE HAT).
  *
- * @details The official Raspberry Pi PoE+ HAT provides:
+ * @details The official Zynq PoE+ HAT provides:
  *   - IEEE 802.3at PoE+ (25.5 W) power delivery over Ethernet
  *   - Onboard 5V/5A DC-DC converter feeding the Pi via 4-pin header
  *   - Controllable brushless fan (PWM via ATtiny I2C controller @ 0x1A)

@@ -1,7 +1,7 @@
 /**
  * @file imu_lib.cpp
- * @brief IMU tests for Raspberry Pi 5.
- *        Pi5 has NO built-in IMU.  Inertial sensing requires an external module
+ * @brief IMU tests for Zynq UltraScale+ MPSoC.
+ *        Zion platform has NO built-in IMU.  Inertial sensing requires an external module
  *        connected via I2C (e.g. ICM-42688 on /dev/i2c-1) or SPI.  Tests use
  *        the Linux IIO (Industrial I/O) subsystem to read accelerometer,
  *        gyroscope, and magnetometer channels via /sys/bus/iio/devices/.
@@ -11,7 +11,7 @@
  */
 
 #include "imu_lib.h"
-#include "../platform_rpi5.h"
+#include "../platform_zynq.h"
 
 #include <array>
 #include <cstdio>
@@ -88,8 +88,8 @@ ImuTesting::~ImuTesting()
 TestOutput ImuTesting::test3axisAccelerometer()
 {
     std::vector<std::string> data;
-    data.push_back("=== 3-Axis Accelerometer (Pi5 + External IMU / IIO) ===");
-    data.push_back("[INFO] Pi5 has no built-in IMU; checking IIO /sys/bus/iio/devices/");
+    data.push_back("=== 3-Axis Accelerometer (Zion platform + External IMU / IIO) ===");
+    data.push_back("[INFO] Zion platform has no built-in IMU; checking IIO /sys/bus/iio/devices/");
 
     auto devs = imuListIioDevices();
     bool found = false;
@@ -115,7 +115,7 @@ TestOutput ImuTesting::test3axisAccelerometer()
     if (!found)
         data.push_back("[WARN] No IIO accelerometer found (connect external IMU via I2C/SPI)");
 
-    data.push_back("[INFO] Typical Pi5 IMU wiring: ICM-42688 on /dev/i2c-1 (GPIO 2/3)");
+    data.push_back("[INFO] Typical Zion platform IMU wiring: ICM-42688 on /dev/i2c-1 (GPIO 2/3)");
     {
         TestOutput _out;
         _out.status = hal::Status::PASS;
@@ -132,7 +132,7 @@ TestOutput ImuTesting::test3axisAccelerometer()
 TestOutput ImuTesting::test3axisGyroscope()
 {
     std::vector<std::string> data;
-    data.push_back("=== 3-Axis Gyroscope (Pi5 + External IMU / IIO) ===");
+    data.push_back("=== 3-Axis Gyroscope (Zion platform + External IMU / IIO) ===");
 
     auto devs = imuListIioDevices();
     bool found = false;
@@ -173,7 +173,7 @@ TestOutput ImuTesting::test3axisGyroscope()
 TestOutput ImuTesting::test3axisMagnetometer()
 {
     std::vector<std::string> data;
-    data.push_back("=== 3-Axis Magnetometer (Pi5 + External Compass / IIO) ===");
+    data.push_back("=== 3-Axis Magnetometer (Zion platform + External Compass / IIO) ===");
 
     auto devs = imuListIioDevices();
     bool found = false;
@@ -214,7 +214,7 @@ TestOutput ImuTesting::test3axisMagnetometer()
 TestOutput ImuTesting::testImuDataRate()
 {
     std::vector<std::string> data;
-    data.push_back("=== IMU Data Rate (Pi5 IIO) ===");
+    data.push_back("=== IMU Data Rate (Zion platform IIO) ===");
 
     auto devs = imuListIioDevices();
     bool found = false;
@@ -251,7 +251,7 @@ TestOutput ImuTesting::testImuDataRate()
 TestOutput ImuTesting::testImuAccuracy()
 {
     std::vector<std::string> data;
-    data.push_back("=== IMU Accuracy (Pi5 IIO) ===");
+    data.push_back("=== IMU Accuracy (Zion platform IIO) ===");
 
     auto devs = imuListIioDevices();
     bool found = false;
@@ -295,7 +295,7 @@ TestOutput ImuTesting::testImuAccuracy()
 TestOutput ImuTesting::testImuCalibration()
 {
     std::vector<std::string> data;
-    data.push_back("=== IMU Calibration (Pi5 IIO) ===");
+    data.push_back("=== IMU Calibration (Zion platform IIO) ===");
 
     auto devs = imuListIioDevices();
     bool found = false;
@@ -337,7 +337,7 @@ TestOutput ImuTesting::testImuCalibration()
 TestOutput ImuTesting::testImuTemperatureCompensation()
 {
     std::vector<std::string> data;
-    data.push_back("=== IMU Temperature Compensation (Pi5 IIO) ===");
+    data.push_back("=== IMU Temperature Compensation (Zion platform IIO) ===");
 
     auto devs = imuListIioDevices();
     bool found = false;
@@ -372,16 +372,16 @@ TestOutput ImuTesting::testImuTemperatureCompensation()
 }
 
 /**
- * @brief Test IMU-to-Pi5 interface (I2C bus presence and communication).
+ * @brief Test IMU-to-Zion platform interface (I2C bus presence and communication).
  * @details Named testImuToOrinInterface in header (Jetson-origin name);
- *          on Pi5 this verifies /dev/i2c-1 (GPIO 2/3) which is the standard
+ *          on Zion platform this verifies /dev/i2c-1 (GPIO 2/3) which is the standard
  *          I2C bus for external IMU modules.
  */
 TestOutput ImuTesting::testImuToOrinInterface()
 {
     std::vector<std::string> data;
-    data.push_back("=== IMU-to-Pi5 Interface (I2C / SPI, Pi5) ===");
-    data.push_back("[INFO] Pi5 standard IMU bus: I2C-1 (/dev/i2c-1, GPIO 2/3 = SDA/SCL)");
+    data.push_back("=== IMU-to-Zion platform Interface (I2C / SPI, Zion platform) ===");
+    data.push_back("[INFO] Zion platform standard IMU bus: I2C-1 (/dev/i2c-1, GPIO 2/3 = SDA/SCL)");
 
     // Check I2C-1 presence
     bool i2c1 = !imuRunCmd("ls /dev/i2c-1 2>/dev/null").empty();

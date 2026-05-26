@@ -6,7 +6,7 @@ install(TARGETS lib_base
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
-install(FILES lib_base.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/acadia_hal)
+install(FILES lib_base.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/zion_hal)
 
 # Add all feature libraries
 add_subdirectory(gpu_lib)
@@ -44,3 +44,4 @@ add_subdirectory(debug_and_development_interfaces)
 add_subdirectory(sense_hat_lib)
 add_subdirectory(camera_module3_lib)
 add_subdirectory(poe_hat_lib)
+add_subdirectory(ps_pl_backend)

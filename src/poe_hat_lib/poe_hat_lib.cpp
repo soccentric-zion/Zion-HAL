@@ -1,13 +1,13 @@
 /**
  * @file poe_hat_lib.cpp
- * @brief Raspberry Pi PoE+ HAT tests for Raspberry Pi 5.
+ * @brief Zynq PoE+ HAT tests for Zynq UltraScale+ MPSoC.
  *
- * Hardware: Raspberry Pi PoE+ HAT (or compatible) on 40-pin header.
+ * Hardware: Zynq PoE+ HAT (or compatible) on 40-pin header.
  *   PoE standard : IEEE 802.3at (Type 2, PoE+, up to 25.5 W)
  *   DC-DC        : 5V / 5A synchronous buck on HAT, feeds Pi via GPIO header
  *   Fan ctrl     : ATtiny on I2C @ 0x1A (RPi PoE HAT), sysfs fan node
  *   Power sense  : Optional INA219/INA226 on I2C (third-party HATs)
- *   Eth link     : Pi5 GbE (BCM2712 MAC + BCM54213PE PHY) — PoE on eth0
+ *   Eth link     : Zion platform GbE (Zynq PS MAC + BZynq module4213PE PHY) — PoE on eth0
  *
  * Tests use hwmon sysfs, I2C tools, ethtool, vcgencmd, and thermal sysfs.
  * @author sandesh ghimire
@@ -15,7 +15,7 @@
  */
 
 #include "poe_hat_lib.h"
-#include "../platform_rpi5.h"
+#include "../platform_zynq.h"
 
 #include <array>
 #include <cstdio>
@@ -87,7 +87,7 @@ PoeHatTesting::~PoeHatTesting() {}
 TestOutput PoeHatTesting::testPoeHatDetection()
 {
     std::vector<std::string> data;
-    data.push_back("=== PoE HAT Detection (Pi5) ===");
+    data.push_back("=== PoE HAT Detection (Zion platform) ===");
     data.push_back("[INFO] Official RPi PoE+ HAT: fan ctrl @ I2C-1 0x1A");
     data.push_back("[INFO] Third-party HATs may expose INA219 @ 0x40 or INA226 @ 0x40-0x4F");
 
@@ -136,18 +136,18 @@ TestOutput PoeHatTesting::testPoePowerNegotiation()
 {
     std::vector<std::string> data;
     data.push_back("=== PoE Power Negotiation (IEEE 802.3at) ===");
-    data.push_back("[INFO] Pi5 receives power over " + std::string(RPI5_ETH_IFACE) + " from PoE switch/injector");
+    data.push_back("[INFO] Zion platform receives power over " + std::string(ZYNQ_ETH_IFACE) + " from PoE switch/injector");
 
     // Check eth0 link is up
     std::string operstate = poeReadFile(
-        "/sys/class/net/" + std::string(RPI5_ETH_IFACE) + "/operstate");
+        "/sys/class/net/" + std::string(ZYNQ_ETH_IFACE) + "/operstate");
     bool linkUp = operstate == "up";
-    data.push_back(linkUp ? "[PASS] " + std::string(RPI5_ETH_IFACE) + " link up (PoE carrier present)"
-                          : "[INFO] " + std::string(RPI5_ETH_IFACE) + " operstate: " + operstate);
+    data.push_back(linkUp ? "[PASS] " + std::string(ZYNQ_ETH_IFACE) + " link up (PoE carrier present)"
+                          : "[INFO] " + std::string(ZYNQ_ETH_IFACE) + " operstate: " + operstate);
 
     // ethtool: check speed and duplex
     std::string ethSpeed = poeRunCmd(
-        "ethtool " + std::string(RPI5_ETH_IFACE) + " 2>/dev/null | grep -E 'Speed|Duplex|Link'");
+        "ethtool " + std::string(ZYNQ_ETH_IFACE) + " 2>/dev/null | grep -E 'Speed|Duplex|Link'");
     if (!ethSpeed.empty())
         data.push_back("[INFO] ethtool:\n" + ethSpeed);
 
@@ -212,7 +212,7 @@ TestOutput PoeHatTesting::testPowerMonitoring()
         data.push_back("[INFO] vcgencmd usb:  " + (v5.empty()    ? "N/A" : v5));
     }
 
-    data.push_back("[INFO] PoE+ budget: 25.5 W input, ~5V × 5A = 25 W to Pi5 GPIO header");
+    data.push_back("[INFO] PoE+ budget: 25.5 W input, ~5V × 5A = 25 W to Zion platform GPIO header");
     {
         TestOutput _out;
         _out.status = hal::Status::PASS;
@@ -318,20 +318,20 @@ TestOutput PoeHatTesting::testFanSpeed()
 }
 
 /**
- * @brief Check Pi5 thermal trip point that triggers fan speed increase.
+ * @brief Check Zion platform thermal trip point that triggers fan speed increase.
  */
 TestOutput PoeHatTesting::testThermalProtection()
 {
     std::vector<std::string> data;
-    data.push_back("=== PoE HAT Thermal Protection (Pi5 trip points) ===");
+    data.push_back("=== PoE HAT Thermal Protection (Zion platform trip points) ===");
 
     // Read CPU temp
     std::string tempRaw = poeReadFile(
-        std::string(RPI5_THERMAL_CPU_ZONE) + "/temp");
+        std::string(ZYNQ_THERMAL_CPU_ZONE) + "/temp");
     double tempC = tempRaw.empty() ? 0.0 : std::stod(tempRaw) / 1000.0;
     data.push_back("[INFO] CPU temperature: " + std::to_string(tempC) + " °C");
-    data.push_back("[INFO] Pi5 throttle threshold: " + std::to_string(RPI5_THERMAL_THROTTLE_C) + " °C");
-    data.push_back("[INFO] Pi5 shutdown threshold: " + std::to_string(RPI5_THERMAL_SHUTDOWN_C) + " °C");
+    data.push_back("[INFO] Zion platform throttle threshold: " + std::to_string(ZYNQ_THERMAL_THROTTLE_C) + " °C");
+    data.push_back("[INFO] Zion platform shutdown threshold: " + std::to_string(ZYNQ_THERMAL_SHUTDOWN_C) + " °C");
 
     // Fan trip points from thermal zone
     std::string trips = poeRunCmd(
@@ -404,7 +404,7 @@ TestOutput PoeHatTesting::testPowerDelivery()
 
     // Pre-stress temperature
     std::string tempBefore = poeReadFile(
-        std::string(RPI5_THERMAL_CPU_ZONE) + "/temp");
+        std::string(ZYNQ_THERMAL_CPU_ZONE) + "/temp");
     data.push_back("[INFO] CPU temp before stress: " +
                    (tempBefore.empty() ? "N/A" : std::to_string(std::stod(tempBefore) / 1000.0) + " °C"));
 
@@ -422,11 +422,11 @@ TestOutput PoeHatTesting::testPowerDelivery()
 
     // Post-stress temperature
     std::string tempAfter = poeReadFile(
-        std::string(RPI5_THERMAL_CPU_ZONE) + "/temp");
+        std::string(ZYNQ_THERMAL_CPU_ZONE) + "/temp");
     data.push_back("[INFO] CPU temp after stress: " +
                    (tempAfter.empty() ? "N/A" : std::to_string(std::stod(tempAfter) / 1000.0) + " °C"));
 
-    data.push_back("[INFO] PoE+ HAT rated for Pi5 maximum load (~8-9 W CPU full load)");
+    data.push_back("[INFO] PoE+ HAT rated for Zion platform maximum load (~8-9 W CPU full load)");
     {
         TestOutput _out;
         _out.status = hal::Status::PASS;

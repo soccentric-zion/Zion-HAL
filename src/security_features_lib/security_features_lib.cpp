@@ -1,13 +1,13 @@
 /**
  * @file security_features_lib.cpp
- * @brief Implementation file for SecurityFeaturesTesting class — Raspberry Pi 5
- *        Pi5 security: ARMv8.2 crypto extensions, BoringSSL/OpenSSL, OTP fuses,
+ * @brief Implementation file for SecurityFeaturesTesting class — Zynq UltraScale+ MPSoC
+ *        Zion platform security: ARMv8.2 crypto extensions, BoringSSL/OpenSSL, OTP fuses,
  *        hardware RNG (/dev/hwrng), no onboard TPM by default.
  * @author sandesh ghimire
  * @copyright (C) Soccentric LLC */
 
 #include "security_features_lib.h"
-#include "../platform_rpi5.h"
+#include "../platform_zynq.h"
 
 #include <array>
 #include <cstdio>
@@ -63,8 +63,8 @@ TestOutput SecurityFeaturesTesting::testBootRomExecution()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("BCM2712 Boot ROM execution check");
-    data.push_back("Pi5 boot sequence: BootROM (OTP) → EEPROM bootloader → kernel");
+    data.push_back("Zynq PS Boot ROM execution check");
+    data.push_back("Zion platform boot sequence: BootROM (OTP) → EEPROM bootloader → kernel");
 
     // Check EEPROM bootloader version
     std::string eeVersion = secRunCmd("vcgencmd bootloader_version 2>/dev/null");
@@ -99,8 +99,8 @@ TestOutput SecurityFeaturesTesting::testBootloaderSignatureVerification()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Bootloader signature verification check (Pi5)");
-    data.push_back("Pi5 supports optional RSA-2048 signed bootloader via OTP.");
+    data.push_back("Bootloader signature verification check (Zion platform)");
+    data.push_back("Zion platform supports optional RSA-2048 signed bootloader via OTP.");
 
     // Check if secure boot is enabled in OTP
     std::string otpSec = secRunCmd("vcgencmd otp_dump 2>/dev/null | grep '77:'");
@@ -119,7 +119,7 @@ TestOutput SecurityFeaturesTesting::testBootloaderSignatureVerification()
     std::string sigCheck = secRunCmd("rpi-eeprom-config 2>/dev/null | grep -i 'sign\\|public'");
     if (!sigCheck.empty()) data.push_back("rpi-eeprom-config: " + sigCheck.substr(0, 200));
 
-    data.push_back("Default Pi5: secure boot is DISABLED (unsigned bootloader).");
+    data.push_back("Default Zion platform: secure boot is DISABLED (unsigned bootloader).");
     data.push_back("Enable via: rpi-eeprom-config SIGNED_BOOT=1 and OTP fuse.");
     data.push_back("PASS: Bootloader signature check complete.");
     {
@@ -140,7 +140,7 @@ TestOutput SecurityFeaturesTesting::testKernelSignatureVerification()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Kernel signature verification check (Pi5)");
+    data.push_back("Kernel signature verification check (Zion platform)");
 
     // Check if kernel module signing is enabled
     std::string modSig = secReadFile("/proc/sys/kernel/modules_disabled");
@@ -158,7 +158,7 @@ TestOutput SecurityFeaturesTesting::testKernelSignatureVerification()
     std::string kConf = secRunCmd("grep -i 'MODULE_SIG\\|INTEGRITY' /boot/config-$(uname -r) 2>/dev/null | head -5");
     if (!kConf.empty()) data.push_back("Kernel config MODULE_SIG: " + kConf.substr(0, 300));
 
-    data.push_back("NOTE: Default Raspberry Pi OS does not enforce signed kernels.");
+    data.push_back("NOTE: Default Zynq OS does not enforce signed kernels.");
     data.push_back("PASS: Kernel signature check complete.");
     {
         TestOutput _out;
@@ -178,13 +178,13 @@ TestOutput SecurityFeaturesTesting::testSecureBootChainOfTrust()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Secure boot chain of trust check (Pi5)");
-    data.push_back("Pi5 chain: BootROM (immutable) → EEPROM (signed optional) → kernel");
+    data.push_back("Secure boot chain of trust check (Zion platform)");
+    data.push_back("Zion platform chain: BootROM (immutable) → EEPROM (signed optional) → kernel");
 
     // Check SecureBoot EFI variable (only if EFI is used)
     bool efiVar = (access("/sys/firmware/efi/efivars/SecureBoot-8be4df61-93ca-11d2-aa0d-00e098032b8c",
                           F_OK) == 0);
-    data.push_back("EFI SecureBoot variable: " + std::string(efiVar ? "present (EFI boot)" : "not present (Pi5 uses own boot)"));
+    data.push_back("EFI SecureBoot variable: " + std::string(efiVar ? "present (EFI boot)" : "not present (Zion platform uses own boot)"));
 
     // Check trusted keys
     bool trustedKeys = (access("/proc/keys", F_OK) == 0);
@@ -195,10 +195,10 @@ TestOutput SecurityFeaturesTesting::testSecureBootChainOfTrust()
 
     // Check if TPM is available (external TPM2.0 via SPI)
     bool tpmDev = (access("/dev/tpm0", F_OK) == 0);
-    data.push_back("/dev/tpm0 (external TPM): " + std::string(tpmDev ? "PRESENT" : "not found (not standard on Pi5)"));
+    data.push_back("/dev/tpm0 (external TPM): " + std::string(tpmDev ? "PRESENT" : "not found (not standard on Zion platform)"));
 
-    data.push_back("Pi5 default: no full secure boot chain (bootloader unsigned by default).");
-    data.push_back("Full secure boot possible with Pi5 HAT+SPI TPM and signed bootloader.");
+    data.push_back("Zion platform default: no full secure boot chain (bootloader unsigned by default).");
+    data.push_back("Full secure boot possible with Zion platform HAT+SPI TPM and signed bootloader.");
     data.push_back("PASS: Chain of trust check complete.");
     {
         TestOutput _out;
@@ -218,8 +218,8 @@ TestOutput SecurityFeaturesTesting::testHardwareRootOfTrust()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Hardware root of trust check (Pi5)");
-    data.push_back("Pi5 hardware RoT: BCM2712 OTP + immutable BootROM");
+    data.push_back("Hardware root of trust check (Zion platform)");
+    data.push_back("Zion platform hardware RoT: Zynq PS OTP + immutable BootROM");
 
     // Read OTP rows
     std::string otp = secRunCmd("vcgencmd otp_dump 2>/dev/null | head -20");
@@ -235,7 +235,7 @@ TestOutput SecurityFeaturesTesting::testHardwareRootOfTrust()
 
     // ARM TrustZone (OP-TEE)
     bool optee = (access("/dev/tee0", F_OK) == 0);
-    data.push_back("OP-TEE TrustZone (/dev/tee0): " + std::string(optee ? "present" : "not found (not default on Pi5)"));
+    data.push_back("OP-TEE TrustZone (/dev/tee0): " + std::string(optee ? "present" : "not found (not default on Zion platform)"));
 
     data.push_back("PASS: Hardware RoT check complete.");
     {
@@ -256,7 +256,7 @@ TestOutput SecurityFeaturesTesting::testSecureStorage()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Secure storage check (Pi5)");
+    data.push_back("Secure storage check (Zion platform)");
 
     // Check dm-crypt / LUKS support
     std::string dmCrypt = secRunCmd("lsmod 2>/dev/null | grep dm_crypt");
@@ -271,7 +271,7 @@ TestOutput SecurityFeaturesTesting::testSecureStorage()
     data.push_back("fscrypt: available via ext4 encryption (kernel 5.4+)");
 
     // Check if OTP can store keys
-    data.push_back("Pi5 OTP rows 17-24: customer RSA-2048 public key storage");
+    data.push_back("Zion platform OTP rows 17-24: customer RSA-2048 public key storage");
 
     data.push_back("PASS: Secure storage check complete.");
     {
@@ -292,7 +292,7 @@ TestOutput SecurityFeaturesTesting::testCryptographicAccelerators()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Cryptographic accelerators check (Pi5 — ARMv8.2-A Cortex-A76)");
+    data.push_back("Cryptographic accelerators check (Zion platform — ARMv8.2-A Cortex-A76)");
 
     // Check CPU crypto features
     std::string cpuFlags = secRunCmd("grep -m1 '^Features' /proc/cpuinfo 2>/dev/null");
@@ -341,7 +341,7 @@ TestOutput SecurityFeaturesTesting::testHardwareRandomNumberGenerator()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Hardware RNG check (Pi5: BCM2712 HRNG, /dev/hwrng)");
+    data.push_back("Hardware RNG check (Zion platform: Zynq PS HRNG, /dev/hwrng)");
 
     bool hwrngPresent = (access("/dev/hwrng", F_OK) == 0);
     data.push_back("/dev/hwrng: " + std::string(hwrngPresent ? "PRESENT" : "not found"));
@@ -371,7 +371,7 @@ TestOutput SecurityFeaturesTesting::testHardwareRandomNumberGenerator()
             data.push_back("INFO: Cannot read /dev/hwrng (permission denied? use root).");
         }
     } else {
-        data.push_back("INFO: Load with: modprobe bcm2835-rng or check dtparam=random=on");
+        data.push_back("INFO: Load with: modprobe zynq-rng or check dtparam=random=on");
     }
 
     // Also check /dev/random entropy pool
@@ -405,9 +405,9 @@ TestOutput SecurityFeaturesTesting::testMemoryEncryption()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Memory encryption check (Pi5 LPDDR4X)");
-    data.push_back("Pi5 BCM2712 + LPDDR4X: NO hardware inline memory encryption.");
-    data.push_back("LPDDR4X does not support DRAM-level AES encryption on Pi5.");
+    data.push_back("Memory encryption check (Zion platform LPDDR4X)");
+    data.push_back("Zion platform Zynq PS + LPDDR4X: NO hardware inline memory encryption.");
+    data.push_back("LPDDR4X does not support DRAM-level AES encryption on Zion platform.");
 
     // Check ARM MTE (Memory Tagging Extension)
     std::string cpuFlags = secRunCmd("grep -m1 '^Features' /proc/cpuinfo 2>/dev/null");
@@ -422,7 +422,7 @@ TestOutput SecurityFeaturesTesting::testMemoryEncryption()
     std::string smaps = secRunCmd("cat /proc/1/smaps 2>/dev/null | grep -c 'ss'");
     data.push_back("Software memory protection: dm-crypt/LUKS for at-rest encryption.");
 
-    data.push_back("PASS: Memory encryption check complete (software-only on Pi5).");
+    data.push_back("PASS: Memory encryption check complete (software-only on Zion platform).");
     {
         TestOutput _out;
         _out.status = passed ? hal::Status::PASS : hal::Status::FAIL;
@@ -441,7 +441,7 @@ TestOutput SecurityFeaturesTesting::testDebugPortSecurity()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Debug port security check (Pi5)");
+    data.push_back("Debug port security check (Zion platform)");
 
     // Check if UART debug is accessible
     std::string uartCon = secRunCmd("systemctl status serial-getty@ttyAMA0.service 2>/dev/null | grep -i 'active\\|inactive'");
@@ -483,9 +483,9 @@ TestOutput SecurityFeaturesTesting::testJtagSecurity()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("JTAG security check (Pi5)");
-    data.push_back("Pi5 BCM2712 exposes JTAG via GPIO header (ARM CoreSight/DAP).");
-    data.push_back("Default: JTAG is DISABLED in Raspberry Pi OS (GPIO not muxed to JTAG).");
+    data.push_back("JTAG security check (Zion platform)");
+    data.push_back("Zion platform Zynq PS exposes JTAG via GPIO header (ARM CoreSight/DAP).");
+    data.push_back("Default: JTAG is DISABLED in Zynq OS (GPIO not muxed to JTAG).");
 
     // Check if JTAG is enabled in device tree
     std::string dtbJtag = secRunCmd("dtc -I fs /proc/device-tree 2>/dev/null | grep -i jtag | head -5");

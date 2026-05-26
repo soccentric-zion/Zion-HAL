@@ -5,4 +5,4 @@ install(TARGETS external_connector_lib
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
-install(FILES external_connector_lib.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/acadia_hal)
+install(FILES external_connector_lib.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/zion_hal)

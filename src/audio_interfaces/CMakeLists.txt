@@ -5,4 +5,4 @@ install(TARGETS audio_interfaces
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
-install(FILES audio_interfaces.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/acadia_hal)
+install(FILES audio_interfaces.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/zion_hal)

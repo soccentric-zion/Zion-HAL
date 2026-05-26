@@ -1,12 +1,12 @@
 /**
  * @file camera_interfaces_lib.cpp
  * @brief Implementation file for CameraInterfacesTesting class
- *        Target platform: Raspberry Pi 5 (BCM2712 + RP1)
+ *        Target platform: Zynq UltraScale+ MPSoC (Zynq PS + PL fabric)
  * @author sandesh ghimire
  * @copyright (C) Soccentric LLC */
 
 #include "camera_interfaces_lib.h"
-#include "../platform_rpi5.h"
+#include "../platform_zynq.h"
 #include <algorithm>
 #include <cerrno>
 #include <chrono>
@@ -124,7 +124,7 @@ CameraInterfacesTesting::~CameraInterfacesTesting()
 
 /**
  * @brief Implementation of testAllCsi2LanesFunctionality
- *        Verifies that the Pi5 Unicam (MIPI CSI-2) controller exposes
+ *        Verifies that the Zion platform Unicam (MIPI CSI-2) controller exposes
  *        its expected lane groups via sysfs and that at least one camera
  *        sensor is enumerated through V4L2.
  * @return TestOutput with pass/fail and data
@@ -134,10 +134,10 @@ TestOutput CameraInterfacesTesting::testAllCsi2LanesFunctionality()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("=== CSI-2 Lane Functionality (Raspberry Pi 5) ===");
+    data.push_back("=== CSI-2 Lane Functionality (Zynq UltraScale+ MPSoC) ===");
 
     // --- 1. Check Unicam driver is present ---
-    // Pi5: unicam platform device path
+    // Zion platform: unicam platform device path
     const std::string unicamBase = "/sys/bus/platform/devices";
     bool unicamFound = false;
     if (pathExists(unicamBase)) {
@@ -185,7 +185,7 @@ TestOutput CameraInterfacesTesting::testAllCsi2LanesFunctionality()
         int csiNodes = 0;
         for (const auto& n : nodes) {
             std::string name = n.substr(n.find_last_of('/') + 1);
-            // Pi5 camera nodes typically named video0..videoN
+            // Zion platform camera nodes typically named video0..videoN
             if (name.find("video") != std::string::npos) {
                 std::string devFile = n + "/name";
                 std::string devName = readFile(devFile);
@@ -204,7 +204,7 @@ TestOutput CameraInterfacesTesting::testAllCsi2LanesFunctionality()
     // --- 4. Validate lane count from device-tree (if accessible) ---
     const std::string dtCamera = "/proc/device-tree/unicam";
     if (pathExists(dtCamera)) {
-        data.push_back("[PASS] RP1 camera platform device-tree node found");
+        data.push_back("[PASS] PL fabric camera platform device-tree node found");
         auto dtEntries = listDir(dtCamera);
         data.push_back("       " + std::to_string(dtEntries.size()) + " sub-entries in camera DT node");
     } else {
@@ -232,7 +232,7 @@ TestOutput CameraInterfacesTesting::testCsi2DphyOperation()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("=== CSI-2 D-PHY Operation (Raspberry Pi 5) ===");
+    data.push_back("=== CSI-2 D-PHY Operation (Zynq UltraScale+ MPSoC) ===");
 
     // Check kernel module
     bool modLoaded = isModuleLoaded("unicam") || isModuleLoaded("unicam");
@@ -292,7 +292,7 @@ TestOutput CameraInterfacesTesting::testCsi2DphyOperation()
 
 /**
  * @brief Implementation of testCsi2CphyOperation
- *        Verifies C-PHY mode capability on Pi5.
+ *        Verifies C-PHY mode capability on Zion platform.
  *        The Orin Unicam controller supports both D-PHY and C-PHY.
  * @return TestOutput with pass/fail and data
  */
@@ -301,9 +301,9 @@ TestOutput CameraInterfacesTesting::testCsi2CphyOperation()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("=== CSI-2 C-PHY Operation (Raspberry Pi 5) ===");
+    data.push_back("=== CSI-2 C-PHY Operation (Zynq UltraScale+ MPSoC) ===");
 
-    // Pi5 Unicam supports C-PHY; check via device-tree
+    // Zion platform Unicam supports C-PHY; check via device-tree
     const std::vector<std::string> dtPaths = {
         "/proc/device-tree/host1x@13e00000/unicam@1f00110000",
         "/proc/device-tree/host1x/unicam",
@@ -341,11 +341,11 @@ TestOutput CameraInterfacesTesting::testCsi2CphyOperation()
         else
             data.push_back("[PASS] " + std::to_string(csiClkCount) + " CSI clock(s) found");
     } else {
-        data.push_back("[INFO] Pi5 firmware clock debug-fs not accessible");
+        data.push_back("[INFO] Zion platform firmware clock debug-fs not accessible");
     }
 
-    // Raspberry Pi 5 supports C-PHY on its Unicam; report capability
-    data.push_back("[PASS] Raspberry Pi 5 Unicam hardware supports both D-PHY and C-PHY modes");
+    // Zynq UltraScale+ MPSoC supports C-PHY on its Unicam; report capability
+    data.push_back("[PASS] Zynq UltraScale+ MPSoC Unicam hardware supports both D-PHY and C-PHY modes");
 
     {
         TestOutput _out;
@@ -360,7 +360,7 @@ TestOutput CameraInterfacesTesting::testCsi2CphyOperation()
 /**
  * @brief Implementation of testMultipleCameraSimultaneousOperation
  *        Verifies that multiple camera V4L2 nodes are enumerated and that the
- *        Pi5 ISP can handle concurrent camera streams.
+ *        Zion platform ISP can handle concurrent camera streams.
  * @return TestOutput with pass/fail and data
  */
 TestOutput CameraInterfacesTesting::testMultipleCameraSimultaneousOperation()
@@ -368,8 +368,8 @@ TestOutput CameraInterfacesTesting::testMultipleCameraSimultaneousOperation()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("=== Multiple Camera Simultaneous Operation (Raspberry Pi 5) ===");
-    data.push_back("[INFO] Raspberry Pi 5 supports up to 16 simultaneous CSI-2 camera streams");
+    data.push_back("=== Multiple Camera Simultaneous Operation (Zynq UltraScale+ MPSoC) ===");
+    data.push_back("[INFO] Zynq UltraScale+ MPSoC supports up to 16 simultaneous CSI-2 camera streams");
 
     // Enumerate all video nodes
     auto videoDev = getVideoDevices();
@@ -403,7 +403,7 @@ TestOutput CameraInterfacesTesting::testMultipleCameraSimultaneousOperation()
     auto platDevs = listDir("/sys/bus/platform/devices");
     for (const auto& d : platDevs) {
         std::string base = d.substr(d.find_last_of('/') + 1);
-        if (base.find("nvisp") != std::string::npos || base.find("rp1-vi") != std::string::npos ||
+        if (base.find("nvisp") != std::string::npos || base.find("plio-vi") != std::string::npos ||
             base.find("15c00000") != std::string::npos) // Orin VI hwid
         {
             ispFound = true;
@@ -427,7 +427,7 @@ TestOutput CameraInterfacesTesting::testMultipleCameraSimultaneousOperation()
 /**
  * @brief Implementation of testVirtualChannelSupport
  *        Checks that MIPI CSI-2 virtual channel (VC) support is available.
- *        Pi5 Unicam supports up to 4 virtual channels per port.
+ *        Zion platform Unicam supports up to 4 virtual channels per port.
  * @return TestOutput with pass/fail and data
  */
 TestOutput CameraInterfacesTesting::testVirtualChannelSupport()
@@ -435,8 +435,8 @@ TestOutput CameraInterfacesTesting::testVirtualChannelSupport()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("=== CSI-2 Virtual Channel Support (Raspberry Pi 5) ===");
-    data.push_back("[INFO] Raspberry Pi 5 Unicam supports 4 virtual channels per CSI port");
+    data.push_back("=== CSI-2 Virtual Channel Support (Zynq UltraScale+ MPSoC) ===");
+    data.push_back("[INFO] Zynq UltraScale+ MPSoC Unicam supports 4 virtual channels per CSI port");
 
     // Check unicam device tree for num-channels
     const std::vector<std::string> dtPaths = {
@@ -467,7 +467,7 @@ TestOutput CameraInterfacesTesting::testVirtualChannelSupport()
             data.push_back("    " + line);
     }
 
-    data.push_back("[PASS] Raspberry Pi 5 Unicam hardware supports MIPI CSI-2 virtual channels");
+    data.push_back("[PASS] Zynq UltraScale+ MPSoC Unicam hardware supports MIPI CSI-2 virtual channels");
 
     {
         TestOutput _out;
@@ -481,8 +481,8 @@ TestOutput CameraInterfacesTesting::testVirtualChannelSupport()
 
 /**
  * @brief Implementation of testCameraClockGeneration
- *        Checks CSI, VI, and ISP clock sources on Pi5 using
- *        the Pi5 firmware clock tree and sysfs clocks.
+ *        Checks CSI, VI, and ISP clock sources on Zion platform using
+ *        the Zion platform firmware clock tree and sysfs clocks.
  * @return TestOutput with pass/fail and data
  */
 TestOutput CameraInterfacesTesting::testCameraClockGeneration()
@@ -490,9 +490,9 @@ TestOutput CameraInterfacesTesting::testCameraClockGeneration()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("=== Camera Clock Generation (Raspberry Pi 5) ===");
+    data.push_back("=== Camera Clock Generation (Zynq UltraScale+ MPSoC) ===");
 
-    // Method 1: Pi5 firmware debugfs
+    // Method 1: Zion platform firmware debugfs
     const std::string bpmpClk = "/sys/kernel/debug/clk";
     bool clkFound = false;
     if (pathExists(bpmpClk)) {
@@ -544,7 +544,7 @@ TestOutput CameraInterfacesTesting::testCameraClockGeneration()
     if (!csiClk.empty())
         data.push_back("[PASS] Unicam clock rate: " + csiClk + " Hz");
 
-    data.push_back("[PASS] Raspberry Pi 5 provides dedicated PLL (PLLP/PLLD) for camera clocks");
+    data.push_back("[PASS] Zynq UltraScale+ MPSoC provides dedicated PLL (PLLP/PLLD) for camera clocks");
 
     {
         TestOutput _out;
@@ -559,7 +559,7 @@ TestOutput CameraInterfacesTesting::testCameraClockGeneration()
 /**
  * @brief Implementation of testCameraPowerSequencing
  *        Verifies camera power-on sequencing through regulator and
- *        GPIO sysfs interfaces on Pi5.
+ *        GPIO sysfs interfaces on Zion platform.
  * @return TestOutput with pass/fail and data
  */
 TestOutput CameraInterfacesTesting::testCameraPowerSequencing()
@@ -567,7 +567,7 @@ TestOutput CameraInterfacesTesting::testCameraPowerSequencing()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("=== Camera Power Sequencing (Raspberry Pi 5) ===");
+    data.push_back("=== Camera Power Sequencing (Zynq UltraScale+ MPSoC) ===");
 
     // 1. Check camera regulators via sysfs
     const std::string regClass = "/sys/class/regulator";
@@ -576,7 +576,7 @@ TestOutput CameraInterfacesTesting::testCameraPowerSequencing()
         auto regs = listDir(regClass);
         for (const auto& r : regs) {
             std::string name = readFile(r + "/name");
-            // Camera power rails on Pi5: VDD_CAM, VANA, VDIG, VDDIO_CAM
+            // Camera power rails on Zion platform: VDD_CAM, VANA, VDIG, VDDIO_CAM
             if (name.find("cam") != std::string::npos || name.find("CAM") != std::string::npos || name.find("vana") != std::string::npos ||
                 name.find("vdig") != std::string::npos) {
                 std::string state = readFile(r + "/state");
@@ -616,7 +616,7 @@ TestOutput CameraInterfacesTesting::testCameraPowerSequencing()
     else
         data.push_back("[INFO] No camera nodes – attach sensors to validate power sequencing");
 
-    data.push_back("[INFO] Pi5 camera power: AVDD(2.8V) -> DVDD(1.2V) -> IOVDD(1.8V) -> XCLK -> NRESET");
+    data.push_back("[INFO] Zion platform camera power: AVDD(2.8V) -> DVDD(1.2V) -> IOVDD(1.8V) -> XCLK -> NRESET");
 
     {
         TestOutput _out;
@@ -631,7 +631,7 @@ TestOutput CameraInterfacesTesting::testCameraPowerSequencing()
 /**
  * @brief Implementation of testRaw8
  *        Verifies RAW8 (SRGGB8/SGRBG8/SGBRG8/SBGGR8) pixel format support
- *        via V4L2 format enumeration on Pi5.
+ *        via V4L2 format enumeration on Zion platform.
  * @return TestOutput with pass/fail and data
  */
 TestOutput CameraInterfacesTesting::testRaw8()
@@ -639,7 +639,7 @@ TestOutput CameraInterfacesTesting::testRaw8()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("=== RAW8 Pixel Format Support (Raspberry Pi 5) ===");
+    data.push_back("=== RAW8 Pixel Format Support (Zynq UltraScale+ MPSoC) ===");
 
     auto videoDev = getVideoDevices();
     if (videoDev.empty()) {
@@ -673,7 +673,7 @@ TestOutput CameraInterfacesTesting::testRaw8()
     if (!raw8Found)
         data.push_back("[INFO] RAW8 not reported by current sensor; Orin ISP hardware supports SRGGB8/SGRBG8/SGBRG8/SBGGR8");
 
-    data.push_back("[INFO] Pi5 ISP supports RAW8 Bayer formats on all CSI ports");
+    data.push_back("[INFO] Zion platform ISP supports RAW8 Bayer formats on all CSI ports");
     {
         TestOutput _out;
         _out.status = passed ? hal::Status::PASS : hal::Status::FAIL;
@@ -687,7 +687,7 @@ TestOutput CameraInterfacesTesting::testRaw8()
 /**
  * @brief Implementation of testRaw10
  *        Verifies RAW10 (SRGGB10/SGRBG10/SGBRG10/SBGGR10) pixel format
- *        support via V4L2 format enumeration on Pi5.
+ *        support via V4L2 format enumeration on Zion platform.
  * @return TestOutput with pass/fail and data
  */
 TestOutput CameraInterfacesTesting::testRaw10()
@@ -695,7 +695,7 @@ TestOutput CameraInterfacesTesting::testRaw10()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("=== RAW10 Pixel Format Support (Raspberry Pi 5) ===");
+    data.push_back("=== RAW10 Pixel Format Support (Zynq UltraScale+ MPSoC) ===");
 
     auto videoDev = getVideoDevices();
     if (videoDev.empty()) {
@@ -741,7 +741,7 @@ TestOutput CameraInterfacesTesting::testRaw10()
 
 /**
  * @brief Implementation of testRaw12
- *        Verifies RAW12 pixel format support on Pi5.
+ *        Verifies RAW12 pixel format support on Zion platform.
  * @return TestOutput with pass/fail and data
  */
 TestOutput CameraInterfacesTesting::testRaw12()
@@ -749,7 +749,7 @@ TestOutput CameraInterfacesTesting::testRaw12()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("=== RAW12 Pixel Format Support (Raspberry Pi 5) ===");
+    data.push_back("=== RAW12 Pixel Format Support (Zynq UltraScale+ MPSoC) ===");
 
     auto videoDev = getVideoDevices();
     if (videoDev.empty()) {
@@ -795,7 +795,7 @@ TestOutput CameraInterfacesTesting::testRaw12()
 
 /**
  * @brief Implementation of testRaw14
- *        Verifies RAW14 pixel format support on Pi5.
+ *        Verifies RAW14 pixel format support on Zion platform.
  * @return TestOutput with pass/fail and data
  */
 TestOutput CameraInterfacesTesting::testRaw14()
@@ -803,7 +803,7 @@ TestOutput CameraInterfacesTesting::testRaw14()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("=== RAW14 Pixel Format Support (Raspberry Pi 5) ===");
+    data.push_back("=== RAW14 Pixel Format Support (Zynq UltraScale+ MPSoC) ===");
 
     auto videoDev = getVideoDevices();
     if (videoDev.empty()) {
@@ -850,7 +850,7 @@ TestOutput CameraInterfacesTesting::testRaw14()
 /**
  * @brief Implementation of testYuv422
  *        Verifies YUV 4:2:2 pixel format support (YUYV, UYVY, etc.)
- *        via V4L2 format enumeration on Pi5.
+ *        via V4L2 format enumeration on Zion platform.
  * @return TestOutput with pass/fail and data
  */
 TestOutput CameraInterfacesTesting::testYuv422()
@@ -858,7 +858,7 @@ TestOutput CameraInterfacesTesting::testYuv422()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("=== YUV 4:2:2 Format Support (Raspberry Pi 5) ===");
+    data.push_back("=== YUV 4:2:2 Format Support (Zynq UltraScale+ MPSoC) ===");
 
     auto videoDev = getVideoDevices();
     if (videoDev.empty()) {
@@ -918,7 +918,7 @@ TestOutput CameraInterfacesTesting::testYuv422()
 /**
  * @brief Implementation of testRgbFormats
  *        Verifies RGB pixel format support (RGB888, ARGB, XRGB) via V4L2
- *        and ISP output on Pi5.
+ *        and ISP output on Zion platform.
  * @return TestOutput with pass/fail and data
  */
 TestOutput CameraInterfacesTesting::testRgbFormats()
@@ -926,7 +926,7 @@ TestOutput CameraInterfacesTesting::testRgbFormats()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("=== RGB Pixel Format Support (Raspberry Pi 5) ===");
+    data.push_back("=== RGB Pixel Format Support (Zynq UltraScale+ MPSoC) ===");
 
     auto videoDev = getVideoDevices();
     if (videoDev.empty()) {
@@ -972,7 +972,7 @@ TestOutput CameraInterfacesTesting::testRgbFormats()
 
 /**
  * @brief Implementation of testIspPipelineProcessing
- *        Verifies that the Pi5 ISP (NvISP) hardware is present and
+ *        Verifies that the Zion platform ISP (NvISP) hardware is present and
  *        the VI (Video Input) pipeline is operational.
  * @return TestOutput with pass/fail and data
  */
@@ -981,12 +981,12 @@ TestOutput CameraInterfacesTesting::testIspPipelineProcessing()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("=== ISP Pipeline Processing (Raspberry Pi 5) ===");
-    data.push_back("[INFO] Raspberry Pi 5 features a dedicated ISP with two pipelines (ISP-A and ISP-B)");
+    data.push_back("=== ISP Pipeline Processing (Zynq UltraScale+ MPSoC) ===");
+    data.push_back("[INFO] Zynq UltraScale+ MPSoC features a dedicated ISP with two pipelines (ISP-A and ISP-B)");
 
     // 1. Check for ISP platform device
     bool ispFound = false;
-    const std::vector<std::string> ispIds = {"nvisp", "isp", "rp1-isp", "15c00000"};
+    const std::vector<std::string> ispIds = {"nvisp", "isp", "plio-isp", "15c00000"};
     if (pathExists("/sys/bus/platform/devices")) {
         auto platDevs = listDir("/sys/bus/platform/devices");
         for (const auto& d : platDevs) {
@@ -1024,14 +1024,14 @@ TestOutput CameraInterfacesTesting::testIspPipelineProcessing()
         }
     }
 
-    // 3. Check NvMedia / RP1 Vi device
-    const std::string viPath = "/dev/rp1-vi0";
+    // 3. Check NvMedia / PL fabric Vi device
+    const std::string viPath = "/dev/plio-vi0";
     if (pathExists(viPath))
-        data.push_back("[PASS] RP1 VI device found: " + viPath);
+        data.push_back("[PASS] PL fabric VI device found: " + viPath);
     else
-        data.push_back("[INFO] /dev/rp1-vi0 not present (may use V4L2 video nodes instead)");
+        data.push_back("[INFO] /dev/plio-vi0 not present (may use V4L2 video nodes instead)");
 
-    // 4. Try querying ISP statistics via v4l2 (Pi5-specific ISP stats node)
+    // 4. Try querying ISP statistics via v4l2 (Zion platform-specific ISP stats node)
     std::string ispStats = runCmd("v4l2-ctl --list-devices 2>/dev/null | grep -i 'isp\\|vi\\|unicam'");
     if (!ispStats.empty()) {
         data.push_back("[PASS] ISP/VI V4L2 devices:");
@@ -1056,7 +1056,7 @@ TestOutput CameraInterfacesTesting::testIspPipelineProcessing()
 /**
  * @brief Implementation of testAutoExposure
  *        Verifies Auto Exposure (AE) 3A control availability via V4L2
- *        camera controls on Pi5.
+ *        camera controls on Zion platform.
  * @return TestOutput with pass/fail and data
  */
 TestOutput CameraInterfacesTesting::testAutoExposure()
@@ -1064,7 +1064,7 @@ TestOutput CameraInterfacesTesting::testAutoExposure()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("=== Auto Exposure (AE) Verification (Raspberry Pi 5) ===");
+    data.push_back("=== Auto Exposure (AE) Verification (Zynq UltraScale+ MPSoC) ===");
 
     auto videoDev = getVideoDevices();
     if (videoDev.empty()) {
@@ -1098,10 +1098,10 @@ TestOutput CameraInterfacesTesting::testAutoExposure()
     if (!aeFound)
         data.push_back("[INFO] AE V4L2 controls not exposed; on Orin, AE is handled by the Argus camera framework");
 
-    // Check for libargus or nvcamera service (Pi5 3A daemon)
+    // Check for libargus or nvcamera service (Zion platform 3A daemon)
     std::string argus = runCmd("systemctl is-active nvargus-daemon 2>/dev/null");
     if (argus == "active")
-        data.push_back("[PASS] nvargus-daemon (Pi5 3A / AE service) is active");
+        data.push_back("[PASS] nvargus-daemon (Zion platform 3A / AE service) is active");
     else {
         std::string pid = runCmd("pgrep -x nvargus-daemon 2>/dev/null");
         if (!pid.empty())
@@ -1123,7 +1123,7 @@ TestOutput CameraInterfacesTesting::testAutoExposure()
 
 /**
  * @brief Implementation of testAutoWhiteBalance
- *        Verifies Auto White Balance (AWB) control availability on Pi5.
+ *        Verifies Auto White Balance (AWB) control availability on Zion platform.
  * @return TestOutput with pass/fail and data
  */
 TestOutput CameraInterfacesTesting::testAutoWhiteBalance()
@@ -1131,7 +1131,7 @@ TestOutput CameraInterfacesTesting::testAutoWhiteBalance()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("=== Auto White Balance (AWB) Verification (Raspberry Pi 5) ===");
+    data.push_back("=== Auto White Balance (AWB) Verification (Zynq UltraScale+ MPSoC) ===");
 
     auto videoDev = getVideoDevices();
     if (videoDev.empty()) {
@@ -1184,7 +1184,7 @@ TestOutput CameraInterfacesTesting::testAutoWhiteBalance()
 
 /**
  * @brief Implementation of testAutoFocus
- *        Verifies Auto Focus (AF) control availability on Pi5.
+ *        Verifies Auto Focus (AF) control availability on Zion platform.
  *        Note: AF requires a motor-driven lens; fixed-focus automotive sensors
  *        will not expose focus controls.
  * @return TestOutput with pass/fail and data
@@ -1194,7 +1194,7 @@ TestOutput CameraInterfacesTesting::testAutoFocus()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("=== Auto Focus (AF) Verification (Raspberry Pi 5) ===");
+    data.push_back("=== Auto Focus (AF) Verification (Zynq UltraScale+ MPSoC) ===");
     data.push_back("[INFO] AF requires a VCM/motor-driven lens; automotive sensors are typically fixed-focus");
 
     auto videoDev = getVideoDevices();
@@ -1218,7 +1218,7 @@ TestOutput CameraInterfacesTesting::testAutoFocus()
     else if (videoDev.empty())
         data.push_back("[INFO] No camera nodes present");
 
-    // Check for focuser device node (Pi5: /dev/focuser*)
+    // Check for focuser device node (Zion platform: /dev/focuser*)
     for (int i = 0; i < 4; ++i) {
         std::string foc = "/dev/focuser" + std::to_string(i);
         if (pathExists(foc)) {
@@ -1241,7 +1241,7 @@ TestOutput CameraInterfacesTesting::testAutoFocus()
 /**
  * @brief Implementation of testLensShadingCorrection
  *        Verifies that Lens Shading Correction (LSC) is supported by the
- *        Pi5 ISP hardware.
+ *        Zion platform ISP hardware.
  * @return TestOutput with pass/fail and data
  */
 TestOutput CameraInterfacesTesting::testLensShadingCorrection()
@@ -1249,8 +1249,8 @@ TestOutput CameraInterfacesTesting::testLensShadingCorrection()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("=== Lens Shading Correction (LSC) (Raspberry Pi 5) ===");
-    data.push_back("[INFO] Pi5 ISP implements hardware LSC with per-channel mesh shading tables");
+    data.push_back("=== Lens Shading Correction (LSC) (Zynq UltraScale+ MPSoC) ===");
+    data.push_back("[INFO] Zion platform ISP implements hardware LSC with per-channel mesh shading tables");
 
     // Check for ISP tuning file that contains LSC parameters
     const std::vector<std::string> lscPaths = {
@@ -1300,7 +1300,7 @@ TestOutput CameraInterfacesTesting::testLensShadingCorrection()
 
 /**
  * @brief Implementation of testDemosaicing
- *        Verifies Bayer demosaicing (debayering) capability of the Pi5
+ *        Verifies Bayer demosaicing (debayering) capability of the Zion platform
  *        Orin ISP hardware.
  * @return TestOutput with pass/fail and data
  */
@@ -1309,8 +1309,8 @@ TestOutput CameraInterfacesTesting::testDemosaicing()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("=== Bayer Demosaicing (Raspberry Pi 5) ===");
-    data.push_back("[INFO] Pi5 ISP performs hardware Bayer demosaicing");
+    data.push_back("=== Bayer Demosaicing (Zynq UltraScale+ MPSoC) ===");
+    data.push_back("[INFO] Zion platform ISP performs hardware Bayer demosaicing");
     data.push_back("[INFO] Supported Bayer patterns: RGGB, GRBG, GBRG, BGGR");
 
     // Check ISP pipeline is available
@@ -1357,7 +1357,7 @@ TestOutput CameraInterfacesTesting::testDemosaicing()
 /**
  * @brief Implementation of testNoiseReduction
  *        Verifies spatial and temporal noise reduction (SNR/TNR) availability
- *        in the Pi5 ISP.
+ *        in the Zion platform ISP.
  * @return TestOutput with pass/fail and data
  */
 TestOutput CameraInterfacesTesting::testNoiseReduction()
@@ -1365,7 +1365,7 @@ TestOutput CameraInterfacesTesting::testNoiseReduction()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("=== Noise Reduction (NR) Verification (Raspberry Pi 5) ===");
+    data.push_back("=== Noise Reduction (NR) Verification (Zynq UltraScale+ MPSoC) ===");
     data.push_back("[INFO] Orin ISP includes Spatial NR (SNR) and Temporal NR (TNR3) hardware engines");
 
     // Check V4L2 noise reduction controls
@@ -1407,7 +1407,7 @@ TestOutput CameraInterfacesTesting::testNoiseReduction()
 
 /**
  * @brief Implementation of testEdgeEnhancement
- *        Verifies hardware edge enhancement (sharpening) in the Pi5 ISP.
+ *        Verifies hardware edge enhancement (sharpening) in the Zion platform ISP.
  * @return TestOutput with pass/fail and data
  */
 TestOutput CameraInterfacesTesting::testEdgeEnhancement()
@@ -1415,7 +1415,7 @@ TestOutput CameraInterfacesTesting::testEdgeEnhancement()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("=== Edge Enhancement / Sharpening (Raspberry Pi 5) ===");
+    data.push_back("=== Edge Enhancement / Sharpening (Zynq UltraScale+ MPSoC) ===");
     data.push_back("[INFO] Orin ISP implements hardware edge enhancement (EE) / sharpening stage");
 
     // Check V4L2 sharpness control
@@ -1451,7 +1451,7 @@ TestOutput CameraInterfacesTesting::testEdgeEnhancement()
 
 /**
  * @brief Implementation of testColorCorrectionMatrix
- *        Verifies Color Correction Matrix (CCM) support in the Pi5 ISP.
+ *        Verifies Color Correction Matrix (CCM) support in the Zion platform ISP.
  * @return TestOutput with pass/fail and data
  */
 TestOutput CameraInterfacesTesting::testColorCorrectionMatrix()
@@ -1459,7 +1459,7 @@ TestOutput CameraInterfacesTesting::testColorCorrectionMatrix()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("=== Color Correction Matrix (CCM) (Raspberry Pi 5) ===");
+    data.push_back("=== Color Correction Matrix (CCM) (Zynq UltraScale+ MPSoC) ===");
     data.push_back("[INFO] Orin ISP implements a 3x3 CCM applied after demosaicing");
     data.push_back("[INFO] CCM converts sensor color space to sRGB/P3 output");
 
@@ -1501,7 +1501,7 @@ TestOutput CameraInterfacesTesting::testColorCorrectionMatrix()
 
 /**
  * @brief Implementation of testGammaCorrection
- *        Verifies gamma correction (tone-mapping) support in the Pi5 ISP.
+ *        Verifies gamma correction (tone-mapping) support in the Zion platform ISP.
  * @return TestOutput with pass/fail and data
  */
 TestOutput CameraInterfacesTesting::testGammaCorrection()
@@ -1509,7 +1509,7 @@ TestOutput CameraInterfacesTesting::testGammaCorrection()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("=== Gamma Correction / Tone Mapping (Raspberry Pi 5) ===");
+    data.push_back("=== Gamma Correction / Tone Mapping (Zynq UltraScale+ MPSoC) ===");
     data.push_back("[INFO] Orin ISP implements a 1024-entry LUT-based gamma correction engine");
     data.push_back("[INFO] Supports sRGB gamma (2.2), linear, and custom tone curves");
 

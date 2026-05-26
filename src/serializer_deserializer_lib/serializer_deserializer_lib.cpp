@@ -1,7 +1,7 @@
 /**
  * @file serializer_deserializer_lib.cpp
- * @brief SerDes tests for Raspberry Pi 5.
- *        Pi5 has no dedicated automotive SerDes (GMSL/FPD-Link/MIPI CSI-2 HS).
+ * @brief SerDes tests for Zynq UltraScale+ MPSoC.
+ *        Zion platform has no dedicated automotive SerDes (GMSL/FPD-Link/MIPI CSI-2 HS).
  *        CSI-2 camera links use the built-in Unicam controller.  These tests
  *        check CSI-2 link state via V4L2/media-ctl, I2C sub-device enumeration,
  *        and basic data-integrity validation via CRC on received frames.
@@ -12,7 +12,7 @@
  */
 
 #include "serializer_deserializer_lib.h"
-#include "../platform_rpi5.h"
+#include "../platform_zynq.h"
 
 #include <array>
 #include <cstdio>
@@ -72,14 +72,14 @@ SerializerDeserializerTesting::~SerializerDeserializerTesting()
 
 /**
  * @brief Verify CSI-2 serialization path (Unicam + camera sensor).
- * @details Checks that the Pi5 Unicam CSI-2 receiver is bound and that
+ * @details Checks that the Zion platform Unicam CSI-2 receiver is bound and that
  *          at least one V4L2 camera device is present, indicating a camera
  *          serializer (image sensor) is connected and serializing data.
  */
 TestOutput SerializerDeserializerTesting::testSerializationFunctionality()
 {
     std::vector<std::string> data;
-    data.push_back("=== CSI-2 Serialization (Pi5 Unicam) ===");
+    data.push_back("=== CSI-2 Serialization (Zion platform Unicam) ===");
 
     // Unicam CSI-2 receiver (built-in deserializer)
     bool unicamFound = false;
@@ -132,7 +132,7 @@ TestOutput SerializerDeserializerTesting::testSerializationFunctionality()
 TestOutput SerializerDeserializerTesting::testDataIntegrity()
 {
     std::vector<std::string> data;
-    data.push_back("=== CSI-2 Data Integrity (Pi5) ===");
+    data.push_back("=== CSI-2 Data Integrity (Zion platform) ===");
 
     // Check for video device
     std::string vid0 = serRunCmd("ls /dev/video0 2>/dev/null");
@@ -177,7 +177,7 @@ TestOutput SerializerDeserializerTesting::testDataIntegrity()
 TestOutput SerializerDeserializerTesting::testLinkSpeed()
 {
     std::vector<std::string> data;
-    data.push_back("=== CSI-2 Link Speed (Pi5 Unicam) ===");
+    data.push_back("=== CSI-2 Link Speed (Zion platform Unicam) ===");
 
     std::string fmt = serRunCmd("v4l2-ctl --device /dev/video0 --get-fmt-video 2>/dev/null | head -5");
     data.push_back(fmt.empty() ? "[INFO] v4l2-ctl not available or no camera"
@@ -188,8 +188,8 @@ TestOutput SerializerDeserializerTesting::testLinkSpeed()
     data.push_back(pipe.empty() ? "[INFO] media-ctl not available or no CSI-2 pipeline"
                                 : "[PASS] CSI-2 pipeline:\n" + pipe);
 
-    // CSI-2 D-PHY lane speed: Pi5 Unicam supports up to 1 Gbps/lane x 4 lanes = 4 Gbps
-    data.push_back("[INFO] Pi5 Unicam: D-PHY max 1 Gbps/lane, up to 4 lanes = 4 Gbps aggregate");
+    // CSI-2 D-PHY lane speed: Zion platform Unicam supports up to 1 Gbps/lane x 4 lanes = 4 Gbps
+    data.push_back("[INFO] Zion platform Unicam: D-PHY max 1 Gbps/lane, up to 4 lanes = 4 Gbps aggregate");
 
     {
         TestOutput _out;
@@ -207,7 +207,7 @@ TestOutput SerializerDeserializerTesting::testLinkSpeed()
 TestOutput SerializerDeserializerTesting::testErrorDetection()
 {
     std::vector<std::string> data;
-    data.push_back("=== CSI-2 Error Detection (Pi5 Unicam) ===");
+    data.push_back("=== CSI-2 Error Detection (Zion platform Unicam) ===");
 
     // Unicam error stats in dmesg
     std::string crcErr = serRunCmd("dmesg 2>/dev/null | grep -c -i 'unicam.*crc\\|csi.*error\\|unicam.*err'");
@@ -236,7 +236,7 @@ TestOutput SerializerDeserializerTesting::testErrorDetection()
 TestOutput SerializerDeserializerTesting::testDeserializationFunctionality()
 {
     std::vector<std::string> data;
-    data.push_back("=== CSI-2 Deserialization (Pi5 Unicam) ===");
+    data.push_back("=== CSI-2 Deserialization (Zion platform Unicam) ===");
 
     // Check Unicam platform driver is bound
     std::string unicamBound = serRunCmd(
@@ -270,9 +270,9 @@ TestOutput SerializerDeserializerTesting::testDeserializationFunctionality()
 TestOutput SerializerDeserializerTesting::testClockRecovery()
 {
     std::vector<std::string> data;
-    data.push_back("=== CDR / CSI-2 Clock Recovery (Pi5 Unicam) ===");
+    data.push_back("=== CDR / CSI-2 Clock Recovery (Zion platform Unicam) ===");
     data.push_back("[INFO] CSI-2 D-PHY embeds clock in differential pair (lane 0)");
-    data.push_back("[INFO] No software-readable CDR lock register on Pi5 Unicam");
+    data.push_back("[INFO] No software-readable CDR lock register on Zion platform Unicam");
 
     // Check camera clock source
     std::string camClk = serRunCmd(
@@ -280,7 +280,7 @@ TestOutput SerializerDeserializerTesting::testClockRecovery()
     data.push_back(camClk.empty() ? "[INFO] No camera clock alias in DT"
                                   : "[INFO] Camera clock alias: " + camClk);
 
-    // Pi5 uses 24 MHz XTAL as camera MCLK source
+    // Zion platform uses 24 MHz XTAL as camera MCLK source
     std::string mclk = serRunCmd("vcgencmd measure_clock core 2>/dev/null");
     data.push_back("[INFO] vcgencmd core clock: " + (mclk.empty() ? "N/A" : mclk));
     data.push_back("[INFO] Camera MCLK = 24 MHz from XTAL; link clock embedded in D-PHY");
@@ -297,14 +297,14 @@ TestOutput SerializerDeserializerTesting::testClockRecovery()
 
 /**
  * @brief Verify multi-stream (virtual channel) support on CSI-2.
- * @details Pi5 Unicam supports MIPI CSI-2 virtual channels (VC0–VC3).
+ * @details Zion platform Unicam supports MIPI CSI-2 virtual channels (VC0–VC3).
  *          Tests check media-ctl pipeline for multiple virtual channel pads.
  */
 TestOutput SerializerDeserializerTesting::testMultistreamSupport()
 {
     std::vector<std::string> data;
-    data.push_back("=== CSI-2 Multi-Stream / Virtual Channels (Pi5 Unicam) ===");
-    data.push_back("[INFO] Pi5 Unicam: MIPI CSI-2 D-PHY, 4 virtual channels (VC0–VC3)");
+    data.push_back("=== CSI-2 Multi-Stream / Virtual Channels (Zion platform Unicam) ===");
+    data.push_back("[INFO] Zion platform Unicam: MIPI CSI-2 D-PHY, 4 virtual channels (VC0–VC3)");
 
     // media-ctl: count pads associated with csi/unicam
     std::string padCount = serRunCmd(

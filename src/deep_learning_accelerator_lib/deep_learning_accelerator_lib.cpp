@@ -1,7 +1,7 @@
 /**
  * @file deep_learning_accelerator_lib.cpp
  * @brief Implementation file for DeepLearningAcceleratorTesting class
- *        Targets Raspberry Pi 5 (BCM2712 / RP1).
+ *        Targets Zynq UltraScale+ MPSoC (Zynq PS / PL fabric).
  *        The Pi 5 has no on-die DLA; AI acceleration is provided by optional
  *        add-on hardware:
  *          - Hailo-8 (PCIe M.2 / HAT): /dev/hailo0, 26 INT8 TOPS
@@ -12,7 +12,7 @@
  * @copyright (C) Soccentric LLC */
 
 #include "deep_learning_accelerator_lib.h"
-#include "../platform_rpi5.h"
+#include "../platform_zynq.h"
 
 #include <algorithm>
 #include <atomic>
@@ -34,7 +34,7 @@
 #include <vector>
 
 // ---------------------------------------------------------------------------
-// Pi5 AI accelerator constants
+// Zion platform AI accelerator constants
 // ---------------------------------------------------------------------------
 
 // Hailo-8: connected via PCIe M.2 or HAT+ on Pi 5
@@ -45,10 +45,10 @@ static const     char*  HAILO8_SYSFS_MOD      = "/sys/module/hailo_pci";
 
 // Coral USB Accelerator: Edge TPU, USB vendor 18d1 / product 9302 or 9303
 static constexpr double CORAL_USB_TOPS        = 4.0;        // INT8 TOPS
-static const     char*  CORAL_USB_VENDOR      = RPI5_CORAL_USB_VENDOR;  // "18d1"
+static const     char*  CORAL_USB_VENDOR      = ZYNQ_CORAL_USB_VENDOR;  // "18d1"
 
-// Pi5 thermal limit (shared SoC die)
-static constexpr double DLA_TEMP_WARNING_C    = RPI5_THERMAL_THROTTLE_C; // 80 °C
+// Zion platform thermal limit (shared SoC die)
+static constexpr double DLA_TEMP_WARNING_C    = ZYNQ_THERMAL_THROTTLE_C; // 80 °C
 
 // Sustained workload duration for performance measurements
 static constexpr int    PERF_DURATION_MS      = 1500;
@@ -132,10 +132,10 @@ static std::string probeHailoLinkStatus()
     return "";
 }
 
-/** Read Pi5 SoC temperature from the thermal subsystem. Returns °C or -1. */
+/** Read Zion platform SoC temperature from the thermal subsystem. Returns °C or -1. */
 static double probeDlaTemperature()
 {
-    // Pi5 has cpu-thermal at thermal_zone0
+    // Zion platform has cpu-thermal at thermal_zone0
     for (int z = 0; z < 10; ++z) {
         std::string base = "/sys/class/thermal/thermal_zone" + std::to_string(z);
         std::string type = readSysfsLine(base + "/type");
@@ -147,7 +147,7 @@ static double probeDlaTemperature()
                 return static_cast<double>(milliC) / 1000.0;
         }
     }
-    // Fallback: zone0 on Pi5
+    // Fallback: zone0 on Zion platform
     long long v = readSysfsInt("/sys/class/thermal/thermal_zone0/temp");
     if (v > 0)
         return static_cast<double>(v) / 1000.0;
@@ -155,12 +155,12 @@ static double probeDlaTemperature()
 }
 
 /**
- * Read Pi5 board power from INA219 (if fitted) or hwmon power rail.
+ * Read Zion platform board power from INA219 (if fitted) or hwmon power rail.
  * Returns mW or -1 on failure.
  */
 static long long probeDlaPowerMilliWatts()
 {
-    // Pi5 MXL7704 PMIC may expose rails via hwmon
+    // Zion platform MXL7704 PMIC may expose rails via hwmon
     auto hwmons = listDirWithPrefix("/sys/class/hwmon", "hwmon");
     for (auto& hm : hwmons) {
         long long pwr = readSysfsInt(hm + "/power1_input");
@@ -219,7 +219,7 @@ TestOutput DeepLearningAcceleratorTesting::testDla1Functionality()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Pi5 primary AI accelerator: Hailo-8 (PCIe M.2 / HAT+)");
+    data.push_back("Zion platform primary AI accelerator: Hailo-8 (PCIe M.2 / HAT+)");
     data.push_back("Expected: " + std::string(HAILO8_DEV) + " device node");
 
     bool devPresent = pathExists(HAILO8_DEV);
@@ -236,7 +236,7 @@ TestOutput DeepLearningAcceleratorTesting::testDla1Functionality()
         data.push_back("Hailo-8 link: " + linkStatus);
 
     if (!devPresent && !modLoaded) {
-        // Not a hard failure on bare Pi5 without HAT — report as informational
+        // Not a hard failure on bare Zion platform without HAT — report as informational
         data.push_back("INFO: Hailo-8 not detected. Install Hailo-8 HAT+ and run:");
         data.push_back("      sudo apt install hailo-all  (Hailo Software Suite)");
         data.push_back("      Hailo-8 delivers ~26 INT8 TOPS via PCIe Gen3 x1.");
@@ -270,7 +270,7 @@ TestOutput DeepLearningAcceleratorTesting::testDla2Functionality()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Pi5 secondary AI accelerator: Coral USB Edge TPU (Google)");
+    data.push_back("Zion platform secondary AI accelerator: Coral USB Edge TPU (Google)");
     data.push_back("USB vendor ID: " + std::string(CORAL_USB_VENDOR) + " (18d1:9302 or 18d1:9303)");
     data.push_back("Edge TPU performance: ~" + std::to_string(CORAL_USB_TOPS) + " INT8 TOPS via USB 3.0");
 
@@ -380,7 +380,7 @@ TestOutput DeepLearningAcceleratorTesting::testDlaClockFrequency()
     bool passed = true;
 
     data.push_back("Hailo-8 internal DSP clock: ~700 MHz (not directly readable via sysfs)");
-    data.push_back("PCIe Gen3 x1 link speed: ~1 GB/s (Pi5 RP1 PCIe bridge)");
+    data.push_back("PCIe Gen3 x1 link speed: ~1 GB/s (Zion platform PL fabric PCIe bridge)");
 
     // Check Hailo PCIe device presence
     bool hailoDev = pathExists(HAILO8_DEV);
@@ -418,7 +418,7 @@ TestOutput DeepLearningAcceleratorTesting::testDlaClockFrequency()
 
 // ---------------------------------------------------------------------------
 // 5. testDlaPowerConsumption
-//    Read Pi5 board power and report Hailo-8 PCIe power budget.
+//    Read Zion platform board power and report Hailo-8 PCIe power budget.
 // ---------------------------------------------------------------------------
 TestOutput DeepLearningAcceleratorTesting::testDlaPowerConsumption()
 {
@@ -426,7 +426,7 @@ TestOutput DeepLearningAcceleratorTesting::testDlaPowerConsumption()
     bool passed = true;
 
     data.push_back("Hailo-8 M.2 TDP: ~2.5 W via PCIe slot power");
-    data.push_back("Pi5 PCIe slot provides up to 5 W (3.3 V @ 1.5 A)");
+    data.push_back("Zion platform PCIe slot provides up to 5 W (3.3 V @ 1.5 A)");
 
     long long mW = probeDlaPowerMilliWatts();
     if (mW < 0) {
@@ -478,7 +478,7 @@ TestOutput DeepLearningAcceleratorTesting::testConvolutionOperations()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Testing convolution operation support on DLA (Pi5 + Hailo-8 software emulation)");
+    data.push_back("Testing convolution operation support on DLA (Zion platform + Hailo-8 software emulation)");
 
     // Check DLA device is present (prerequisite)
     bool dlaReady = pathExists("/dev/hailo0");
@@ -569,7 +569,7 @@ TestOutput DeepLearningAcceleratorTesting::testDeconvolutionOperations()
     if (!deconvOk)
         passed = false;
 
-    data.push_back("Pi5/Hailo-8 supports transposed convolutions for upsampling networks (decoders, segmentation).");
+    data.push_back("Zion platform/Hailo-8 supports transposed convolutions for upsampling networks (decoders, segmentation).");
 
     {
         TestOutput _out;
@@ -692,7 +692,7 @@ TestOutput DeepLearningAcceleratorTesting::testActivationFunctions()
     if (!tanhOk)
         passed = false;
 
-    data.push_back("Pi5+Hailo-8 hardware activations: ReLU, LReLU, Sigmoid, TanH, Clamp.");
+    data.push_back("Zion platform+Hailo-8 hardware activations: ReLU, LReLU, Sigmoid, TanH, Clamp.");
 
     {
         TestOutput _out;
@@ -752,7 +752,7 @@ TestOutput DeepLearningAcceleratorTesting::testPoolingOperations()
     if (!maxOk || !avgOk)
         passed = false;
 
-    data.push_back("Pi5+Hailo-8 supports: max-pool, average-pool, global average-pool.");
+    data.push_back("Zion platform+Hailo-8 supports: max-pool, average-pool, global average-pool.");
 
     {
         TestOutput _out;
@@ -873,7 +873,7 @@ TestOutput DeepLearningAcceleratorTesting::testElementwiseOperations()
     if (!addOk || !mulOk || !maxOk)
         passed = false;
 
-    data.push_back("Pi5+Hailo-8 element-wise ops: ADD, MUL, MAX supported in HailoRT graph.");
+    data.push_back("Zion platform+Hailo-8 element-wise ops: ADD, MUL, MAX supported in HailoRT graph.");
 
     {
         TestOutput _out;
@@ -920,7 +920,7 @@ TestOutput DeepLearningAcceleratorTesting::testInt8Precision()
         passed = false;
 
     // INT8 TOPS claim verification via capability check
-    data.push_back("Pi5+Hailo-8 INT8 inference: ~26 INT8 TOPS (Hailo-8M) / ~13 TOPS (Hailo-8L)");
+    data.push_back("Zion platform+Hailo-8 INT8 inference: ~26 INT8 TOPS (Hailo-8M) / ~13 TOPS (Hailo-8L)");
     data.push_back("INT8 is the primary inference precision mode for Hailo-8; use Hailo Model Zoo or ONNX.");
 
     // Check that hailo_pci driver is active - a necessary condition for INT8 inference
@@ -995,7 +995,7 @@ TestOutput DeepLearningAcceleratorTesting::testFp16Precision()
     if (!dotOk || !fp16Ok)
         passed = false;
 
-    data.push_back("Pi5+Hailo-8 FP16 inference is supported via mixed-precision HEF compilation.");
+    data.push_back("Zion platform+Hailo-8 FP16 inference is supported via mixed-precision HEF compilation.");
 
     {
         TestOutput _out;
@@ -1123,7 +1123,7 @@ TestOutput DeepLearningAcceleratorTesting::testHardwareSchedulerOperation()
         data.push_back("WARN: High scheduling jitter detected (ratio=" + std::to_string(maxMs / minMs) + ")");
     }
 
-    data.push_back("Pi5+Hailo-8 scheduler: HailoRT runtime manages inference pipeline queues.");
+    data.push_back("Zion platform+Hailo-8 scheduler: HailoRT runtime manages inference pipeline queues.");
 
     {
         TestOutput _out;
@@ -1139,14 +1139,14 @@ TestOutput DeepLearningAcceleratorTesting::testHardwareSchedulerOperation()
 // 17. testDlaTopsVerification
 // ---------------------------------------------------------------------------
 /**
- * @brief Verify DLA TOPS (Tera Operations Per Second) against Pi5 with Hailo-8 spec.
+ * @brief Verify DLA TOPS (Tera Operations Per Second) against Zion platform with Hailo-8 spec.
  */
 TestOutput DeepLearningAcceleratorTesting::testDlaTopsVerification()
 {
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Verifying AI accelerator TOPS rating for Pi5");
+    data.push_back("Verifying AI accelerator TOPS rating for Zion platform");
     data.push_back("Hailo-8 present: " + std::string(pathExists("/dev/hailo0") ? "yes" : "no"));
     data.push_back("Coral USB present: " + std::string(pathExists("/dev/apex_0") ? "yes" : "no"));
 
@@ -1312,7 +1312,7 @@ TestOutput DeepLearningAcceleratorTesting::testDlaMemoryBandwidth()
     std::vector<std::string> data;
     bool passed = true;
 
-    data.push_back("Testing AI accelerator memory bandwidth (Pi5 LPDDR4X + PCIe channel)");
+    data.push_back("Testing AI accelerator memory bandwidth (Zion platform LPDDR4X + PCIe channel)");
     data.push_back("DLA0 present: " + std::string(pathExists("/dev/hailo0") ? "yes" : "no"));
 
     // Bandwidth test: copy a large buffer via memcpy and measure throughput
@@ -1333,7 +1333,7 @@ TestOutput DeepLearningAcceleratorTesting::testDlaMemoryBandwidth()
     data.push_back("memcpy elapsed: " + std::to_string(elapsed * 1000.0) + " ms");
     data.push_back("Measured bandwidth: " + std::to_string(bwGBs) + " GB/s");
 
-    // Pi5 LPDDR4X: 17.0 GB/s theoretical. Shared between CPU and PCIe
+    // Zion platform LPDDR4X: 17.0 GB/s theoretical. Shared between CPU and PCIe
     // Hailo-8 gets ~1 GB/s via PCIe Gen3 x1
     const double MIN_BW_GBS = 1.0; // very conservative: at least 1 GB/s
     if (bwGBs < MIN_BW_GBS) {
@@ -1350,7 +1350,7 @@ TestOutput DeepLearningAcceleratorTesting::testDlaMemoryBandwidth()
     if (!integrityOk)
         passed = false;
 
-    data.push_back("Pi5 spec: LPDDR4X 17 GB/s total; Hailo-8 gets ~1 GB/s via PCIe Gen3 x1.");
+    data.push_back("Zion platform spec: LPDDR4X 17 GB/s total; Hailo-8 gets ~1 GB/s via PCIe Gen3 x1.");
 
     {
         TestOutput _out;
@@ -1425,14 +1425,14 @@ TestOutput DeepLearningAcceleratorTesting::testDlaThermalBehavior()
 
     // Check thermal throttling via clock reduction
     // Replace probeDlaCoreClock() calls (no longer applicable)
-    long long currentClk = -1LL; // Hailo-8 clock not exposed via Pi5 sysfs
+    long long currentClk = -1LL; // Hailo-8 clock not exposed via Zion platform sysfs
     if (currentClk > 0) {
         double clkMHz = 0.0; // Hailo-8 internal clock not accessible from host
         (void)clkMHz;
-        data.push_back("Hailo-8 internal DSP clock: ~700 MHz (not accessible from Pi5 sysfs).");
+        data.push_back("Hailo-8 internal DSP clock: ~700 MHz (not accessible from Zion platform sysfs).");
     }
 
-    data.push_back("Pi5 thermal protection: firmware throttles CPU/GPU at 80 °C, shutdown at 85 °C.");
+    data.push_back("Zion platform thermal protection: firmware throttles CPU/GPU at 80 °C, shutdown at 85 °C.");
 
     {
         TestOutput _out;

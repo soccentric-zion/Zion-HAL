@@ -1,5 +1,5 @@
 // client_service.proto — bidirectional streaming protocol between
-// the Acadia Client (on-target) and the Acadia Server (x86).
+// the Zion Client (on-target) and the Zion Server (x86).
 //
 // Design: one persistent bidi stream per client process; all runs multiplex
 // on that single stream keyed by run_id.  The Server side initiates run
@@ -10,7 +10,7 @@
 
 syntax = "proto3";
 
-package acadia.stream;
+package zion.stream;
 
 import "google/protobuf/any.proto";
 import "google/protobuf/timestamp.proto";

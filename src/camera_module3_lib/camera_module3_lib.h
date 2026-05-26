@@ -9,16 +9,16 @@
 
 /**
  * @class CameraModule3Testing
- * @brief Tests for the Raspberry Pi Camera Module 3 (IMX708).
+ * @brief Tests for the Zynq Camera Module 3 (IMX708).
  *
  * @details The Camera Module 3 uses the Sony IMX708 sensor:
  *   - 12.3 MP (4608×2592), 1/2.43" sensor
  *   - Phase-detection autofocus (PDAF)
  *   - HDR mode (staggered dual-exposure)
  *   - FoV: standard 66° / wide 102° diagonal
- *   - Interface: MIPI CSI-2 2-lane D-PHY → RP1 Unicam
- *   - V4L2 driver: unicam + bcm2835-isp
- *   - libcamera pipeline: RPi (Raspberry Pi)
+ *   - Interface: MIPI CSI-2 2-lane D-PHY → PL fabric Unicam
+ *   - V4L2 driver: unicam + zynq-isp
+ *   - libcamera pipeline: RPi (Zynq)
  */
 class CameraModule3Testing : public TestBase
 {
@@ -41,7 +41,7 @@ class CameraModule3Testing : public TestBase
     /** @brief Attempt a single still capture via libcamera-still or v4l2-ctl. */
     TestOutput testStillCapture();
 
-    /** @brief Verify MIPI CSI-2 interface via RP1 Unicam sysfs / dmesg. */
+    /** @brief Verify MIPI CSI-2 interface via PL fabric Unicam sysfs / dmesg. */
     TestOutput testMipiCsiInterface();
 
     /** @brief Check supported pixel formats (RAW10, RGB888, YUV420, etc.). */

@@ -5,4 +5,4 @@ install(TARGETS functional_safety_lib
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
-install(FILES functional_safety_lib.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/acadia_hal)
+install(FILES functional_safety_lib.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/zion_hal)

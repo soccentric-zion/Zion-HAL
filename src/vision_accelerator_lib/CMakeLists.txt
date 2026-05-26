@@ -5,4 +5,4 @@ install(TARGETS vision_accelerator_lib
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
-install(FILES vision_accelerator_lib.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/acadia_hal)
+install(FILES vision_accelerator_lib.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/zion_hal)

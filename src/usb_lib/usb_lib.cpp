@@ -1,6 +1,6 @@
 /**
  * @file usb_lib.cpp
- * @brief Implementation file for UsbTesting class targeting Raspberry Pi 5
+ * @brief Implementation file for UsbTesting class targeting Zynq UltraScale+ MPSoC
  * @details Tests USB host/device mode, USB 3.2 Gen2 speeds, backward compatibility,
  *          power delivery, device enumeration, hotplug, suspend/resume, and device
  *          class support (mass storage, cameras, network adapters, hubs, audio, HID).
@@ -9,7 +9,7 @@
  * @copyright (C) Soccentric LLC */
 
 #include "usb_lib.h"
-#include "../platform_rpi5.h"
+#include "../platform_zynq.h"
 #include <algorithm>
 #include <cerrno>
 #include <chrono>
@@ -119,8 +119,8 @@ UsbTesting::~UsbTesting()
 // ---------------------------------------------------------------------------
 
 /**
- * @brief Test USB host mode by verifying xHCI host controller presence on Pi5.
- * @details Checks for xhci-hcd (RP1 USB host) driver binding in
+ * @brief Test USB host mode by verifying xHCI host controller presence on Zion platform.
+ * @details Checks for xhci-hcd (PL fabric USB host) driver binding in
  *          /sys/bus/platform/drivers/xhci-hcd and scans USB root hubs
  *          (usb1, usb2, …) exposed under /sys/bus/usb/devices/.
  * @return TestOutput with pass/fail and diagnostic data
@@ -130,7 +130,7 @@ TestOutput UsbTesting::testUsbHostMode()
     std::vector<std::string> data;
     bool passed = false;
 
-    data.push_back("=== USB Host Mode (Pi5 / xhci-hcd xHCI) ===");
+    data.push_back("=== USB Host Mode (Zion platform / xhci-hcd xHCI) ===");
 
     // Check xhci-hcd platform driver
     const std::string xhciDriverPath = "/sys/bus/platform/drivers/xhci-hcd";
@@ -184,10 +184,10 @@ TestOutput UsbTesting::testUsbHostMode()
 }
 
 /**
- * @brief Test USB device (peripheral/gadget) mode on Pi5.
+ * @brief Test USB device (peripheral/gadget) mode on Zion platform.
  * @details Checks for the USB gadget driver framework
  *          (/sys/class/udc/) which exposes UDC (USB Device Controller) entries.
- *          Pi5 exposes its UDC via dwc3.
+ *          Zion platform exposes its UDC via dwc3.
  * @return TestOutput with pass/fail and diagnostic data
  */
 TestOutput UsbTesting::testUsbDeviceMode()
@@ -195,7 +195,7 @@ TestOutput UsbTesting::testUsbDeviceMode()
     std::vector<std::string> data;
     bool passed = false;
 
-    data.push_back("=== USB Device (Gadget) Mode (Pi5 / dwc3) ===");
+    data.push_back("=== USB Device (Gadget) Mode (Zion platform / dwc3) ===");
 
     const std::string udcClass = "/sys/class/udc";
     DIR* dir = opendir(udcClass.c_str());
@@ -249,9 +249,9 @@ TestOutput UsbTesting::testUsbDeviceMode()
 }
 
 /**
- * @brief Test USB 3.2 Gen2 (SuperSpeed+ / 10 Gbps) port availability on Pi5.
+ * @brief Test USB 3.2 Gen2 (SuperSpeed+ / 10 Gbps) port availability on Zion platform.
  * @details Scans /sys/bus/usb/devices/ for devices or root hubs reporting
- *          "10000" Mbps (SuperSpeed+). Pi5 provides USB 3.2 Gen2 via
+ *          "10000" Mbps (SuperSpeed+). Zion platform provides USB 3.2 Gen2 via
  *          its Type-C port.
  * @return TestOutput with pass/fail and diagnostic data
  */
@@ -260,7 +260,7 @@ TestOutput UsbTesting::testUsb32Gen2Speed()
     std::vector<std::string> data;
     bool found = false;
 
-    data.push_back("=== USB 3.2 Gen2 (SuperSpeed+, 10 Gbps) on Pi5 ===");
+    data.push_back("=== USB 3.2 Gen2 (SuperSpeed+, 10 Gbps) on Zion platform ===");
 
     std::vector<std::string> devs = getUsbDevices();
     int ssPlus = 0;
@@ -281,7 +281,7 @@ TestOutput UsbTesting::testUsb32Gen2Speed()
 
     if (!found) {
         data.push_back("[INFO] No USB 3.2 Gen2 (10000 Mbps) devices currently enumerated");
-        data.push_back("[INFO] Pi5 Type-C controller supports Gen2 – connect a 10G device to verify");
+        data.push_back("[INFO] Zion platform Type-C controller supports Gen2 – connect a 10G device to verify");
         // Presence of the SuperSpeedPlus capable root hub still counts as support
         for (const auto& dev : devs) {
             std::string speed = readSysfs(dev + "/speed");
@@ -305,7 +305,7 @@ TestOutput UsbTesting::testUsb32Gen2Speed()
 }
 
 /**
- * @brief Test USB 3.1 Gen1 (SuperSpeed / 5 Gbps) backward compatibility on Pi5.
+ * @brief Test USB 3.1 Gen1 (SuperSpeed / 5 Gbps) backward compatibility on Zion platform.
  * @details Checks for devices or ports reporting a speed of 5000 Mbps in sysfs.
  * @return TestOutput with pass/fail and diagnostic data
  */
@@ -358,7 +358,7 @@ TestOutput UsbTesting::testUsb31Gen1BackwardCompatibility()
 }
 
 /**
- * @brief Test USB 2.0 backward compatibility on Pi5.
+ * @brief Test USB 2.0 backward compatibility on Zion platform.
  * @details Checks for USB 2.0 (480 Mbps) root hubs and connected devices in sysfs.
  * @return TestOutput with pass/fail and diagnostic data
  */
@@ -411,7 +411,7 @@ TestOutput UsbTesting::testUsb20BackwardCompatibility()
 }
 
 /**
- * @brief Test USB Power Delivery (VBUS/current advertisement) on Pi5.
+ * @brief Test USB Power Delivery (VBUS/current advertisement) on Zion platform.
  * @details Reads power-related sysfs attributes (bMaxPower, bmAttributes) from
  *          connected USB devices and checks for USB-C power delivery via
  *          /sys/class/power_supply/ (ucsi_source / pd charger entries).
@@ -501,7 +501,7 @@ TestOutput UsbTesting::testUsbPowerDelivery()
 }
 
 /**
- * @brief Test enumeration of multiple USB devices on Pi5.
+ * @brief Test enumeration of multiple USB devices on Zion platform.
  * @details Counts the total number of USB devices enumerated in
  *          /sys/bus/usb/devices/ (excluding root hubs) and verifies
  *          that each has a valid idVendor/idProduct.
@@ -568,7 +568,7 @@ TestOutput UsbTesting::testMultipleUsbDeviceEnumeration()
 }
 
 /**
- * @brief Test USB hotplug (dynamic device add/removal) detection on Pi5.
+ * @brief Test USB hotplug (dynamic device add/removal) detection on Zion platform.
  * @details Verifies the udev daemon is running (which handles hotplug events)
  *          and that the kernel USB hotplug path /proc/sys/kernel/hotplug or
  *          udevd socket is present.  Also checks that the usb_storage and
@@ -608,7 +608,7 @@ TestOutput UsbTesting::testUsbHotplugDetection()
         passed = true;
     }
 
-    // Check USB autosuspend / wakeup-capable root hubs (Pi5 power mgmt)
+    // Check USB autosuspend / wakeup-capable root hubs (Zion platform power mgmt)
     std::vector<std::string> devs = getUsbDevices();
     int wakeupCapable = 0;
     for (const auto& dev : devs) {
@@ -635,7 +635,7 @@ TestOutput UsbTesting::testUsbHotplugDetection()
 }
 
 /**
- * @brief Test USB suspend/resume power management on Pi5.
+ * @brief Test USB suspend/resume power management on Zion platform.
  * @details Reads the runtime power management state of each connected USB
  *          device (/sys/bus/usb/devices/<dev>/power/runtime_status and
  *          /sys/../power/control) to verify autosuspend is configured.
@@ -688,7 +688,7 @@ TestOutput UsbTesting::testUsbSuspendresume()
     data.push_back("Active devices     : " + std::to_string(activeCount));
     data.push_back("Autosuspend-enabled: " + std::to_string(autosuspendCount));
 
-    // Pi5 supports USB runtime PM; having the sysfs attributes is enough to pass
+    // Zion platform supports USB runtime PM; having the sysfs attributes is enough to pass
     if (suspendedCount > 0 || autosuspendCount > 0) {
         data.push_back("[PASS] USB suspend/resume runtime PM is functional");
         passed = true;
@@ -710,7 +710,7 @@ TestOutput UsbTesting::testUsbSuspendresume()
 }
 
 /**
- * @brief Test USB mass storage device support on Pi5.
+ * @brief Test USB mass storage device support on Zion platform.
  * @details Scans /sys/bus/usb/devices/ for USB Mass Storage (class 0x08)
  *          devices and checks for corresponding block device nodes in /dev.
  * @return TestOutput with pass/fail and diagnostic data
@@ -795,7 +795,7 @@ TestOutput UsbTesting::testUsbMassStorageDevices()
 }
 
 /**
- * @brief Test USB camera (UVC) device support on Pi5.
+ * @brief Test USB camera (UVC) device support on Zion platform.
  * @details Scans USB interfaces for class 0x0E (Video) UVC devices and
  *          checks for /dev/video* nodes created by the uvcvideo driver.
  * @return TestOutput with pass/fail and diagnostic data
@@ -852,7 +852,7 @@ TestOutput UsbTesting::testUsbCameras()
 }
 
 /**
- * @brief Test USB network adapter support on Pi5.
+ * @brief Test USB network adapter support on Zion platform.
  * @details Scans for USB Communication Device Class (CDC, 0x02) or
  *          vendor-specific USB network (class 0xFF) interfaces and checks
  *          for corresponding network interfaces created in /sys/class/net/.
@@ -930,7 +930,7 @@ TestOutput UsbTesting::testUsbNetworkAdapters()
 }
 
 /**
- * @brief Test USB hub support and downstream port enumeration on Pi5.
+ * @brief Test USB hub support and downstream port enumeration on Zion platform.
  * @details Scans /sys/bus/usb/devices/ for USB hub devices (class 0x09) and
  *          reports their downstream port count and connection status.
  * @return TestOutput with pass/fail and diagnostic data
@@ -1011,7 +1011,7 @@ TestOutput UsbTesting::testUsbHubs()
 }
 
 /**
- * @brief Test USB audio device support on Pi5.
+ * @brief Test USB audio device support on Zion platform.
  * @details Scans for USB Audio class (0x01) interfaces and checks for
  *          ALSA sound card entries created by the snd-usb-audio driver.
  * @return TestOutput with pass/fail and diagnostic data
@@ -1075,7 +1075,7 @@ TestOutput UsbTesting::testUsbAudioDevices()
 }
 
 /**
- * @brief Test USB HID (Human Interface Device) support on Pi5.
+ * @brief Test USB HID (Human Interface Device) support on Zion platform.
  * @details Scans for USB HID class (0x03) interfaces and verifies that the
  *          hid-generic / usbhid kernel driver has created corresponding
  *          /dev/input/event* or /dev/input/js* nodes.

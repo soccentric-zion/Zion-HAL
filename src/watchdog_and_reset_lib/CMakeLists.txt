@@ -5,4 +5,4 @@ install(TARGETS watchdog_and_reset_lib
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
-install(FILES watchdog_and_reset_lib.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/acadia_hal)
+install(FILES watchdog_and_reset_lib.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/zion_hal)

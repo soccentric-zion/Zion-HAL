@@ -9,7 +9,7 @@
 
 /**
  * @class SenseHatTesting
- * @brief Tests for the Raspberry Pi Sense HAT (V1 / V2).
+ * @brief Tests for the Zynq Sense HAT (V1 / V2).
  *
  * @details The Sense HAT attaches to the Pi 5 40-pin header and provides:
  *   - 8×8 RGB LED matrix  (rpi-sense-fb framebuffer or I2C ATtiny88 @ 0x46)
