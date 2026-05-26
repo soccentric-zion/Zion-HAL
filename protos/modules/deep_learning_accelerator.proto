@@ -1,0 +1,47 @@
+// Source: src/deep_learning_accelerator_lib/deep_learning_accelerator_lib.h
+//         (class DeepLearningAcceleratorTesting : public TestBase)
+//
+// Field-numbering rules: numbers start at 1, never renumber, mark removed fields reserved.
+
+syntax = "proto3";
+
+package hal.modules.deep_learning_accelerator;
+
+import "common.proto";
+
+// Config for the deep_learning_accelerator module.
+// Leave test_names empty to run all available tests.
+//
+// Available tests (in declaration order in DeepLearningAcceleratorTesting):
+//   testDla1Functionality
+//   testDla2Functionality
+//   testDualDlaConcurrentOperation
+//   testDlaClockFrequency
+//   testDlaPowerConsumption
+//   testConvolutionOperations
+//   testDeconvolutionOperations
+//   testFullyConnectedLayers
+//   testActivationFunctions
+//   testPoolingOperations
+//   testBatchNormalization
+//   testElementwiseOperations
+//   testInt8Precision
+//   testFp16Precision
+//   testStructuredSparsitySupport
+//   testHardwareSchedulerOperation
+//   testDlaTopsVerification
+//   testDlaThroughputTesting
+//   testDlaLatencyMeasurements
+//   testDlaMemoryBandwidth
+//   testDlaThermalBehavior
+message Config {
+  // Names of individual tests to execute; empty list = run all tests.
+  repeated string test_names = 1;
+}
+
+// Result from a single deep_learning_accelerator test run.
+message Result {
+  reserved 1;
+  reserved "test_results";
+  repeated hal.common.TestResult results = 2;
+}

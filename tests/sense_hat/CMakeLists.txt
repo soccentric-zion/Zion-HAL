@@ -1,0 +1,6 @@
+add_executable(test_sense_hat main.cpp)
+target_link_libraries(test_sense_hat PRIVATE sense_hat_lib)
+target_include_directories(test_sense_hat PRIVATE ${CMAKE_SOURCE_DIR}/src)
+add_test(NAME test_sense_hat COMMAND test_sense_hat)
+set_tests_properties(test_sense_hat PROPERTIES TIMEOUT 300)
+install(TARGETS test_sense_hat RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

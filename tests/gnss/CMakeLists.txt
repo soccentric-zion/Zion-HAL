@@ -1,0 +1,6 @@
+add_executable(test_gnss main.cpp)
+target_link_libraries(test_gnss PRIVATE gnss_lib)
+target_include_directories(test_gnss PRIVATE ${CMAKE_SOURCE_DIR}/src)
+add_test(NAME test_gnss COMMAND test_gnss)
+set_tests_properties(test_gnss PROPERTIES TIMEOUT 300)
+install(TARGETS test_gnss RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

@@ -1,0 +1,6 @@
+add_executable(test_external_connector main.cpp)
+target_link_libraries(test_external_connector PRIVATE external_connector_lib)
+target_include_directories(test_external_connector PRIVATE ${CMAKE_SOURCE_DIR}/src)
+add_test(NAME test_external_connector COMMAND test_external_connector)
+set_tests_properties(test_external_connector PROPERTIES TIMEOUT 300)
+install(TARGETS test_external_connector RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

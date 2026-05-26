@@ -1,0 +1,56 @@
+// Source: src/communication_interface_lib/communication_interface_lib.h
+//         (class CommunicationInterfaceTesting : public TestBase)
+//
+// Covers UART, SPI, I2C, and related serial communication interfaces.
+//
+// Field-numbering rules: numbers start at 1, never renumber, mark removed fields reserved.
+
+syntax = "proto3";
+
+package hal.modules.communication_interface;
+
+import "common.proto";
+
+// Config for the communication_interface module.
+// Leave test_names empty to run all available tests.
+//
+// Available tests (in declaration order in CommunicationInterfaceTesting):
+//   -- UART --
+//   testAllUartPortsFunctionality
+//   testVariousBaudRates
+//   testHardwareFlowControl
+//   testParityChecking
+//   testStopBitConfiguration
+//   testUartDmaOperation
+//   testUartInterruptHandling
+//   testConsoledebugUart
+//   -- SPI --
+//   testAllSpiControllers
+//   testSpiMasterMode
+//   testSpiSlaveMode
+//   testVariousSpiClockSpeeds
+//   testSpiModes
+//   testChipSelectFunctionality
+//   testSpiDmaTransfers
+//   testMultipleSpiDevices
+//   -- I2C --
+//   testAllI2cBuses
+//   testI2cMasterMode
+//   testI2cSlaveMode
+//   testStandardMode
+//   testFastMode
+//   testFastModePlus
+//   testHighspeedMode
+//   testI2cClockStretching
+//   (see source for any additional tests)
+message Config {
+  // Names of individual tests to execute; empty list = run all tests.
+  repeated string test_names = 1;
+}
+
+// Result from a single communication_interface test run.
+message Result {
+  reserved 1;
+  reserved "test_results";
+  repeated hal.common.TestResult results = 2;
+}

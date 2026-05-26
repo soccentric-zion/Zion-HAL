@@ -1,0 +1,6 @@
+add_executable(test_camera_interfaces main.cpp)
+target_link_libraries(test_camera_interfaces PRIVATE camera_interfaces_lib)
+target_include_directories(test_camera_interfaces PRIVATE ${CMAKE_SOURCE_DIR}/src)
+add_test(NAME test_camera_interfaces COMMAND test_camera_interfaces)
+set_tests_properties(test_camera_interfaces PROPERTIES TIMEOUT 300)
+install(TARGETS test_camera_interfaces RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

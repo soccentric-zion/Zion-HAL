@@ -1,0 +1,6 @@
+add_executable(test_audio_interfaces main.cpp)
+target_link_libraries(test_audio_interfaces PRIVATE audio_interfaces)
+target_include_directories(test_audio_interfaces PRIVATE ${CMAKE_SOURCE_DIR}/src)
+add_test(NAME test_audio_interfaces COMMAND test_audio_interfaces)
+set_tests_properties(test_audio_interfaces PROPERTIES TIMEOUT 300)
+install(TARGETS test_audio_interfaces RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

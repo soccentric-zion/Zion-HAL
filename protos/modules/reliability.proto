@@ -1,0 +1,31 @@
+// Source: src/reliability_lib/reliability_lib.h  (class ReliabilityTesting : public TestBase)
+//
+// Field-numbering rules: numbers start at 1, never renumber, mark removed fields reserved.
+
+syntax = "proto3";
+
+package hal.modules.reliability;
+
+import "common.proto";
+
+// Config for the reliability module.
+// Leave test_names empty to run all available tests.
+//
+// Available tests (in declaration order in ReliabilityTesting):
+//   testBurninTesting
+//   testPowerCycling
+//   testThermalCycling
+//   testMtbf
+//   testComponentAging
+//   testSolderJointIntegrity
+message Config {
+  // Names of individual tests to execute; empty list = run all tests.
+  repeated string test_names = 1;
+}
+
+// Result from a single reliability test run.
+message Result {
+  reserved 1;
+  reserved "test_results";
+  repeated hal.common.TestResult results = 2;
+}

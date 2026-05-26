@@ -1,0 +1,43 @@
+// Source: src/vision_accelerator_lib/vision_accelerator_lib.h
+//         (class VisionAcceleratorTesting : public TestBase)
+//
+// Field-numbering rules: numbers start at 1, never renumber, mark removed fields reserved.
+
+syntax = "proto3";
+
+package hal.modules.vision_accelerator;
+
+import "common.proto";
+
+// Config for the vision_accelerator module.
+// Leave test_names empty to run all available tests.
+//
+// Available tests (in declaration order in VisionAcceleratorTesting):
+//   testDualVectorProcessingUnits
+//   testVectorCoresInEachVpu
+//   testVliwSlots
+//   testScalarExecutionUnits
+//   testVectorExecutionUnits
+//   testDmaEngine1Functionality
+//   testDmaEngine2Functionality
+//   test5dimensionalAddressing
+//   test16HardwareChannelsPerEngine
+//   testDmaBandwidthTesting
+//   testDmaLatencyTesting
+//   testComputerVisionAlgorithms
+//   testImageProcessingPipelines
+//   testFeatureDetection
+//   testOpticalFlow
+//   testStereoDisparity
+//   testPvaPowerConsumption
+message Config {
+  // Names of individual tests to execute; empty list = run all tests.
+  repeated string test_names = 1;
+}
+
+// Result from a single vision_accelerator test run.
+message Result {
+  reserved 1;
+  reserved "test_results";
+  repeated hal.common.TestResult results = 2;
+}

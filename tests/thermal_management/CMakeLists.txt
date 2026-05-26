@@ -1,0 +1,6 @@
+add_executable(test_thermal_management main.cpp)
+target_link_libraries(test_thermal_management PRIVATE thermal_management_lib)
+target_include_directories(test_thermal_management PRIVATE ${CMAKE_SOURCE_DIR}/src)
+add_test(NAME test_thermal_management COMMAND test_thermal_management)
+set_tests_properties(test_thermal_management PROPERTIES TIMEOUT 300)
+install(TARGETS test_thermal_management RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

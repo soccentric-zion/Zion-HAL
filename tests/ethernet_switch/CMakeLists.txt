@@ -1,0 +1,6 @@
+add_executable(test_ethernet_switch main.cpp)
+target_link_libraries(test_ethernet_switch PRIVATE ethernet_switch_lib)
+target_include_directories(test_ethernet_switch PRIVATE ${CMAKE_SOURCE_DIR}/src)
+add_test(NAME test_ethernet_switch COMMAND test_ethernet_switch)
+set_tests_properties(test_ethernet_switch PROPERTIES TIMEOUT 300)
+install(TARGETS test_ethernet_switch RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

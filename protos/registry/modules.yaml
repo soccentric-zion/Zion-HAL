@@ -1,0 +1,491 @@
+# protos/registry/modules.yaml
+#
+# Machine-readable manifest of every HAL module exposed over the proto layer.
+#
+# Fields:
+#   id           — wire identifier (must be unique and permanent; never reuse)
+#   proto_package — fully-qualified proto package name
+#   config_type  — fully-qualified proto type for the module Config message
+#   result_type  — fully-qualified proto type for the module Result message
+#   version      — integer; increment when the proto contract changes
+#   status       — "active" | "deprecated"
+#   source_path  — repo-relative path to the C++ header this proto was derived from
+#
+# Adding a module: append a new entry here and create protos/modules/<id>.proto.
+# No other file needs to change.
+
+modules:
+  - id: audio_interfaces
+    proto_package: hal.modules.audio_interfaces
+    config_type: hal.modules.audio_interfaces.Config
+    result_type: hal.modules.audio_interfaces.Result
+    version: 1
+    status: active
+    category: peripherals
+    source_path: src/audio_interfaces/audio_interfaces.h
+
+  - id: camera_interfaces
+    proto_package: hal.modules.camera_interfaces
+    config_type: hal.modules.camera_interfaces.Config
+    result_type: hal.modules.camera_interfaces.Result
+    version: 1
+    status: active
+    category: peripherals
+    source_path: src/camera_interfaces_lib/camera_interfaces_lib.h
+
+  - id: camera_module3
+    proto_package: hal.modules.camera_module3
+    config_type: hal.modules.camera_module3.Config
+    result_type: hal.modules.camera_module3.Result
+    version: 1
+    status: active
+    category: peripherals
+    source_path: src/camera_module3_lib/camera_module3_lib.h
+
+  - id: clock_and_timing
+    proto_package: hal.modules.clock_and_timing
+    config_type: hal.modules.clock_and_timing.Config
+    result_type: hal.modules.clock_and_timing.Result
+    version: 1
+    status: active
+    category: timing
+    source_path: src/clock_and_timing_lib/clock_and_timing_lib.h
+
+  - id: communication_interface
+    proto_package: hal.modules.communication_interface
+    config_type: hal.modules.communication_interface.Config
+    result_type: hal.modules.communication_interface.Result
+    version: 1
+    status: active
+    category: connectivity
+    source_path: src/communication_interface_lib/communication_interface_lib.h
+
+  - id: cpu
+    proto_package: hal.modules.cpu
+    config_type: hal.modules.cpu.Config
+    result_type: hal.modules.cpu.Result
+    version: 1
+    status: active
+    category: compute
+    source_path: src/cpu_lib/cpu_lib.h
+
+  - id: debug_and_development_interfaces
+    proto_package: hal.modules.debug_and_development_interfaces
+    config_type: hal.modules.debug_and_development_interfaces.Config
+    result_type: hal.modules.debug_and_development_interfaces.Result
+    version: 1
+    status: active
+    category: debug
+    source_path: src/debug_and_development_interfaces/debug_and_development_interfaces.h
+
+  - id: deep_learning_accelerator
+    proto_package: hal.modules.deep_learning_accelerator
+    config_type: hal.modules.deep_learning_accelerator.Config
+    result_type: hal.modules.deep_learning_accelerator.Result
+    version: 1
+    status: active
+    category: compute
+    source_path: src/deep_learning_accelerator_lib/deep_learning_accelerator_lib.h
+
+  - id: display_interfaces
+    proto_package: hal.modules.display_interfaces
+    config_type: hal.modules.display_interfaces.Config
+    result_type: hal.modules.display_interfaces.Result
+    version: 1
+    status: active
+    category: peripherals
+    source_path: src/display_interfaces/display_interfaces.h
+
+  - id: environmental
+    proto_package: hal.modules.environmental
+    config_type: hal.modules.environmental.Config
+    result_type: hal.modules.environmental.Result
+    version: 1
+    status: active
+    category: sensors
+    source_path: src/environmental_lib/environmental_lib.h
+
+  - id: ethernet
+    proto_package: hal.modules.ethernet
+    config_type: hal.modules.ethernet.Config
+    result_type: hal.modules.ethernet.Result
+    version: 1
+    status: active
+    category: connectivity
+    source_path: src/ethernet_lib/ethernet_lib.h
+
+  - id: ethernet_switch
+    proto_package: hal.modules.ethernet_switch
+    config_type: hal.modules.ethernet_switch.Config
+    result_type: hal.modules.ethernet_switch.Result
+    version: 1
+    status: active
+    category: connectivity
+    source_path: src/ethernet_switch_lib/ethernet_switch_lib.h
+
+  - id: external_connector
+    proto_package: hal.modules.external_connector
+    config_type: hal.modules.external_connector.Config
+    result_type: hal.modules.external_connector.Result
+    version: 1
+    status: active
+    category: connectivity
+    source_path: src/external_connector_lib/external_connector_lib.h
+
+  - id: functional_safety
+    proto_package: hal.modules.functional_safety
+    config_type: hal.modules.functional_safety.Config
+    result_type: hal.modules.functional_safety.Result
+    version: 1
+    status: active
+    category: safety
+    source_path: src/functional_safety_lib/functional_safety_lib.h
+
+  - id: gnss
+    proto_package: hal.modules.gnss
+    config_type: hal.modules.gnss.Config
+    result_type: hal.modules.gnss.Result
+    version: 1
+    status: active
+    category: sensors
+    source_path: src/gnss_lib/gnss_lib.h
+
+  - id: gpio
+    proto_package: hal.modules.gpio
+    config_type: hal.modules.gpio.Config
+    result_type: hal.modules.gpio.Result
+    version: 1
+    status: active
+    category: io
+    source_path: src/gpio_lib/gpio_lib.h
+
+  - id: gpu
+    proto_package: hal.modules.gpu
+    config_type: hal.modules.gpu.Config
+    result_type: hal.modules.gpu.Result
+    version: 1
+    status: active
+    category: compute
+    source_path: src/gpu_lib/gpu_lib.h
+
+  - id: imu
+    proto_package: hal.modules.imu
+    config_type: hal.modules.imu.Config
+    result_type: hal.modules.imu.Result
+    version: 1
+    status: active
+    category: sensors
+    source_path: src/imu_lib/imu_lib.h
+
+  - id: mcu_interface
+    proto_package: hal.modules.mcu_interface
+    config_type: hal.modules.mcu_interface.Config
+    result_type: hal.modules.mcu_interface.Result
+    version: 1
+    status: active
+    category: connectivity
+    source_path: src/mcu_interface_lib/mcu_interface_lib.h
+
+  - id: pcie
+    proto_package: hal.modules.pcie
+    config_type: hal.modules.pcie.Config
+    result_type: hal.modules.pcie.Result
+    version: 1
+    status: active
+    category: connectivity
+    source_path: src/pcie_lib/pcie_lib.h
+
+  - id: poe_hat
+    proto_package: hal.modules.poe_hat
+    config_type: hal.modules.poe_hat.Config
+    result_type: hal.modules.poe_hat.Result
+    version: 1
+    status: active
+    category: power
+    source_path: src/poe_hat_lib/poe_hat_lib.h
+
+  - id: power_management
+    proto_package: hal.modules.power_management
+    config_type: hal.modules.power_management.Config
+    result_type: hal.modules.power_management.Result
+    version: 1
+    status: active
+    category: power
+    source_path: src/power_management_lib/power_management_lib.h
+
+  - id: reliability
+    proto_package: hal.modules.reliability
+    config_type: hal.modules.reliability.Config
+    result_type: hal.modules.reliability.Result
+    version: 1
+    status: active
+    category: safety
+    source_path: src/reliability_lib/reliability_lib.h
+
+  - id: security_features
+    proto_package: hal.modules.security_features
+    config_type: hal.modules.security_features.Config
+    result_type: hal.modules.security_features.Result
+    version: 1
+    status: active
+    category: security
+    source_path: src/security_features_lib/security_features_lib.h
+
+  - id: sense_hat
+    proto_package: hal.modules.sense_hat
+    config_type: hal.modules.sense_hat.Config
+    result_type: hal.modules.sense_hat.Result
+    version: 1
+    status: active
+    category: sensors
+    source_path: src/sense_hat_lib/sense_hat_lib.h
+
+  - id: serializer_deserializer
+    proto_package: hal.modules.serializer_deserializer
+    config_type: hal.modules.serializer_deserializer.Config
+    result_type: hal.modules.serializer_deserializer.Result
+    version: 1
+    status: active
+    category: connectivity
+    source_path: src/serializer_deserializer_lib/serializer_deserializer_lib.h
+
+  - id: software_interface
+    proto_package: hal.modules.software_interface
+    config_type: hal.modules.software_interface.Config
+    result_type: hal.modules.software_interface.Result
+    version: 1
+    status: active
+    category: debug
+    source_path: src/software_interface_lib/software_interface_lib.h
+
+  - id: storage
+    proto_package: hal.modules.storage
+    config_type: hal.modules.storage.Config
+    result_type: hal.modules.storage.Result
+    version: 1
+    status: active
+    category: storage
+    source_path: src/storage_lib/storage_lib.h
+
+  - id: system_integration
+    proto_package: hal.modules.system_integration
+    config_type: hal.modules.system_integration.Config
+    result_type: hal.modules.system_integration.Result
+    version: 1
+    status: active
+    category: system
+    source_path: src/system_integration_lib/system_integration_lib.h
+
+  - id: system_memory
+    proto_package: hal.modules.system_memory
+    config_type: hal.modules.system_memory.Config
+    result_type: hal.modules.system_memory.Result
+    version: 1
+    status: active
+    category: compute
+    source_path: src/system_memory_lib/system_memory_lib.h
+
+  - id: thermal_management
+    proto_package: hal.modules.thermal_management
+    config_type: hal.modules.thermal_management.Config
+    result_type: hal.modules.thermal_management.Result
+    version: 1
+    status: active
+    category: sensors
+    source_path: src/thermal_management_lib/thermal_management_lib.h
+
+  - id: usb
+    proto_package: hal.modules.usb
+    config_type: hal.modules.usb.Config
+    result_type: hal.modules.usb.Result
+    version: 1
+    status: active
+    category: connectivity
+    source_path: src/usb_lib/usb_lib.h
+
+  - id: video_encode_decode
+    proto_package: hal.modules.video_encode_decode
+    config_type: hal.modules.video_encode_decode.Config
+    result_type: hal.modules.video_encode_decode.Result
+    version: 1
+    status: active
+    category: compute
+    source_path: src/video_encode_decode_lib/video_encode_decode_lib.h
+
+  - id: vision_accelerator
+    proto_package: hal.modules.vision_accelerator
+    config_type: hal.modules.vision_accelerator.Config
+    result_type: hal.modules.vision_accelerator.Result
+    version: 1
+    status: active
+    category: compute
+    source_path: src/vision_accelerator_lib/vision_accelerator_lib.h
+
+  - id: watchdog_and_reset
+    proto_package: hal.modules.watchdog_and_reset
+    config_type: hal.modules.watchdog_and_reset.Config
+    result_type: hal.modules.watchdog_and_reset.Result
+    version: 1
+    status: active
+    category: safety
+    source_path: src/watchdog_and_reset_lib/watchdog_and_reset_lib.h
+
+  - id: i2c
+    name: I2C Bus
+    description: I2C bus communication testing
+    version: "1.0.0"
+    status: active
+    category: connectivity
+    modes: [SINGLE_SHOT, LONG_TERM, MONITORING]
+    config_type_url: type.googleapis.com/hal.modules.i2c.Config
+    result_type_url: type.googleapis.com/hal.modules.i2c.Result
+
+  - id: spi
+    name: SPI Bus
+    description: SPI bus communication testing
+    version: "1.0.0"
+    status: active
+    category: connectivity
+    modes: [SINGLE_SHOT, LONG_TERM]
+    config_type_url: type.googleapis.com/hal.modules.spi.Config
+    result_type_url: type.googleapis.com/hal.modules.spi.Result
+
+  - id: uart
+    name: UART
+    description: UART/serial communication testing
+    version: "1.0.0"
+    status: active
+    category: connectivity
+    modes: [SINGLE_SHOT, LONG_TERM, MONITORING]
+    config_type_url: type.googleapis.com/hal.modules.uart.Config
+    result_type_url: type.googleapis.com/hal.modules.uart.Result
+
+  - id: rtc
+    name: Real-Time Clock
+    description: Real-time clock accuracy and persistence testing
+    version: "1.0.0"
+    status: active
+    category: timing
+    modes: [SINGLE_SHOT, MONITORING]
+    config_type_url: type.googleapis.com/hal.modules.rtc.Config
+    result_type_url: type.googleapis.com/hal.modules.rtc.Result
+
+  - id: battery
+    name: Battery Management
+    description: Battery charge, health, and capacity testing
+    version: "1.0.0"
+    status: active
+    category: power
+    modes: [SINGLE_SHOT, MONITORING, EVENT_BASED]
+    config_type_url: type.googleapis.com/hal.modules.battery.Config
+    result_type_url: type.googleapis.com/hal.modules.battery.Result
+
+  - id: nvme
+    name: NVMe Storage
+    description: NVMe SSD performance and health testing
+    version: "1.0.0"
+    status: active
+    category: storage
+    modes: [SINGLE_SHOT, LONG_TERM]
+    config_type_url: type.googleapis.com/hal.modules.nvme.Config
+    result_type_url: type.googleapis.com/hal.modules.nvme.Result
+
+  - id: emmc
+    name: eMMC Storage
+    description: eMMC flash storage testing
+    version: "1.0.0"
+    status: active
+    category: storage
+    modes: [SINGLE_SHOT, LONG_TERM]
+    config_type_url: type.googleapis.com/hal.modules.emmc.Config
+    result_type_url: type.googleapis.com/hal.modules.emmc.Result
+
+  - id: can_bus
+    name: CAN Bus
+    description: CAN bus communication and error testing
+    version: "1.0.0"
+    status: active
+    category: connectivity
+    modes: [SINGLE_SHOT, LONG_TERM, MONITORING, EVENT_BASED]
+    config_type_url: type.googleapis.com/hal.modules.can_bus.Config
+    result_type_url: type.googleapis.com/hal.modules.can_bus.Result
+
+  - id: rs485
+    name: RS-485
+    description: RS-485 half-duplex serial bus testing
+    version: "1.0.0"
+    status: active
+    category: connectivity
+    modes: [SINGLE_SHOT, LONG_TERM]
+    config_type_url: type.googleapis.com/hal.modules.rs485.Config
+    result_type_url: type.googleapis.com/hal.modules.rs485.Result
+
+  - id: analog_input
+    name: Analog Input (ADC)
+    description: ADC analog input measurement and linearity testing
+    version: "1.0.0"
+    status: active
+    category: io
+    modes: [SINGLE_SHOT, MONITORING, EVENT_BASED]
+    config_type_url: type.googleapis.com/hal.modules.analog_input.Config
+    result_type_url: type.googleapis.com/hal.modules.analog_input.Result
+
+  - id: pwm_output
+    name: PWM Output
+    description: PWM output frequency and duty cycle testing
+    version: "1.0.0"
+    status: active
+    category: io
+    modes: [SINGLE_SHOT, LONG_TERM]
+    config_type_url: type.googleapis.com/hal.modules.pwm_output.Config
+    result_type_url: type.googleapis.com/hal.modules.pwm_output.Result
+
+  - id: sd_card
+    name: SD Card
+    description: SD card read/write performance and reliability testing
+    version: "1.0.0"
+    status: active
+    category: storage
+    modes: [SINGLE_SHOT, LONG_TERM]
+    config_type_url: type.googleapis.com/hal.modules.sd_card.Config
+    result_type_url: type.googleapis.com/hal.modules.sd_card.Result
+
+  - id: bluetooth
+    name: Bluetooth
+    description: Bluetooth radio and pairing testing
+    version: "1.0.0"
+    status: active
+    category: connectivity
+    modes: [SINGLE_SHOT, MONITORING]
+    config_type_url: type.googleapis.com/hal.modules.bluetooth.Config
+    result_type_url: type.googleapis.com/hal.modules.bluetooth.Result
+
+  - id: mipi_csi
+    name: MIPI CSI Camera Interface
+    description: MIPI CSI-2 camera lane and signal testing
+    version: "1.0.0"
+    status: active
+    category: peripherals
+    modes: [SINGLE_SHOT, MONITORING]
+    config_type_url: type.googleapis.com/hal.modules.mipi_csi.Config
+    result_type_url: type.googleapis.com/hal.modules.mipi_csi.Result
+
+  - id: mipi_dsi
+    name: MIPI DSI Display Interface
+    description: MIPI DSI display lane and signal testing
+    version: "1.0.0"
+    status: active
+    category: peripherals
+    modes: [SINGLE_SHOT, MONITORING]
+    config_type_url: type.googleapis.com/hal.modules.mipi_dsi.Config
+    result_type_url: type.googleapis.com/hal.modules.mipi_dsi.Result
+
+  - id: accelerometer
+    name: Accelerometer
+    description: Accelerometer sensor calibration and range testing
+    version: "1.0.0"
+    status: active
+    category: sensors
+    modes: [SINGLE_SHOT, MONITORING, EVENT_BASED]
+    config_type_url: type.googleapis.com/hal.modules.accelerometer.Config
+    result_type_url: type.googleapis.com/hal.modules.accelerometer.Result

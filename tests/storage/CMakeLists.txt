@@ -1,0 +1,6 @@
+add_executable(test_storage main.cpp)
+target_link_libraries(test_storage PRIVATE storage_lib)
+target_include_directories(test_storage PRIVATE ${CMAKE_SOURCE_DIR}/src)
+add_test(NAME test_storage COMMAND test_storage)
+set_tests_properties(test_storage PROPERTIES TIMEOUT 300)
+install(TARGETS test_storage RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

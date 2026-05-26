@@ -1,0 +1,40 @@
+// Source: src/storage_lib/storage_lib.h  (class StorageTesting : public TestBase)
+//
+// Field-numbering rules: numbers start at 1, never renumber, mark removed fields reserved.
+
+syntax = "proto3";
+
+package hal.modules.storage;
+
+import "common.proto";
+
+// Config for the storage module.
+// Leave test_names empty to run all available tests.
+//
+// Available tests (in declaration order in StorageTesting):
+//   testEmmc51InterfaceFunctionality
+//   testFullCapacityVerification
+//   testSequentialReadPerformance
+//   testSequentialWritePerformance
+//   testRandomReadIops
+//   testRandomWriteIops
+//   testEmmcWearLeveling
+//   testBadBlockManagement
+//   testPowerLossProtection
+//   testEmmcTemperatureMonitoring
+//   testNvmeSsdDetection
+//   testNvmeReadwritePerformance
+//   testNvmeThermalThrottling
+//   testHotplugCapability
+//   testStorageEncryptionSupport
+message Config {
+  // Names of individual tests to execute; empty list = run all tests.
+  repeated string test_names = 1;
+}
+
+// Result from a single storage test run.
+message Result {
+  reserved 1;
+  reserved "test_results";
+  repeated hal.common.TestResult results = 2;
+}

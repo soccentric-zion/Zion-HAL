@@ -1,0 +1,192 @@
+// client_service.proto — bidirectional streaming protocol between
+// the Acadia Client (on-target) and the Acadia Server (x86).
+//
+// Design: one persistent bidi stream per client process; all runs multiplex
+// on that single stream keyed by run_id.  The Server side initiates run
+// configuration (ConfigureRun / StartRun / control messages).  The Client
+// side sends results, logs, ACKs, and state reports.
+//
+// Field-numbering rules: never renumber, mark removed fields reserved.
+
+syntax = "proto3";
+
+package acadia.stream;
+
+import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
+import "common.proto";
+
+// ============================================================
+// Enumerations
+// ============================================================
+
+enum RunState {
+  RUN_STATE_UNSPECIFIED = 0;
+  CONFIGURED   = 1;
+  RUNNING      = 2;
+  PAUSED       = 3;
+  COMPLETED    = 4;
+  FAILED       = 5;
+  CANCELLED    = 6;
+}
+
+// ============================================================
+// Server → Client messages
+// ============================================================
+
+// Server pushes a run configuration to the client.
+message ConfigureRun {
+  string                      run_id        = 1;
+  string                      module_id     = 2;
+  hal.common.ExecutionMode    mode          = 3;
+  hal.common.CommonConfig     common        = 4;
+  google.protobuf.Any         module_config = 5;  // hal.modules.<name>.Config
+  hal.common.MonitoringParams monitoring    = 6;  // only for MONITORING mode
+  hal.common.EventCondition   condition     = 7;  // only for EVENT_BASED mode
+}
+
+// Server commands the client to start an already-configured run.
+message StartRun {
+  string run_id = 1;
+}
+
+// Server commands the client to pause a running run.
+message PauseRun {
+  string run_id = 1;
+}
+
+// Server commands the client to resume a paused run.
+message ResumeRun {
+  string run_id = 1;
+}
+
+// Server commands the client to stop a run (graceful).
+message StopRun {
+  string run_id = 1;
+}
+
+// Server issues a new run_id to replace a completed/failed run (restart).
+message RestartRun {
+  string old_run_id = 1;
+  string new_run_id = 2;
+}
+
+// Server ACKs a result batch.
+message BatchAck {
+  string  run_id    = 1;
+  int64   batch_seq = 2;
+}
+
+// Server ACKs a log batch.
+message LogBatchAck {
+  string  run_id    = 1;
+  int64   batch_seq = 2;
+}
+
+// Container for all server-to-client messages.
+message ServerMessage {
+  oneof payload {
+    ConfigureRun   configure_run  = 1;
+    StartRun       start_run      = 2;
+    PauseRun       pause_run      = 3;
+    ResumeRun      resume_run     = 4;
+    StopRun        stop_run       = 5;
+    RestartRun     restart_run    = 6;
+    BatchAck       batch_ack      = 7;
+    LogBatchAck    log_batch_ack  = 8;
+  }
+}
+
+// ============================================================
+// Client → Server messages
+// ============================================================
+
+// Sent by client on (re)connect.  Lists active run_ids and the last
+// batch_seq the client sent for each (server uses this to detect gaps).
+message HelloReport {
+  string board_id               = 1;
+  string client_version         = 2;
+  string hal_version            = 3;
+  string os_version             = 4;
+  repeated ActiveRunInfo runs   = 5;
+}
+
+message ActiveRunInfo {
+  string run_id         = 1;
+  RunState state        = 2;
+  int64   last_batch_seq = 3;
+}
+
+// Client ACKs or NACKs a ConfigureRun.
+message ConfigureAck {
+  string run_id    = 1;
+  bool   ok        = 2;
+  string error     = 3;   // empty when ok=true
+  string field     = 4;   // which config field failed (when ok=false)
+}
+
+// One sample in a result batch.
+message ResultSample {
+  google.protobuf.Timestamp timestamp = 1;
+  hal.common.TestStatus     status    = 2;
+  string                    error     = 3;
+  google.protobuf.Any       payload   = 4;  // hal.modules.<name>.Result
+  string                    type_url  = 5;
+}
+
+// Batched result samples from the client (1 Hz cadence).
+message TestResultBatch {
+  string                    run_id        = 1;
+  int64                     batch_seq     = 2;  // monotonic per run_id
+  string                    module_id     = 3;
+  hal.common.ExecutionMode  mode          = 4;
+  RunState                  state         = 5;  // current run state
+  bool                      terminal      = 6;  // true on final batch
+  repeated ResultSample     samples       = 7;
+}
+
+// One log line.
+message LogLine {
+  string                    run_id    = 1;   // "_system" for non-run logs
+  string                    source    = 2;   // "kernel", "journald", "hal", "client"
+  google.protobuf.Timestamp timestamp = 3;
+  string                    level     = 4;   // "debug", "info", "warn", "error"
+  string                    text      = 5;
+}
+
+// Batched log lines.
+message LogBatch {
+  string            run_id    = 1;
+  int64             batch_seq = 2;
+  repeated LogLine  lines     = 3;
+}
+
+// Periodic client state report (heartbeat).
+message StateReport {
+  string               board_id       = 1;
+  RunState             overall_state  = 2;
+  repeated ActiveRunInfo active_runs  = 3;
+  uint64               spool_bytes    = 4;
+  uint64               spool_cap_bytes = 5;
+}
+
+// Container for all client-to-server messages.
+message ClientMessage {
+  oneof payload {
+    HelloReport      hello          = 1;
+    ConfigureAck     configure_ack  = 2;
+    TestResultBatch  result_batch   = 3;
+    LogBatch         log_batch      = 4;
+    StateReport      state_report   = 5;
+  }
+}
+
+// ============================================================
+// Service definition
+// ============================================================
+
+service ClientService {
+  // Bidirectional stream; client initiates.
+  // Client sends ClientMessage; server sends ServerMessage.
+  rpc Connect(stream ClientMessage) returns (stream ServerMessage);
+}

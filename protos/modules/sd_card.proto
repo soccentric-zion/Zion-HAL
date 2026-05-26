@@ -1,0 +1,31 @@
+// sd_card.proto — SD card testing
+//
+// Field-numbering rules: numbers start at 1, never renumber.
+
+syntax = "proto3";
+
+package hal.modules.sd_card;
+
+import "common.proto";
+
+// Config for the sd_card module.
+// Leave test_names empty to run all available tests.
+message Config {
+  hal.common.CommonConfig common     = 1;
+  repeated string         test_names = 2;
+}
+
+// Result for the sd_card module.
+message Result {
+  hal.common.TestStatus   status     = 1;
+  string                  message    = 2;
+  repeated TestDetail     details    = 3;
+}
+
+message TestDetail {
+  string name    = 1;
+  bool   passed  = 2;
+  string message = 3;
+  double value   = 4;
+  string unit    = 5;
+}

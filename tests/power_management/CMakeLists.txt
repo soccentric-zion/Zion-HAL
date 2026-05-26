@@ -1,0 +1,6 @@
+add_executable(test_power_management main.cpp)
+target_link_libraries(test_power_management PRIVATE power_management_lib)
+target_include_directories(test_power_management PRIVATE ${CMAKE_SOURCE_DIR}/src)
+add_test(NAME test_power_management COMMAND test_power_management)
+set_tests_properties(test_power_management PROPERTIES TIMEOUT 300)
+install(TARGETS test_power_management RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

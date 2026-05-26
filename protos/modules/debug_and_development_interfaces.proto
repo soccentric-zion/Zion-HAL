@@ -1,0 +1,32 @@
+// Source: src/debug_and_development_interfaces/debug_and_development_interfaces.h
+//         (class DebugAndDevelopmentInterfaces : public TestBase)
+//
+// Field-numbering rules: numbers start at 1, never renumber, mark removed fields reserved.
+
+syntax = "proto3";
+
+package hal.modules.debug_and_development_interfaces;
+
+import "common.proto";
+
+// Config for the debug_and_development_interfaces module.
+// Leave test_names empty to run all available tests.
+//
+// Available tests (in declaration order in DebugAndDevelopmentInterfaces):
+//   testJtagInterface
+//   testSerialWireDebug
+//   testDebugUart
+//   testTracePort
+//   testPerformanceCounters
+//   testDebugAuthentication
+message Config {
+  // Names of individual tests to execute; empty list = run all tests.
+  repeated string test_names = 1;
+}
+
+// Result from a single debug_and_development_interfaces test run.
+message Result {
+  reserved 1;
+  reserved "test_results";
+  repeated hal.common.TestResult results = 2;
+}

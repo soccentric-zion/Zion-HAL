@@ -1,0 +1,136 @@
+// hal_service.proto — single, stable gRPC service contract for the HAL.
+//
+// THIS FILE MUST NOT CHANGE when modules are added or removed.
+// Module-specific config and result types are passed as google.protobuf.Any
+// so the service signature remains fixed regardless of the module set.
+//
+// Field-numbering rules: see protos/README.md
+
+syntax = "proto3";
+
+package hal;
+
+import "common.proto";
+import "google/protobuf/any.proto";
+
+// ============================================================
+// Request messages
+// ============================================================
+
+// Run all (or selected) tests once and return a single result.
+message SingleShotRequest {
+  string                    module_id     = 1;
+  hal.common.CommonConfig   common        = 2;
+  google.protobuf.Any       module_config = 3;  // hal.modules.<name>.Config
+}
+
+// Start a long-term run; server streams one ResultEnvelope per cycle.
+message LongTermRequest {
+  string                    module_id     = 1;
+  hal.common.CommonConfig   common        = 2;
+  google.protobuf.Any       module_config = 3;  // hal.modules.<name>.Config
+}
+
+// Start a monitoring run; server streams one ResultEnvelope per cycle.
+// ResultEnvelope.payload is a hal.common.MonitoringSnapshot.
+message MonitoringRequest {
+  string                       module_id     = 1;
+  hal.common.CommonConfig      common        = 2;
+  hal.common.MonitoringParams  monitoring    = 3;
+  google.protobuf.Any          module_config = 4;  // hal.modules.<name>.Config
+}
+
+// Start event-based testing; server streams a ResultEnvelope each time
+// the condition fires.
+message EventBasedRequest {
+  string                    module_id     = 1;
+  hal.common.CommonConfig   common        = 2;
+  hal.common.EventCondition condition     = 3;
+  google.protobuf.Any       module_config = 4;  // hal.modules.<name>.Config
+}
+
+// Stop an active background session for a module.
+message StopRequest {
+  string module_id  = 1;
+  string session_id = 2;  // Optional; stops all sessions for module if empty.
+}
+
+message StopResponse {
+  bool   accepted = 1;
+  string message  = 2;
+}
+
+// Pause an active background session.
+message PauseRequest {
+  string module_id  = 1;
+  string session_id = 2;
+}
+
+message PauseResponse {
+  bool   accepted = 1;
+  string message  = 2;
+}
+
+// Resume a paused background session.
+message ResumeRequest {
+  string module_id  = 1;
+  string session_id = 2;
+}
+
+message ResumeResponse {
+  bool   accepted = 1;
+  string message  = 2;
+}
+
+// ============================================================
+// Module registry messages (returned by ListModules)
+// ============================================================
+
+// Metadata for one registered module — mirrors registry/modules.yaml entries.
+message ModuleInfo {
+  string id           = 1;  // e.g. "cpu"
+  string proto_package = 2; // e.g. "hal.modules.cpu"
+  string config_type  = 3;  // fully-qualified, e.g. "hal.modules.cpu.Config"
+  string result_type  = 4;  // fully-qualified, e.g. "hal.modules.cpu.Result"
+  int32  version      = 5;
+  string status       = 6;  // "active" | "deprecated"
+  string source_path  = 7;  // relative path to C++ source header
+}
+
+message ListModulesRequest {}
+
+message ListModulesResponse {
+  repeated ModuleInfo modules = 1;
+}
+
+// ============================================================
+// Service definition
+// ============================================================
+
+// The single, stable gRPC service contract.
+// Adding or removing a HAL module never modifies this file.
+service HalService {
+  // Run tests once (TestBase::SINGLE_SHOT).
+  rpc RunSingleShot(SingleShotRequest)   returns (hal.common.ResultEnvelope);
+
+  // Run tests repeatedly for a fixed duration (TestBase::LONG_TERM).
+  rpc StartLongTerm(LongTermRequest)     returns (stream hal.common.ResultEnvelope);
+
+  // Run tests indefinitely, sampling monitor items each cycle (TestBase::MONITORING).
+  rpc StartMonitoring(MonitoringRequest) returns (stream hal.common.ResultEnvelope);
+
+  // Poll tests continuously and stream results when the condition fires (TestBase::EVENT_BASED).
+  rpc StartEventBased(EventBasedRequest) returns (stream hal.common.ResultEnvelope);
+
+  // Stop any active background session for a module.
+  rpc Stop(StopRequest)                  returns (StopResponse);
+
+  // Pause any active background session for a module.
+  rpc Pause(PauseRequest)                returns (PauseResponse);
+
+  // Resume any paused background session for a module.
+  rpc Resume(ResumeRequest)              returns (ResumeResponse);
+
+  // Return the server-side module registry.
+  rpc ListModules(ListModulesRequest)    returns (ListModulesResponse);
+}

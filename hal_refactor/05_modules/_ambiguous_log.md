@@ -1,0 +1,42 @@
+# Migration Ambiguity Log
+
+All unlabeled `data` vector entries are positionally indexed and
+moved to `reason["detail_N"]`. No data is lost.
+
+| File | Key | Destination | Rationale |
+|---|---|---|---|
+| `src/audio_interfaces/audio_interfaces.cpp` | `data[0..N]` | `reason["detail_N"]` | Unlabeled vector entries; positional index used as key |
+| `src/camera_interfaces_lib/camera_interfaces_lib.cpp` | `data[0..N]` | `reason["detail_N"]` | Unlabeled vector entries; positional index used as key |
+| `src/camera_module3_lib/camera_module3_lib.cpp` | `data[0..N]` | `reason["detail_N"]` | Unlabeled vector entries; positional index used as key |
+| `src/clock_and_timing_lib/clock_and_timing_lib.cpp` | `data[0..N]` | `reason["detail_N"]` | Unlabeled vector entries; positional index used as key |
+| `src/communication_interface_lib/communication_interface_lib.cpp` | `data[0..N]` | `reason["detail_N"]` | Unlabeled vector entries; positional index used as key |
+| `src/cpu_lib/cpu_lib.cpp` | `data[0..N]` | `reason["detail_N"]` | Unlabeled vector entries; positional index used as key |
+| `src/debug_and_development_interfaces/debug_and_development_interfaces.cpp` | `data[0..N]` | `reason["detail_N"]` | Unlabeled vector entries; positional index used as key |
+| `src/deep_learning_accelerator_lib/deep_learning_accelerator_lib.cpp` | `data[0..N]` | `reason["detail_N"]` | Unlabeled vector entries; positional index used as key |
+| `src/display_interfaces/display_interfaces.cpp` | `data[0..N]` | `reason["detail_N"]` | Unlabeled vector entries; positional index used as key |
+| `src/environmental_lib/environmental_lib.cpp` | `data[0..N]` | `reason["detail_N"]` | Unlabeled vector entries; positional index used as key |
+| `src/ethernet_lib/ethernet_lib.cpp` | `data[0..N]` | `reason["detail_N"]` | Unlabeled vector entries; positional index used as key |
+| `src/ethernet_switch_lib/ethernet_switch_lib.cpp` | `data[0..N]` | `reason["detail_N"]` | Unlabeled vector entries; positional index used as key |
+| `src/external_connector_lib/external_connector_lib.cpp` | `data[0..N]` | `reason["detail_N"]` | Unlabeled vector entries; positional index used as key |
+| `src/functional_safety_lib/functional_safety_lib.cpp` | `data[0..N]` | `reason["detail_N"]` | Unlabeled vector entries; positional index used as key |
+| `src/gnss_lib/gnss_lib.cpp` | `data[0..N]` | `reason["detail_N"]` | Unlabeled vector entries; positional index used as key |
+| `src/gpio_lib/gpio_lib.cpp` | `data[0..N]` | `reason["detail_N"]` | Unlabeled vector entries; positional index used as key |
+| `src/gpu_lib/gpu_lib.cpp` | `data[0..N]` | `reason["detail_N"]` | Unlabeled vector entries; positional index used as key |
+| `src/imu_lib/imu_lib.cpp` | `data[0..N]` | `reason["detail_N"]` | Unlabeled vector entries; positional index used as key |
+| `src/mcu_interface_lib/mcu_interface_lib.cpp` | `data[0..N]` | `reason["detail_N"]` | Unlabeled vector entries; positional index used as key |
+| `src/pcie_lib/pcie_lib.cpp` | `data[0..N]` | `reason["detail_N"]` | Unlabeled vector entries; positional index used as key |
+| `src/poe_hat_lib/poe_hat_lib.cpp` | `data[0..N]` | `reason["detail_N"]` | Unlabeled vector entries; positional index used as key |
+| `src/power_management_lib/power_management_lib.cpp` | `data[0..N]` | `reason["detail_N"]` | Unlabeled vector entries; positional index used as key |
+| `src/reliability_lib/reliability_lib.cpp` | `data[0..N]` | `reason["detail_N"]` | Unlabeled vector entries; positional index used as key |
+| `src/security_features_lib/security_features_lib.cpp` | `data[0..N]` | `reason["detail_N"]` | Unlabeled vector entries; positional index used as key |
+| `src/sense_hat_lib/sense_hat_lib.cpp` | `data[0..N]` | `reason["detail_N"]` | Unlabeled vector entries; positional index used as key |
+| `src/serializer_deserializer_lib/serializer_deserializer_lib.cpp` | `data[0..N]` | `reason["detail_N"]` | Unlabeled vector entries; positional index used as key |
+| `src/software_interface_lib/software_interface_lib.cpp` | `data[0..N]` | `reason["detail_N"]` | Unlabeled vector entries; positional index used as key |
+| `src/storage_lib/storage_lib.cpp` | `data[0..N]` | `reason["detail_N"]` | Unlabeled vector entries; positional index used as key |
+| `src/system_integration_lib/system_integration_lib.cpp` | `data[0..N]` | `reason["detail_N"]` | Unlabeled vector entries; positional index used as key |
+| `src/system_memory_lib/system_memory_lib.cpp` | `data[0..N]` | `reason["detail_N"]` | Unlabeled vector entries; positional index used as key |
+| `src/thermal_management_lib/thermal_management_lib.cpp` | `data[0..N]` | `reason["detail_N"]` | Unlabeled vector entries; positional index used as key |
+| `src/usb_lib/usb_lib.cpp` | `data[0..N]` | `reason["detail_N"]` | Unlabeled vector entries; positional index used as key |
+| `src/video_encode_decode_lib/video_encode_decode_lib.cpp` | `data[0..N]` | `reason["detail_N"]` | Unlabeled vector entries; positional index used as key |
+| `src/vision_accelerator_lib/vision_accelerator_lib.cpp` | `data[0..N]` | `reason["detail_N"]` | Unlabeled vector entries; positional index used as key |
+| `src/watchdog_and_reset_lib/watchdog_and_reset_lib.cpp` | `data[0..N]` | `reason["detail_N"]` | Unlabeled vector entries; positional index used as key |

@@ -1,0 +1,6 @@
+add_executable(test_gpu main.cpp)
+target_link_libraries(test_gpu PRIVATE gpu_lib)
+target_include_directories(test_gpu PRIVATE ${CMAKE_SOURCE_DIR}/src)
+add_test(NAME test_gpu COMMAND test_gpu)
+set_tests_properties(test_gpu PROPERTIES TIMEOUT 300)
+install(TARGETS test_gpu RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

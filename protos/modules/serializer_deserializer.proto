@@ -1,0 +1,33 @@
+// Source: src/serializer_deserializer_lib/serializer_deserializer_lib.h
+//         (class SerializerDeserializerTesting : public TestBase)
+//
+// Field-numbering rules: numbers start at 1, never renumber, mark removed fields reserved.
+
+syntax = "proto3";
+
+package hal.modules.serializer_deserializer;
+
+import "common.proto";
+
+// Config for the serializer_deserializer module.
+// Leave test_names empty to run all available tests.
+//
+// Available tests (in declaration order in SerializerDeserializerTesting):
+//   testSerializationFunctionality
+//   testDataIntegrity
+//   testLinkSpeed
+//   testErrorDetection
+//   testDeserializationFunctionality
+//   testClockRecovery
+//   testMultistreamSupport
+message Config {
+  // Names of individual tests to execute; empty list = run all tests.
+  repeated string test_names = 1;
+}
+
+// Result from a single serializer_deserializer test run.
+message Result {
+  reserved 1;
+  reserved "test_results";
+  repeated hal.common.TestResult results = 2;
+}

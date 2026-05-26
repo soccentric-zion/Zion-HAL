@@ -1,0 +1,6 @@
+add_executable(test_cpu main.cpp)
+target_link_libraries(test_cpu PRIVATE cpu_lib)
+target_include_directories(test_cpu PRIVATE ${CMAKE_SOURCE_DIR}/src)
+add_test(NAME test_cpu COMMAND test_cpu)
+set_tests_properties(test_cpu PROPERTIES TIMEOUT 300)
+install(TARGETS test_cpu RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

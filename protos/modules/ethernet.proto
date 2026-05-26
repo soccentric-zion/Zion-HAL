@@ -1,0 +1,46 @@
+// Source: src/ethernet_lib/ethernet_lib.h  (class EthernetTesting : public TestBase)
+//
+// Raspberry Pi 5 target: BCM2712 built-in GbE MAC.
+//
+// Field-numbering rules: numbers start at 1, never renumber, mark removed fields reserved.
+
+syntax = "proto3";
+
+package hal.modules.ethernet;
+
+import "common.proto";
+
+// Config for the ethernet module.
+// Leave test_names empty to run all available tests.
+//
+// Available tests (in declaration order in EthernetTesting):
+//   test10GigabitLinkEstablishment
+//   test10gbeTransmitThroughput
+//   test10gbeReceiveThroughput
+//   testFullduplexOperation
+//   testJumboFramesSupport
+//   testFlowControl
+//   testVlanTagging
+//   testChecksumOffload
+//   testIeee8021asTimeSynchronization
+//   testIeee8021qbv
+//   testIeee8021qbu
+//   testIeee8021qav
+//   testTsnTrafficScheduling
+//   testTsnLatencyGuarantees
+//   testTsnTimePrecision
+//   test1gPhyFunctionality
+//   testLinkSpeedNegotiation
+//   testAutomdimdix
+//   testEthernetCableDiagnostics
+message Config {
+  // Names of individual tests to execute; empty list = run all tests.
+  repeated string test_names = 1;
+}
+
+// Result from a single ethernet test run.
+message Result {
+  reserved 1;
+  reserved "test_results";
+  repeated hal.common.TestResult results = 2;
+}

@@ -1,0 +1,6 @@
+add_executable(test_debug_and_development_interfaces main.cpp)
+target_link_libraries(test_debug_and_development_interfaces PRIVATE debug_and_development_interfaces)
+target_include_directories(test_debug_and_development_interfaces PRIVATE ${CMAKE_SOURCE_DIR}/src)
+add_test(NAME test_debug_and_development_interfaces COMMAND test_debug_and_development_interfaces)
+set_tests_properties(test_debug_and_development_interfaces PROPERTIES TIMEOUT 300)
+install(TARGETS test_debug_and_development_interfaces RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

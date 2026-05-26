@@ -1,0 +1,31 @@
+// rs485.proto — RS-485 serial testing
+//
+// Field-numbering rules: numbers start at 1, never renumber.
+
+syntax = "proto3";
+
+package hal.modules.rs485;
+
+import "common.proto";
+
+// Config for the rs485 module.
+// Leave test_names empty to run all available tests.
+message Config {
+  hal.common.CommonConfig common     = 1;
+  repeated string         test_names = 2;
+}
+
+// Result for the rs485 module.
+message Result {
+  hal.common.TestStatus   status     = 1;
+  string                  message    = 2;
+  repeated TestDetail     details    = 3;
+}
+
+message TestDetail {
+  string name    = 1;
+  bool   passed  = 2;
+  string message = 3;
+  double value   = 4;
+  string unit    = 5;
+}

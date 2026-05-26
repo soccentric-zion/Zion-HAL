@@ -1,0 +1,6 @@
+add_executable(test_environmental main.cpp)
+target_link_libraries(test_environmental PRIVATE environmental_lib)
+target_include_directories(test_environmental PRIVATE ${CMAKE_SOURCE_DIR}/src)
+add_test(NAME test_environmental COMMAND test_environmental)
+set_tests_properties(test_environmental PROPERTIES TIMEOUT 300)
+install(TARGETS test_environmental RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

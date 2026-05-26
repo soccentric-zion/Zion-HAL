@@ -1,0 +1,6 @@
+add_executable(test_poe_hat main.cpp)
+target_link_libraries(test_poe_hat PRIVATE poe_hat_lib)
+target_include_directories(test_poe_hat PRIVATE ${CMAKE_SOURCE_DIR}/src)
+add_test(NAME test_poe_hat COMMAND test_poe_hat)
+set_tests_properties(test_poe_hat PROPERTIES TIMEOUT 300)
+install(TARGETS test_poe_hat RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

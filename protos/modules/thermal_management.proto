@@ -1,0 +1,39 @@
+// Source: src/thermal_management_lib/thermal_management_lib.h
+//         (class ThermalManagementTesting : public TestBase)
+//
+// Field-numbering rules: numbers start at 1, never renumber, mark removed fields reserved.
+
+syntax = "proto3";
+
+package hal.modules.thermal_management;
+
+import "common.proto";
+
+// Config for the thermal_management module.
+// Leave test_names empty to run all available tests.
+//
+// Available tests (in declaration order in ThermalManagementTesting):
+//   testSocJunctionTemperature
+//   testGpuTemperature
+//   testCpuTemperature
+//   testMemoryTemperature
+//   testBoardAmbientTemperature
+//   testAllThermalZones
+//   testThermalThrottlingThresholds
+//   testThermalShutdownTemperature
+//   testCoolingSolutionEffectiveness
+//   testTemperatureDistributionAcrossDie
+//   testSustainedThermalPerformance
+//   testThermalRecoveryTime
+//   testFanControl
+message Config {
+  // Names of individual tests to execute; empty list = run all tests.
+  repeated string test_names = 1;
+}
+
+// Result from a single thermal_management test run.
+message Result {
+  reserved 1;
+  reserved "test_results";
+  repeated hal.common.TestResult results = 2;
+}

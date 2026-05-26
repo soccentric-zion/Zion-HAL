@@ -1,0 +1,6 @@
+add_executable(test_ethernet main.cpp)
+target_link_libraries(test_ethernet PRIVATE ethernet_lib)
+target_include_directories(test_ethernet PRIVATE ${CMAKE_SOURCE_DIR}/src)
+add_test(NAME test_ethernet COMMAND test_ethernet)
+set_tests_properties(test_ethernet PROPERTIES TIMEOUT 300)
+install(TARGETS test_ethernet RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

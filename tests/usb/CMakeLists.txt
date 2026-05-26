@@ -1,0 +1,6 @@
+add_executable(test_usb main.cpp)
+target_link_libraries(test_usb PRIVATE usb_lib)
+target_include_directories(test_usb PRIVATE ${CMAKE_SOURCE_DIR}/src)
+add_test(NAME test_usb COMMAND test_usb)
+set_tests_properties(test_usb PROPERTIES TIMEOUT 300)
+install(TARGETS test_usb RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

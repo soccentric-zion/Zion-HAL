@@ -1,0 +1,34 @@
+// Source: src/functional_safety_lib/functional_safety_lib.h
+//         (class FunctionalSafetyTesting : public TestBase)
+//
+// Field-numbering rules: numbers start at 1, never renumber, mark removed fields reserved.
+
+syntax = "proto3";
+
+package hal.modules.functional_safety;
+
+import "common.proto";
+
+// Config for the functional_safety module.
+// Leave test_names empty to run all available tests.
+//
+// Available tests (in declaration order in FunctionalSafetyTesting):
+//   testLockstepCpuOperation
+//   testEccOnMemories
+//   testRedundantPowerSupplies
+//   testSafetyMonitoring
+//   testDiagnosticCoverage
+//   testFaultInjectionTesting
+//   testFailsafeBehavior
+//   testAsilQsLAndRRailIsolation
+message Config {
+  // Names of individual tests to execute; empty list = run all tests.
+  repeated string test_names = 1;
+}
+
+// Result from a single functional_safety test run.
+message Result {
+  reserved 1;
+  reserved "test_results";
+  repeated hal.common.TestResult results = 2;
+}

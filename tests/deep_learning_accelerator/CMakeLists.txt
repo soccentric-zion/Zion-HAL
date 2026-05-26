@@ -1,0 +1,6 @@
+add_executable(test_deep_learning_accelerator main.cpp)
+target_link_libraries(test_deep_learning_accelerator PRIVATE deep_learning_accelerator_lib)
+target_include_directories(test_deep_learning_accelerator PRIVATE ${CMAKE_SOURCE_DIR}/src)
+add_test(NAME test_deep_learning_accelerator COMMAND test_deep_learning_accelerator)
+set_tests_properties(test_deep_learning_accelerator PROPERTIES TIMEOUT 300)
+install(TARGETS test_deep_learning_accelerator RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

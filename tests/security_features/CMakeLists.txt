@@ -1,0 +1,6 @@
+add_executable(test_security_features main.cpp)
+target_link_libraries(test_security_features PRIVATE security_features_lib)
+target_include_directories(test_security_features PRIVATE ${CMAKE_SOURCE_DIR}/src)
+add_test(NAME test_security_features COMMAND test_security_features)
+set_tests_properties(test_security_features PROPERTIES TIMEOUT 300)
+install(TARGETS test_security_features RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

@@ -1,0 +1,6 @@
+add_executable(test_serializer_deserializer main.cpp)
+target_link_libraries(test_serializer_deserializer PRIVATE serializer_deserializer_lib)
+target_include_directories(test_serializer_deserializer PRIVATE ${CMAKE_SOURCE_DIR}/src)
+add_test(NAME test_serializer_deserializer COMMAND test_serializer_deserializer)
+set_tests_properties(test_serializer_deserializer PROPERTIES TIMEOUT 300)
+install(TARGETS test_serializer_deserializer RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

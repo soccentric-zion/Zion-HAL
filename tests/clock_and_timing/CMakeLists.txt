@@ -1,0 +1,6 @@
+add_executable(test_clock_and_timing main.cpp)
+target_link_libraries(test_clock_and_timing PRIVATE clock_and_timing_lib)
+target_include_directories(test_clock_and_timing PRIVATE ${CMAKE_SOURCE_DIR}/src)
+add_test(NAME test_clock_and_timing COMMAND test_clock_and_timing)
+set_tests_properties(test_clock_and_timing PROPERTIES TIMEOUT 300)
+install(TARGETS test_clock_and_timing RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

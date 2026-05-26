@@ -1,0 +1,37 @@
+// Source: src/clock_and_timing_lib/clock_and_timing_lib.h  (class ClockAndTimingTesting : public TestBase)
+//
+// Field-numbering rules: numbers start at 1, never renumber, mark removed fields reserved.
+
+syntax = "proto3";
+
+package hal.modules.clock_and_timing;
+
+import "common.proto";
+
+// Config for the clock_and_timing module.
+// Leave test_names empty to run all available tests.
+//
+// Available tests (in declaration order in ClockAndTimingTesting):
+//   testSystemClockAccuracy
+//   testPcieReferenceClock
+//   testUsbReferenceClock
+//   testEthernetReferenceClock
+//   testCameraClockOutput
+//   testAudioClock
+//   testPllLockStatus
+//   testClockJitterMeasurements
+//   testRtcAccuracy
+//   testRtcBatteryBackup
+//   testRtcAlarmFunctionality
+//   testRtcTimePersistence
+message Config {
+  // Names of individual tests to execute; empty list = run all tests.
+  repeated string test_names = 1;
+}
+
+// Result from a single clock_and_timing test run.
+message Result {
+  reserved 1;
+  reserved "test_results";
+  repeated hal.common.TestResult results = 2;
+}

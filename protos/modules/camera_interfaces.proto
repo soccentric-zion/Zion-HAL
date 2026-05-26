@@ -1,0 +1,48 @@
+// Source: src/camera_interfaces_lib/camera_interfaces_lib.h  (class CameraInterfacesTesting : public TestBase)
+//
+// Field-numbering rules: numbers start at 1, never renumber, mark removed fields reserved.
+
+syntax = "proto3";
+
+package hal.modules.camera_interfaces;
+
+import "common.proto";
+
+// Config for the camera_interfaces module.
+// Leave test_names empty to run all available tests.
+//
+// Available tests (in declaration order in CameraInterfacesTesting):
+//   testAllCsi2LanesFunctionality
+//   testCsi2DphyOperation
+//   testCsi2CphyOperation
+//   testMultipleCameraSimultaneousOperation
+//   testVirtualChannelSupport
+//   testCameraClockGeneration
+//   testCameraPowerSequencing
+//   testRaw8
+//   testRaw10
+//   testRaw12
+//   testRaw14
+//   testYuv422
+//   testRgbFormats
+//   testIspPipelineProcessing
+//   testAutoExposure
+//   testAutoWhiteBalance
+//   testAutoFocus
+//   testLensShadingCorrection
+//   testDemosaicing
+//   testNoiseReduction
+//   testEdgeEnhancement
+//   testColorCorrectionMatrix
+//   testGammaCorrection
+message Config {
+  // Names of individual tests to execute; empty list = run all tests.
+  repeated string test_names = 1;
+}
+
+// Result from a single camera_interfaces test run.
+message Result {
+  reserved 1;
+  reserved "test_results";
+  repeated hal.common.TestResult results = 2;
+}

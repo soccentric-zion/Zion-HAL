@@ -1,0 +1,186 @@
+// common.proto — shared types used by every HAL module
+//
+// Source: src/lib_base.h  (TestBase, TestOutput, TestResult, MonitoringSnapshot, EventCriteria)
+//
+// Field-numbering rules (IMPORTANT):
+//   - Field numbers start at 1 and increase monotonically.
+//   - Never renumber an existing field.
+//   - If a field is removed, mark it `reserved` before committing.
+//   - This file is the only place where cross-module shared types live.
+
+syntax = "proto3";
+
+package hal.common;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/any.proto";
+
+// ============================================================
+// Enumerations
+// ============================================================
+
+// Execution mode for a HAL test run.
+// Maps directly to TestBase::TestMode.
+enum ExecutionMode {
+  EXECUTION_MODE_UNSPECIFIED = 0;
+  SINGLE_SHOT  = 1;  // ONE_SHOT  — run once, return one result
+  LONG_TERM    = 2;  // LONG_TERM — run at interval for a fixed duration
+  MONITORING   = 3;  // MONITORING — run at interval, collect monitor items
+  EVENT_BASED  = 4;  // EVENT     — poll continuously, fire on condition
+}
+
+// Per-test and overall-run status.
+// Numeric values are stable forever — never reassign.
+// The prefixed names (TEST_STATUS_*) are canonical; the short names are
+// legacy aliases kept for envelope-level consumers and are deprecated.
+enum TestStatus {
+  option allow_alias = true;
+  TEST_STATUS_UNSPECIFIED = 0;
+  // Canonical per-test status values (mirrors hal::Status):
+  TEST_STATUS_PASS        = 1;
+  TEST_STATUS_FAIL        = 2;
+  TEST_STATUS_ERROR       = 3;
+  TEST_STATUS_TIMEOUT     = 4;
+  TEST_STATUS_ABORTED     = 5;
+  TEST_STATUS_SKIPPED     = 7;  // new value; 5 was ABORTED, 6 was PARTIAL
+  // Deprecated short aliases kept for envelope-level consumers:
+  PASS    = 1;   // deprecated; use TEST_STATUS_PASS
+  FAIL    = 2;   // deprecated; use TEST_STATUS_FAIL
+  ERROR   = 3;   // deprecated; use TEST_STATUS_ERROR
+  TIMEOUT = 4;   // deprecated; use TEST_STATUS_TIMEOUT
+  ABORTED = 5;   // deprecated; use TEST_STATUS_ABORTED
+  PARTIAL = 6;   // deprecated envelope aggregate — no longer produced; kept to avoid decode errors
+}
+
+// Per-test severity (new — mirrors hal::Severity).
+// Numeric values are stable forever.
+enum TestSeverity {
+  TEST_SEVERITY_UNSPECIFIED = 0;
+  TEST_SEVERITY_INFO        = 1;
+  TEST_SEVERITY_WARNING     = 2;
+  TEST_SEVERITY_ERROR       = 3;
+  TEST_SEVERITY_CRITICAL    = 4;
+}
+
+// ============================================================
+// Typed value (new — mirrors hal::Value std::variant)
+// ============================================================
+
+// Mirrors hal::Value (std::variant<bool, int64_t, double, std::string>).
+// Used for typed metrics, monitoring readings, and event payloads.
+message TypedValue {
+  oneof value {
+    bool   bool_value   = 1;
+    int64  int_value    = 2;
+    double double_value = 3;
+    string string_value = 4;
+  }
+}
+
+// ============================================================
+// Low-level test result types
+// ============================================================
+
+// Mirrors hal::TestOutput (new shape).
+// Old fields (passed=1, data=2) are retired and reserved.
+message TestOutput {
+  reserved 1, 2;
+  reserved "passed", "data";
+  // New fields at tag 3+:
+  TestStatus   status        = 3;   // mirrors hal::Status
+  TestSeverity severity      = 4;   // mirrors hal::Severity
+  map<string, string>     reason     = 5;  // human-readable explanation strings
+  map<string, TypedValue> metrics    = 6;  // measured values from the test
+  map<string, TypedValue> monitoring = 7;  // environmental variables (MONITORING mode)
+  map<string, TypedValue> event      = 8;  // event payload (EVENT_BASED mode)
+  string                  error_message = 9;  // non-empty only when status is ERROR/TIMEOUT/ABORTED
+}
+
+// Mirrors hal::TestResult (new shape).
+// This is a NEW message name; the old TestResultEntry is deprecated below.
+message TestResult {
+  string                    module_id  = 1;
+  string                    test_id    = 2;
+  string                    name       = 3;
+  uint64                    sequence   = 4;
+  google.protobuf.Timestamp timestamp  = 5;
+  google.protobuf.Duration  duration   = 6;
+  TestOutput                output     = 7;
+  repeated TestResult       subtests   = 8;
+}
+
+// DEPRECATED — kept for decode compatibility; do not produce new messages of this type.
+// Old mirrors: TestBase::TestOutput (passed + data) and TestBase::TestResult.
+message TestResultEntry {
+  reserved 1, 2, 3;
+  reserved "name", "output", "duration_sec";
+}
+
+// ============================================================
+// Monitoring types
+// ============================================================
+
+// Generic key-value pair used for sampled monitor data.
+message KeyValuePair {
+  string key   = 1;
+  string value = 2;
+}
+
+// Mirrors TestBase::MonitoringSnapshot (one snapshot per cycle).
+// Used as the payload inside ResultEnvelope for MONITORING mode.
+message MonitoringSnapshot {
+  int32                        cycle        = 1;  // 1-based cycle count
+  google.protobuf.Timestamp    timestamp    = 2;  // system_clock::time_point
+  repeated TestResult          test_results = 3;
+  repeated KeyValuePair        monitor_data = 4;  // sampled MonitorItem values
+}
+
+// ============================================================
+// Configuration shared by all execution modes
+// ============================================================
+
+// Fields common to every execution mode request.
+message CommonConfig {
+  int32 interval_ms     = 1;  // Cycle interval in ms (LONG_TERM / MONITORING / EVENT_BASED)
+  int64 duration_ms     = 2;  // Total run time ms; 0 = run until Stop() (LONG_TERM / MONITORING)
+  bool  run_forever     = 3;  // If true, ignore duration_ms; run until Stop()
+  int32 poll_interval_ms = 4; // Poll interval for EVENT_BASED mode
+}
+
+// Extra parameters for MONITORING mode.
+// Resolution A1: MonitorItem::reader (std::function<string()>) is not serializable;
+// the client sends the names of registered monitor items and the server maps them
+// to their reader functions.
+message MonitoringParams {
+  repeated string monitor_item_names = 1;
+}
+
+// Condition specification for EVENT_BASED mode.
+// Resolution A2: EventCriteria::predicate (std::function) is not serializable;
+// the client sends a structured condition that the server evaluates each poll cycle.
+message EventCondition {
+  // Simple form: fire when the named test has the expected pass/fail result.
+  string test_name     = 1;
+  bool   expected_pass = 2;
+  // Freeform rule string evaluated server-side when test_name is empty.
+  // Example: "cpu_temp_c > 80"
+  string expression    = 3;
+}
+
+// ============================================================
+// Result envelope (wraps every response from HalService)
+// ============================================================
+
+// Common wrapper returned by all HalService RPCs.
+// The module-specific Result message is packed into `payload` as a
+// google.protobuf.Any containing hal.modules.<name>.Result.
+message ResultEnvelope {
+  string                    module_id      = 1;  // e.g. "cpu"
+  string                    module_version = 2;  // semver string, e.g. "1.0.0"
+  google.protobuf.Timestamp timestamp      = 3;
+  ExecutionMode             mode           = 4;
+  TestStatus                status         = 5;
+  string                    error_message  = 6;
+  google.protobuf.Any       payload        = 7;  // hal.modules.<name>.Result
+}

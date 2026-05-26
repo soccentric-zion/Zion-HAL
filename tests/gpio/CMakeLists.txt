@@ -1,0 +1,6 @@
+add_executable(test_gpio main.cpp)
+target_link_libraries(test_gpio PRIVATE gpio_lib)
+target_include_directories(test_gpio PRIVATE ${CMAKE_SOURCE_DIR}/src)
+add_test(NAME test_gpio COMMAND test_gpio)
+set_tests_properties(test_gpio PROPERTIES TIMEOUT 300)
+install(TARGETS test_gpio RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
