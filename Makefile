@@ -12,7 +12,7 @@ NATIVE_BUILD_DIR := build/native
 CROSS_BUILD_DIR := build/cross
 
 # Parallel jobs (override with make JOBS=N)
-JOBS := $(shell nproc)
+JOBS := 16
 DOCKER_IMAGE := zion
 DOCKER_CROSS_BUILD_DIR := /workspace/build/cross
 
