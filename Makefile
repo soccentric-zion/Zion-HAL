@@ -83,12 +83,23 @@ endef
 # Native builds (host architecture)
 # =============================================================================
 
+# Real-file sentinel: cmake only runs when build.ninja is absent.
+# This prevents cmake from being re-invoked on every 'make build' and
+# eliminates the race condition when multiple targets depend on this step
+# in a parallel make (-j) invocation.
+$(NATIVE_BUILD_DIR)/build.ninja:
+	@echo "Configuring project with Ninja..."
+	mkdir -p $(NATIVE_BUILD_DIR)
+	cd $(NATIVE_BUILD_DIR) && cmake -GNinja $(CURDIR)
+
+# configure: always forces a full re-configuration (explicit user intent).
+# Depends on nothing so it always runs cmake unconditionally.
 configure:
 	@echo "Configuring project with Ninja..."
 	mkdir -p $(NATIVE_BUILD_DIR)
 	cd $(NATIVE_BUILD_DIR) && cmake -GNinja $(CURDIR)
 
-build: configure
+build: $(NATIVE_BUILD_DIR)/build.ninja
 	@echo "Building project with Ninja..."
 	cd $(NATIVE_BUILD_DIR) && ninja -j$(JOBS)
 
@@ -170,7 +181,13 @@ docker-package-ipk: docker-build
 	@echo "Generating IPK package (cross/ARM64)..."
 	$(DOCKER_RUN) "cd $(DOCKER_CROSS_BUILD_DIR) && cmake --build . --target package_ipk"
 
-docker-package: docker-package-deb docker-package-ipk
+# docker-package: build once inside Docker, then run both cpack steps
+# sequentially to prevent two parallel docker-build invocations racing.
+docker-package: docker-build
+	@echo "Generating DEB package (cross/ARM64)..."
+	$(DOCKER_RUN) "cd $(DOCKER_CROSS_BUILD_DIR) && cpack -G DEB"
+	@echo "Generating IPK package (cross/ARM64)..."
+	$(DOCKER_RUN) "cd $(DOCKER_CROSS_BUILD_DIR) && cmake --build . --target package_ipk"
 	@echo "Cross packages generated in build/cross/"
 
 # =============================================================================
@@ -195,7 +212,7 @@ run-b: deploy-b
 # Code quality & Docs
 # =============================================================================
 
-format: configure
+format: $(NATIVE_BUILD_DIR)/build.ninja
 	@echo "Formatting C++ files with clang-format..."
 	cd $(NATIVE_BUILD_DIR) && ninja format
 	@echo "Formatting CMake files..."
@@ -205,11 +222,11 @@ format: configure
 		echo "  cmake-format not found, skipping CMake file formatting."; \
 	fi
 
-cppcheck: configure
+cppcheck: $(NATIVE_BUILD_DIR)/build.ninja
 	@echo "Running cppcheck static analysis..."
 	cd $(NATIVE_BUILD_DIR) && ninja cppcheck
 
-doc: configure
+doc: $(NATIVE_BUILD_DIR)/build.ninja
 	@echo "Generating documentation..."
 	cd $(NATIVE_BUILD_DIR) && ninja doc_doxygen
 
@@ -217,6 +234,8 @@ doc: configure
 # Packaging (DEB / IPK / RPM)
 # =============================================================================
 
+# package-deb/rpm/ipk: depend only on build so they can still be called
+# independently. The parent 'package' target serialises them via build.
 package-deb: build
 	@echo "Generating DEB package..."
 	cd $(NATIVE_BUILD_DIR) && cpack -G DEB
@@ -232,7 +251,13 @@ package-ipk: build
 	cd $(NATIVE_BUILD_DIR) && cmake --build . --target package_ipk
 	@echo "Package: $$(ls $(NATIVE_BUILD_DIR)/zion-hal_*.ipk 2>/dev/null | head -1)"
 
-package: package-deb package-ipk
+# package: build once, then run both cpack steps sequentially to prevent
+# two parallel ninja/cmake processes racing in the same build directory.
+package: build
+	@echo "Generating DEB package..."
+	cd $(NATIVE_BUILD_DIR) && cpack -G DEB
+	@echo "Generating IPK package..."
+	cd $(NATIVE_BUILD_DIR) && cmake --build . --target package_ipk
 	@echo "All packages generated in $(NATIVE_BUILD_DIR)/"
 
 # =============================================================================
