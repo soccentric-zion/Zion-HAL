@@ -19,7 +19,7 @@ import "common.proto";
 //   testImuAccuracy
 //   testImuCalibration
 //   testImuTemperatureCompensation
-//   testImuToOrinInterface
+//   testImuToZionInterface
 message Config {
   // Names of individual tests to execute; empty list = run all tests.
   repeated string test_names = 1;

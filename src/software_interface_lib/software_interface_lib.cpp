@@ -154,8 +154,8 @@ TestOutput SoftwareInterfaceTesting::testDeviceDriverLoading()
         {"xhci_hcd",      "USB3 xHCI host"},
         {"zynq_dma",   "DMA engine"},
         {"snd_zynq",   "zynq_ps ALSA audio"},
-        {"brcmfmac",      "BCM WiFi (optional)"},
-        {"gpio_brcmstb",  "GPIO (Zion platform gpiochip4)"},
+        {"cfg80211",      "WiFi (optional)"},
+        {"gpio_xilinx",   "Zynq GPIO driver"},
     };
 
     bool anyLoaded = false;
@@ -201,7 +201,7 @@ TestOutput SoftwareInterfaceTesting::testDeviceDriverLoading()
 /**
  * @brief Verify that critical systemd services are active on Zion platform.
  * @details Checks systemd unit state for ssh, dbus, networking, and
- *          raspberry-pi-specific services (raspi-config, Zynq GPIO driverd if present).
+ *          Zion platform-specific services (Zynq GPIO driver if present).
  */
 TestOutput SoftwareInterfaceTesting::testSystemServiceStartup()
 {

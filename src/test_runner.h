@@ -95,7 +95,7 @@ static long long trParseDuration(const std::string& s)
 // Built-in Zynq UltraScale+ MPSoC hardware monitor items
 // ---------------------------------------------------------------------------
 
-static std::vector<MonitorItem> trPi5MonitorItems()
+static std::vector<MonitorItem> trZionMonitorItems()
 {
     return {
         {"cpu_temp_C", []() {
@@ -373,7 +373,7 @@ int runTestApp(const std::string& appName, int argc, char* argv[])
                   << "ms  duration=" << duration_ms << "ms"
                   << "  Ctrl+C to abort early\n";
         std::signal(SIGINT, testRunnerSigHandler);
-        tester.runMonitoringTest(interval_ms, duration_ms, trPi5MonitorItems(),
+        tester.runMonitoringTest(interval_ms, duration_ms, trZionMonitorItems(),
                                   [](const MonitoringSnapshot& snap) {
                                       trPrintCycleHeader(snap.cycle, "monitor-test", false);
                                       trPrintMonitorData(snap.monitorData);

@@ -6,13 +6,13 @@ Acaida-HAL is a comprehensive hardware abstraction and testing suite targeting t
 
 > **Port history**: Originally developed for NVIDIA Jetson AGX Orin (Tegra234).
 > Ported to Zynq UltraScale+ MPSoC (Zynq PS + PL fabric) — all platform-specific paths, constants,
-> and device nodes updated for the Pi 5 hardware.
+> and device nodes updated for the Zion platform hardware.
 
 ### Target Platform
 
 | Property | Value |
 |---|---|
-| SoC | Zynq PS (quad-core Cortex-A76 @ 2.4 GHz) |
+| SoC | Zynq UltraScale+ MPSoC (quad-core Cortex-A53 @ 1.5 GHz + dual-core Cortex-R5) |
 | South-bridge | PL fabric (USB 3, PCIe Gen3 x1, GPIO, I2S, CSI/DSI) |
 | GPU | VideoCore VII (12 shader quad cores, 800 MHz max) |
 | Memory | 4 GB / 8 GB LPDDR4X-4267 |
@@ -22,8 +22,8 @@ Acaida-HAL is a comprehensive hardware abstraction and testing suite targeting t
 ### Key Features
 
 - **Modular Library Architecture**: Separate libraries for CPU, GPU, DLA (Hailo-8/Coral), video codec (V4L2 M2M), camera (Unicam/PL fabric), audio (PL fabric I2S), PCIe, USB (xhci-hcd), GPIO (gpiochip4), storage, Ethernet, and more.
-- **Pi5 Platform Header**: Centralised constants in `src/platform_zynq.h` (device paths, thermal thresholds, memory bandwidth).
-- **Cross-compilation via Docker**: ARM64 Ubuntu 24.04 container (`rpi5-builder`).
+- **Zynq Platform Header**: Centralised constants in `src/platform_zynq.h` (device paths, thermal thresholds, memory bandwidth).
+- **Cross-compilation via Docker**: ARM64 Ubuntu 22.04 container (`zion`).
 - **Comprehensive Testing**: Unit tests, integration tests, and deployment workflows.
 - **Documentation Generation**: Integrated Doxygen support.
 - **Code Quality Tools**: clang-format and cppcheck.
@@ -46,9 +46,9 @@ Acaida-HAL is a comprehensive hardware abstraction and testing suite targeting t
 The project supports two primary build methods:
 
 1. **Native Compilation**: Build directly on a Zynq UltraScale+ MPSoC running 64-bit OS.
-2. **Docker-based Cross-Compilation**: Build for ARM64 on any Linux host using the `rpi5-builder` container.
+2. **Docker-based Cross-Compilation**: Build for ARM64 on any Linux host using the `zion` container.
 
-### Native Compilation (on Pi 5)
+### Native Compilation (on Zion / Zynq UltraScale+ MPSoC)
 
 #### Install Dependencies
 ```bash
@@ -94,12 +94,12 @@ The Docker image is based on `ubuntu:22.04` (ARM64) and is named `zion`.
    - Builds all targets
    - Outputs binaries in the `build/cross/` directory
 
-4. **Deploy and Run on Target Pi 5**
+4. **Deploy and Run on Zion Target**
 
 ```bash
-   # For Pi 5 Primary (192.168.1.3)
+   # For Zion Primary (192.168.1.3)
    make run-a
-   # For Pi 5 Secondary (192.168.1.13)
+   # For Zion Secondary (192.168.1.13)
    make run-b
    # Specify custom IP address
    make run-b IP_B=192.168.200.2
@@ -125,7 +125,7 @@ The Docker image is based on `ubuntu:22.04` (ARM64) and is named `zion`.
 - V4L2 device: `/dev/video0`, media controller: `/dev/media0`
 
 ### Debug UART
-- `/dev/ttyAMA0` (115200 8N1 by default on Pi 5)
+- `/dev/ttyPS0` (115200 8N1 by default on Zynq UltraScale+ MPSoC)
 
 ## Make Targets
 

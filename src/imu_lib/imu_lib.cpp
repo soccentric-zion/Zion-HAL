@@ -373,11 +373,10 @@ TestOutput ImuTesting::testImuTemperatureCompensation()
 
 /**
  * @brief Test IMU-to-Zion platform interface (I2C bus presence and communication).
- * @details Named testImuToOrinInterface in header (Jetson-origin name);
- *          on Zion platform this verifies /dev/i2c-1 (GPIO 2/3) which is the standard
- *          I2C bus for external IMU modules.
+ * @details Verifies /dev/i2c-1 (GPIO 2/3) which is the standard
+ *          I2C bus for external IMU modules on the Zion platform.
  */
-TestOutput ImuTesting::testImuToOrinInterface()
+TestOutput ImuTesting::testImuToZionInterface()
 {
     std::vector<std::string> data;
     data.push_back("=== IMU-to-Zion platform Interface (I2C / SPI, Zion platform) ===");
@@ -539,16 +538,16 @@ std::vector<TestResult> ImuTesting::runAllTests()
         }
     }
 
-    // Run testImuToOrinInterface
+    // Run testImuToZionInterface
     {
         auto start = std::chrono::high_resolution_clock::now();
-        TestOutput result = testImuToOrinInterface();
+        TestOutput result = testImuToZionInterface();
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> duration = end - start;
         {
             TestResult _tr;
-            _tr.name = "testImuToOrinInterface";
-            _tr.test_id = "testImuToOrinInterface";
+            _tr.name = "testImuToZionInterface";
+            _tr.test_id = "testImuToZionInterface";
             _tr.duration = std::chrono::duration_cast<std::chrono::nanoseconds>(duration);
             _tr.output = result;
             results.push_back(_tr);
@@ -565,7 +564,7 @@ std::vector<TestResult> ImuTesting::runAllTests()
 std::vector<std::string> ImuTesting::getAvailableTests()
 {
     return {
-        "testImuDataRate", "testImuAccuracy", "testImuCalibration", "testImuTemperatureCompensation", "testImuToOrinInterface",
+        "testImuDataRate", "testImuAccuracy", "testImuCalibration", "testImuTemperatureCompensation", "testImuToZionInterface",
     };
 }
 
@@ -590,8 +589,8 @@ TestResult ImuTesting::runSingleTest(const std::string& testName)
         result = testImuCalibration();
     } else if (testName == "testImuTemperatureCompensation") {
         result = testImuTemperatureCompensation();
-    } else if (testName == "testImuToOrinInterface") {
-        result = testImuToOrinInterface();
+    } else if (testName == "testImuToZionInterface") {
+        result = testImuToZionInterface();
     } else {
         // Unknown test name
         auto end = std::chrono::high_resolution_clock::now();

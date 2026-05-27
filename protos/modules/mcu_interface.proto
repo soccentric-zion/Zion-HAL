@@ -19,7 +19,7 @@ import "common.proto";
 //   testMcuSpiInterface
 //   testMcuUartInterface
 //   testMcuDmsInterface
-//   testMcuToOrinDataTransfer
+//   testMcuToZionDataTransfer
 //   testSecondaryMcuRedundancy
 //   testMcuFailoverMechanism
 //   testMcuSynchronization

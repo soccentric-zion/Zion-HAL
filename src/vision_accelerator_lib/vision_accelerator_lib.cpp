@@ -233,7 +233,7 @@ TestOutput VisionAcceleratorTesting::testDmaEngine1Functionality()
                               : "[INFO] DMA platform devices not found");
 
     std::string dmaMod = vaRunCmd("grep -c 'zynq-dma\\|zynq_ps' /proc/modules 2>/dev/null");
-    data.push_back("[INFO] BCM DMA module count: " + dmaMod);
+    data.push_back("[INFO] Zynq DMA module count: " + dmaMod);
 
     {
         TestOutput _out;

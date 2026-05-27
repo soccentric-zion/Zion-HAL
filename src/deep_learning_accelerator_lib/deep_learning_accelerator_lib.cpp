@@ -2,7 +2,7 @@
  * @file deep_learning_accelerator_lib.cpp
  * @brief Implementation file for DeepLearningAcceleratorTesting class
  *        Targets Zynq UltraScale+ MPSoC (Zynq PS / PL fabric).
- *        The Pi 5 has no on-die DLA; AI acceleration is provided by optional
+ *        The Zion platform has no on-die DLA; AI acceleration is provided by optional
  *        add-on hardware:
  *          - Hailo-8 (PCIe M.2 / HAT): /dev/hailo0, 26 INT8 TOPS
  *          - Coral USB Accelerator (Edge TPU): USB vendor 18d1, 4 INT8 TOPS
@@ -37,7 +37,7 @@
 // Zion platform AI accelerator constants
 // ---------------------------------------------------------------------------
 
-// Hailo-8: connected via PCIe M.2 or HAT+ on Pi 5
+// Hailo-8: connected via PCIe M.2 or HAT+ on Zion platform
 static constexpr double HAILO8_TOPS           = 26.0;       // INT8 TOPS
 static constexpr double HAILO8_TOPS_TOLERANCE = 15.0;       // % allowed deviation
 static const     char*  HAILO8_DEV            = "/dev/hailo0";
@@ -141,7 +141,8 @@ static double probeDlaTemperature()
         std::string type = readSysfsLine(base + "/type");
         if (type.find("cpu") != std::string::npos ||
             type.find("soc") != std::string::npos ||
-            type.find("bcm") != std::string::npos) {
+            type.find("xlnx") != std::string::npos ||
+            type.find("zynq") != std::string::npos) {
             long long milliC = readSysfsInt(base + "/temp");
             if (milliC > 0)
                 return static_cast<double>(milliC) / 1000.0;

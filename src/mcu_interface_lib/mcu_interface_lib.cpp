@@ -3,8 +3,6 @@
  * @brief MCU interface tests for Zynq UltraScale+ MPSoC.
  *        Zion platform can communicate with an external MCU (PL deterministic I/O engine, STM32, etc.) via
  *        SPI (/dev/spidev0.0), UART (/dev/ttyAMA0), or I2C (/dev/i2c-1).
- *        Tests labelled "testMcuToOrinDataTransfer" and "testMcuDmsInterface"
- *        reference Jetson AGX Orin; they are mapped to Zion platform equivalents.
  * @author sandesh ghimire
  * @copyright (C) Lucid Motors
  */
@@ -364,15 +362,15 @@ TestOutput McuInterfaceTesting::testMcuDmsInterface()
 }
 
 /**
- * @brief MCU-to-Zion platform data transfer (replaces Jetson testMcuToOrinDataTransfer).
+ * @brief MCU-to-Zion platform data transfer via SPI or UART.
  * @details Verifies end-to-end message transfer over SPI or UART between MCU
  *          and Zion platform.  Without a physical MCU, checks loopback capability.
  */
-TestOutput McuInterfaceTesting::testMcuToOrinDataTransfer()
+TestOutput McuInterfaceTesting::testMcuToZionDataTransfer()
 {
     std::vector<std::string> data;
     data.push_back("=== MCU-to-Zion platform Data Transfer (SPI/UART) ===");
-    data.push_back("[INFO] Function name 'testMcuToOrinDataTransfer' refers to Jetson; Zion platform equivalent used");
+    data.push_back("[INFO] Function name 'testMcuToZionDataTransfer' verifies SPI/UART transfer on Zion platform");
 
     bool spiOk = mcuPathExists("/dev/spidev0.0");
     bool uartOk = mcuPathExists("/dev/ttyAMA0");
@@ -612,16 +610,16 @@ std::vector<TestResult> McuInterfaceTesting::runAllTests()
         }
     }
 
-    // Run testMcuToOrinDataTransfer
+    // Run testMcuToZionDataTransfer
     {
         auto start = std::chrono::high_resolution_clock::now();
-        TestOutput result = testMcuToOrinDataTransfer();
+        TestOutput result = testMcuToZionDataTransfer();
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> duration = end - start;
         {
             TestResult _tr;
-            _tr.name = "testMcuToOrinDataTransfer";
-            _tr.test_id = "testMcuToOrinDataTransfer";
+            _tr.name = "testMcuToZionDataTransfer";
+            _tr.test_id = "testMcuToZionDataTransfer";
             _tr.duration = std::chrono::duration_cast<std::chrono::nanoseconds>(duration);
             _tr.output = result;
             results.push_back(_tr);
@@ -687,7 +685,7 @@ std::vector<std::string> McuInterfaceTesting::getAvailableTests()
 {
     return {
         "testMcuCommunicationInterface", "testMcuFirmwareOperation", "testMcuWatchdog",        "testMcuGpioInterface",
-        "testMcuSpiInterface",           "testMcuUartInterface",     "testMcuDmsInterface",    "testMcuToOrinDataTransfer",
+        "testMcuSpiInterface",           "testMcuUartInterface",     "testMcuDmsInterface",    "testMcuToZionDataTransfer",
         "testSecondaryMcuRedundancy",    "testMcuFailoverMechanism", "testMcuSynchronization",
     };
 }
@@ -719,8 +717,8 @@ TestResult McuInterfaceTesting::runSingleTest(const std::string& testName)
         result = testMcuUartInterface();
     } else if (testName == "testMcuDmsInterface") {
         result = testMcuDmsInterface();
-    } else if (testName == "testMcuToOrinDataTransfer") {
-        result = testMcuToOrinDataTransfer();
+    } else if (testName == "testMcuToZionDataTransfer") {
+        result = testMcuToZionDataTransfer();
     } else if (testName == "testSecondaryMcuRedundancy") {
         result = testSecondaryMcuRedundancy();
     } else if (testName == "testMcuFailoverMechanism") {

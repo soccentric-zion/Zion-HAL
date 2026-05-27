@@ -103,10 +103,10 @@ class ImuTesting : public TestBase
      * @return TestOutput with pass/fail and data
      */
     /**
-     * @brief Tests the imutoorininterface functionality
+     * @brief Tests the imutozynqinterface functionality
      * @return TestOutput with pass/fail and data
      */
-    TestOutput testImuToOrinInterface();
+    TestOutput testImuToZionInterface();
 
     /**
      * @brief Get list of all available test names

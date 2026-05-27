@@ -7,8 +7,8 @@ build:
 	docker buildx build --platform linux/arm64 --load --build-arg UID=$(shell id -u) --build-arg GID=$(shell id -g) -t $(IMAGE_NAME) .
 
 run:
-	# No --gpus flag: Pi 5 has VideoCore VII (not CUDA)
-	docker run -it --rm --hostname rpi5 $(IMAGE_NAME)
+	# No --gpus flag: Zion platform uses VideoCore VII (not CUDA)
+	docker run -it --rm --hostname zion $(IMAGE_NAME)
 
 clean:
 	docker rmi $(IMAGE_NAME) || true

@@ -103,10 +103,10 @@ class McuInterfaceTesting : public TestBase
      * @return TestOutput with pass/fail and data
      */
     /**
-     * @brief Tests the mcutoorindatatransfer functionality
+     * @brief Tests the mcutozyondatatransfer functionality
      * @return TestOutput with pass/fail and data
      */
-    TestOutput testMcuToOrinDataTransfer();
+    TestOutput testMcuToZionDataTransfer();
     /**
      * @brief Constructor for McuInterfaceTesting
      * @return TestOutput with pass/fail and data
