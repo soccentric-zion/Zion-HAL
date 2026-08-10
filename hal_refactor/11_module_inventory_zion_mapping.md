@@ -1,6 +1,4 @@
-# Module Inventory and Zion Backend Mapping
-
-## Module Mapping
+# Module Inventory and Zion Backend Mapping ## Module Mapping
 | Module | Zion backend mapping |
 |---|---|
 | audio_interfaces | PS Linux ALSA/I2S + PL deterministic I/O endpoints over AXI-Lite |
@@ -37,15 +35,9 @@
 | usb_lib | PS/PL USB host/device validation |
 | video_encode_decode_lib | V4L2 and PL codec pipeline checks |
 | vision_accelerator_lib | PL vision IP, DMA and software fallback checks |
-| watchdog_and_reset_lib | PS watchdog and PL reset-domain checks |
-
-## Test Mapping
-All existing module tests under tests/* remain enabled. Pi-specific assumptions were retargeted to generic Zynq/PL semantics through platform constants and backend text updates.
-
-Additional Zion backend coverage:
-- tests/ps_pl_axi/main.cpp
-
-Covers:
+| watchdog_and_reset_lib | PS watchdog and PL reset-domain checks | ## Test Mapping
+All existing module tests under tests/* remain enabled. Zynq UltraScale+-specific assumptions were retargeted to generic Zynq/PL semantics through platform constants and backend text updates. Additional Zion backend coverage:
+- tests/ps_pl_axi/main.cpp Covers:
 - AXI register read/write and range checks.
 - DMA success and error paths.
 - IP-core handshake command/ack and timeout behavior.

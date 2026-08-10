@@ -1,9 +1,5 @@
-# Migration Ambiguity Log
-
-All unlabeled `data` vector entries are positionally indexed and
-moved to `reason["detail_N"]`. No data is lost.
-
-| File | Key | Destination | Rationale |
+# Migration Ambiguity Log All unlabeled `data` vector entries are positionally indexed and
+moved to `reason["detail_N"]`. No data is lost. | File | Key | Destination | Rationale |
 |---|---|---|---|
 | `src/audio_interfaces/audio_interfaces.cpp` | `data[0..N]` | `reason["detail_N"]` | Unlabeled vector entries; positional index used as key |
 | `src/camera_interfaces_lib/camera_interfaces_lib.cpp` | `data[0..N]` | `reason["detail_N"]` | Unlabeled vector entries; positional index used as key |

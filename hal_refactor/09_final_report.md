@@ -1,67 +1,17 @@
-# Phase 9: Final Report — HAL Result-Type Refactor
-
-## Summary
-
-All 9 phases of the HAL result-type refactor have been completed successfully.
-The full codebase compiles cleanly with zero errors (333/333 targets).
-
-## Objective
-
-Replace the old aggregate `TestOutput {bool passed; vector<string> data;}` and
+# Phase 9: Final Report — HAL Result-Type Refactor ## Summary All 9 phases of the HAL result-type refactor have been completed successfully.
+The full codebase compiles cleanly with zero errors (333/333 targets). ## Objective Replace the old aggregate `TestOutput {bool passed; vector<string> data;}` and
 `TestResult {string name; TestOutput output; chrono::duration<double> duration;}`
-types with the new canonical types in `namespace hal`:
-
-```cpp
-namespace hal {
-  using Value = std::variant<bool, int64_t, double, std::string>;
-  enum class Status { PASS, FAIL, ERROR, TIMEOUT, SKIPPED, ABORTED };
-  enum class Severity { INFO, WARNING, ERROR, CRITICAL };
-  struct TestOutput {
-    Status status;
-    Severity severity;
-    std::map<std::string,std::string> reason;
-    std::map<std::string,Value> metrics;
-    std::map<std::string,Value> monitoring;
-    std::map<std::string,Value> event;
-    std::string error_message;
-  };
-  struct TestResult {
-    std::string module_id;
-    std::string test_id;
-    std::string name;
-    uint64_t sequence;
-    std::chrono::system_clock::time_point timestamp;
-    std::chrono::nanoseconds duration;
-    TestOutput output;
-    std::vector<TestResult> subtests;
-  };
+types with the new canonical types in `namespace hal`: ```cpp
+namespace hal { using Value = std::variant<bool, int64_t, double, std::string>; enum class Status { PASS, FAIL, ERROR, TIMEOUT, SKIPPED, ABORTED }; enum class Severity { INFO, WARNING, ERROR, CRITICAL }; struct TestOutput { Status status; Severity severity; std::map<std::string,std::string> reason; std::map<std::string,Value> metrics; std::map<std::string,Value> monitoring; std::map<std::string,Value> event; std::string error_message; }; struct TestResult { std::string module_id; std::string test_id; std::string name; uint64_t sequence; std::chrono::system_clock::time_point timestamp; std::chrono::nanoseconds duration; TestOutput output; std::vector<TestResult> subtests; };
 }
-```
-
-## Files Changed
-
-### Core
-
-| File | Change |
+``` ## Files Changed ### Core | File | Change |
 |---|---|
-| `src/lib_base.h` | Added new type definitions in `namespace hal`; added global `using` declarations for backward compat |
-
-### Proto files
-
-| File | Change |
+| `src/lib_base.h` | Added new type definitions in `namespace hal`; added global `using` declarations for backward compat | ### Proto files | File | Change |
 |---|---|
 | `protos/common.proto` | Added `TypedValue`, `TestResult`, `TestSeverity`, `TestStatus` aliases, updated `TestOutput`, deprecated `TestResultEntry`, updated `MonitoringSnapshot` |
-| 35 × `protos/modules/*.proto` | Reserved old `test_results` (tag 1); added new `results` (tag 2, type `TestResult`) |
-
-### Serializer
-
-| File | Change |
+| 35 × `protos/modules/*.proto` | Reserved old `test_results` (tag 1); added new `results` (tag 2, type `TestResult`) | ### Serializer | File | Change |
 |---|---|
-| `protos/server/typed_module_handler.h` | Complete rewrite: `ToProtoStatus`, `ToProtoSeverity`, `ToProtoTypedValue`, `ToProtoTestOutput`, `ToProtoTestResult`, `StampResults`; all 4 test mode handlers updated |
-
-### Module implementations (all 35)
-
-| Module | `.cpp` file |
+| `protos/server/typed_module_handler.h` | Complete rewrite: `ToProtoStatus`, `ToProtoSeverity`, `ToProtoTypedValue`, `ToProtoTestOutput`, `ToProtoTestResult`, `StampResults`; all 4 test mode handlers updated | ### Module implementations (all 35) | Module | `.cpp` file |
 |---|---|
 | audio_interfaces | `src/audio_interfaces/audio_interfaces.cpp` |
 | camera_interfaces | `src/camera_interfaces_lib/camera_interfaces_lib.cpp` |
@@ -97,17 +47,9 @@ namespace hal {
 | usb | `src/usb_lib/usb_lib.cpp` |
 | video_encode_decode | `src/video_encode_decode_lib/video_encode_decode_lib.cpp` |
 | vision_accelerator | `src/vision_accelerator_lib/vision_accelerator_lib.cpp` |
-| watchdog_and_reset | `src/watchdog_and_reset_lib/watchdog_and_reset_lib.cpp` |
-
-### Runner
-
-| File | Change |
+| watchdog_and_reset | `src/watchdog_and_reset_lib/watchdog_and_reset_lib.cpp` | ### Runner | File | Change |
 |---|---|
-| `src/test_runner.h` | Updated `trPrintTable()` and `trMakeCriteria()` to use new types |
-
-## Transformation Rules Applied
-
-| Old pattern | New pattern | Count |
+| `src/test_runner.h` | Updated `trPrintTable` and `trMakeCriteria` to use new types | ## Transformation Rules Applied | Old pattern | New pattern | Count |
 |---|---|---|
 | `return {true, data}` | New `TestOutput` with `Status::PASS` | ~161 |
 | `return {false, data}` | New `TestOutput` with `Status::FAIL` | ~62 + 15 inline |
@@ -116,25 +58,13 @@ namespace hal {
 | `results.push_back({name, out, dur})` | New `TestResult _tr` block | ~35 |
 | `return {testName, out, dur}` | New `TestResult _tr` block | ~35 |
 | `TestOutput r = {false, {}}` | Default-init with `Status::ERROR` | ~8 |
-| `return {name+"(UNKNOWN)", {false,{}}, dur}` | Error `TestResult` | ~35 |
-
-## Migration Ambiguities
-
-All unlabeled `data` vector entries were positionally indexed:
-`data[0]` → `reason["detail_0"]`, `data[1]` → `reason["detail_1"]`, etc.
-
-This preserves all data without loss. 572 total `[MIGRATION-AMBIGUOUS]` entries
-logged in `hal_refactor/05_modules/_ambiguous_log.md`.
-
-Future work: replace positional `detail_N` keys with meaningful semantic names
-per-module.
-
-## Hard Rules Compliance
-
-| Rule | Status |
+| `return {name+"(UNKNOWN)", {false,{}}, dur}` | Error `TestResult` | ~35 | ## Migration Ambiguities All unlabeled `data` vector entries were positionally indexed:
+`data[0]` → `reason["detail_0"]`, `data[1]` → `reason["detail_1"]`, etc. This preserves all data without loss. 572 total `[MIGRATION-AMBIGUOUS]` entries
+logged in `hal_refactor/05_modules/_ambiguous_log.md`. Future work: replace positional `detail_N` keys with meaningful semantic names
+per-module. ## Hard Rules Compliance | Rule | Status |
 |---|---|
 | `passed` must not survive in any code path | ✅ Zero occurrences |
-| `sequence` and `timestamp` NOT set inside test functions | ✅ Set only in `StampResults()` |
+| `sequence` and `timestamp` NOT set inside test functions | ✅ Set only in `StampResults` |
 | `module_id` values unchanged from `modules.yaml` | ✅ Passed through `HAL_REGISTER` |
 | Old proto tag numbers not reused | ✅ Tag 1 reserved; new field at tag 2 |
 | Old field names not reused | ✅ `test_results` reserved; new field is `results` |
