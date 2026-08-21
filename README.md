@@ -40,6 +40,10 @@ Inspect `tests/` and the Makefile for exact unit and integration targets.
 ## Limitations
 
 No target board, kernel driver, accelerator, camera, storage device, or deployment path was manually exercised. Platform-specific documentation contains assumptions that must be checked against the actual Zion hardware revision.
+
+## Detailed Reference
+
+The retained HAL guide below contains the repository's extended platform, build, device-path, and contribution notes.
 # Zynq UltraScale+-HAL – Hardware Abstraction Library for Zynq UltraScale+ MPSoC ## Overview Zynq UltraScale+-HAL is a comprehensive hardware abstraction and testing suite targeting the **Zynq UltraScale+ MPSoC** (Zynq PS SoC + PL fabric south-bridge). It provides a modular, extensible architecture for testing and exercising hardware interfaces and system components commonly found in automotive and industrial applications. > **Port history**: Originally developed for Zynq UltraScale+ (Zynq UltraScale+).
 > Ported to Zynq UltraScale+ MPSoC (Zynq PS + PL fabric) — all platform-specific paths, constants,
 > and device nodes updated for the Zion platform hardware. ### Target Platform | Property | Value |
