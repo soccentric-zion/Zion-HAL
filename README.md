@@ -1,3 +1,45 @@
+# Zion-HAL
+
+## Project Summary
+
+Device permissions and kernel support must be checked before treating a peripheral failure as a library-only defect.
+
+The source-level adapter inventory is useful for planning coverage, while actual support depends on the matching device tree, kernel interfaces, drivers, libraries, and board wiring. Those dependencies are deliberately visible as verification work.
+
+Zion-HAL is the hardware-abstraction and validation library for the Zion Zynq UltraScale+ MPSoC platform. It is a CMake/Make C++ project with protobuf definitions, Docker-based cross-compilation support, a `src` implementation tree, and unit/integration test directories. Existing documentation describes modular libraries for compute, memory, thermal, power, storage, networking, PCIe, USB, GPIO, camera, audio, video, and accelerator paths, with platform constants centralized in `src/platform_zynq.h`. Device-node and sysfs references include V4L2, DRM/GPU, CSI, UART, Hailo, and Coral examples. These are integration contracts, not evidence that every peripheral is present on every Zion board or that each path is operational. Native builds target Linux hosts or the board; Docker targets an ARM64 Ubuntu build container. The repository also advertises Doxygen, clang-format, and cppcheck workflows. Because this leaf touches real hardware, automated tests can validate interfaces, parsing, and mocks while leaving timing, permissions, kernel drivers, electrical connections, and device-specific behavior for manual checks. The feature table distinguishes implemented repository surfaces from partial hardware integrations and avoids turning the platform description into a verification claim. Use the Makefile to discover exact targets, inspect `tests/`, and use Docker only when the cross-toolchain and target assumptions match the board under test. Zion-Client consumes this layer through the project gRPC/protobuf boundary, but this repository should be validated independently first.
+
+## Feature Status
+
+| # | Name / Description | Implemented? | Test Coverage? | Manual Test |
+|---:|---|---|---|---|
+| 1 | CMake/Make native build | Implemented | Test targets/config present; build not run | [ ] Manual verification required |
+| 2 | ARM64 Docker cross-build | Implemented | Docker path documented; image build unverified | [ ] Manual verification required |
+| 3 | Platform constants and device mappings | Implemented | Unit coverage unknown | [ ] Manual verification required |
+| 4 | CPU and system-memory validation | Implemented | Tests exist; breadth unknown | [ ] Manual verification required |
+| 5 | GPU and deep-learning accelerator adapters | Partial | Hardware-dependent coverage unknown | [ ] Manual verification required |
+| 6 | Camera, display, and video V4L2 paths | Partial | Automated coverage not established | [ ] Manual verification required |
+| 7 | Audio/I2S, GPIO, USB, PCIe, and Ethernet paths | Partial | Test breadth unknown | [ ] Manual verification required |
+| 8 | Storage, thermal, power, and watchdog checks | Partial | Test breadth unknown | [ ] Manual verification required |
+| 9 | Protobuf interface definitions | Implemented | Generation/compile coverage implied; not run | [ ] Manual verification required |
+| 10 | Doxygen documentation configuration | Implemented | Generation not verified | [ ] Manual verification required |
+| 11 | clang-format and cppcheck tooling | Implemented | Tool runs not verified | [ ] Manual verification required |
+| 12 | Deployment/run helpers for Zion targets | Partial | Networked deployment unverified | [ ] Manual verification required |
+
+## Tests and Commands
+
+```bash
+make build
+make run
+make help
+make format
+make cppcheck
+```
+
+Inspect `tests/` and the Makefile for exact unit and integration targets.
+
+## Limitations
+
+No target board, kernel driver, accelerator, camera, storage device, or deployment path was manually exercised. Platform-specific documentation contains assumptions that must be checked against the actual Zion hardware revision.
 # Zynq UltraScale+-HAL – Hardware Abstraction Library for Zynq UltraScale+ MPSoC ## Overview Zynq UltraScale+-HAL is a comprehensive hardware abstraction and testing suite targeting the **Zynq UltraScale+ MPSoC** (Zynq PS SoC + PL fabric south-bridge). It provides a modular, extensible architecture for testing and exercising hardware interfaces and system components commonly found in automotive and industrial applications. > **Port history**: Originally developed for Zynq UltraScale+ (Zynq UltraScale+).
 > Ported to Zynq UltraScale+ MPSoC (Zynq PS + PL fabric) — all platform-specific paths, constants,
 > and device nodes updated for the Zion platform hardware. ### Target Platform | Property | Value |
