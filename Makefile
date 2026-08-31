@@ -1,16 +1,15 @@
 # Master Makefile for Zion HAL
-# Supports both native and Docker-based builds with Ninja
+# Docker-based builds: the default (and only) build path is Docker.
 
 .DEFAULT_GOAL := help
 
-.PHONY: all build configure clean test format cppcheck doc help
+.PHONY: all build clean test format cppcheck doc help
 .PHONY: package package-deb package-rpm package-ipk
 .PHONY: docker-build docker-configure docker-clean docker-shell docker-install docker-image docker-test
 .PHONY: docker-package docker-package-deb docker-package-rpm docker-package-ipk
-.PHONY: deploy deploy-a deploy-b run run-a run-b list setup-completion
+.PHONY: deploy deploy-a deploy-b run-a run-b list setup-completion
 
 # Build directories (separate to avoid CMake cache conflicts)
-NATIVE_BUILD_DIR := build/native
 CROSS_BUILD_DIR := build/cross
 
 # Parallel jobs (override with make JOBS=N)
@@ -38,7 +37,7 @@ SSH := $(SSHPASS) ssh -o StrictHostKeyChecking=no
 SCP := $(SSHPASS) scp -o StrictHostKeyChecking=no
 
 # Default target
-all: docker-build ## Alias for docker-build (default)
+all: docker-build ## Default target: Docker cross-build (fleet standard)
 
 # Deploy to remote target: $(1)=IP address
 define deploy_remote
@@ -64,42 +63,12 @@ define run_remote
 	fi
 endef
 
-define run_local
-	@APP="$(word 2, $(MAKECMDGOALS))"; \
-	ARGS="$(wordlist 3, $(words $(MAKECMDGOALS)), $(MAKECMDGOALS))"; \
-	if [ -z "$$APP" ]; then \
-		echo "Running all test applications locally..."; \
-		for name in $$(ls $(NATIVE_BUILD_DIR)/bin/); do \
-			echo "--- Running $$name ---"; \
-			$(if $(V),echo "LD_LIBRARY_PATH=$(NATIVE_BUILD_DIR)/lib $(NATIVE_BUILD_DIR)/bin/$$name";) \
-			LD_LIBRARY_PATH=$(NATIVE_BUILD_DIR)/lib $(NATIVE_BUILD_DIR)/bin/$$name || true; \
-		done; \
-	else \
-		echo "Running $$APP locally with args: $$ARGS"; \
-		$(if $(V),echo "LD_LIBRARY_PATH=$(NATIVE_BUILD_DIR)/lib $(NATIVE_BUILD_DIR)/bin/$$APP $$ARGS";) \
-		LD_LIBRARY_PATH=$(NATIVE_BUILD_DIR)/lib $(NATIVE_BUILD_DIR)/bin/$$APP $$ARGS; \
-	fi
-endef
-
 # =============================================================================
-# Native builds (host architecture)
+# Build & test (Docker — the default build path)
 # =============================================================================
 
-configure: ## Configure the project with CMake/Ninja
-	@echo "Configuring project with Ninja..."
-	mkdir -p $(NATIVE_BUILD_DIR)
-	cd $(NATIVE_BUILD_DIR) && cmake -GNinja $(CURDIR)
-
-build: configure ## Build the project (configures if needed)
-	@echo "Building project with Ninja..."
-	cd $(NATIVE_BUILD_DIR) && ninja -j$(JOBS)
-
-run: build ## Run test app locally (usage: make run [name] [args...], no args = run all)
-	$(call run_local)
-
-test: build ## Run tests with CTest
-	@echo "Running tests with CTest..."
-	cd $(NATIVE_BUILD_DIR) && ctest --output-on-failure -j$(JOBS)
+build: docker-build ## Build the project in Docker (alias for docker-build)
+test: docker-test ## Run tests in Docker (ARM64 via QEMU)
 
 # =============================================================================
 # Common for native and Cross
@@ -110,8 +79,6 @@ clean: ## Remove build directory
 	rm -rf build
 
 list: ## List available test applications
-	@echo "Native ($(NATIVE_BUILD_DIR)):"
-	@ls -1 $(NATIVE_BUILD_DIR)/bin/ 2>/dev/null | sed 's/^/    /' || echo "    (none - run 'make build' first)"
 	@echo "Cross ($(CROSS_BUILD_DIR)):"
 	@ls -1 $(CROSS_BUILD_DIR)/bin/ 2>/dev/null | sed 's/^/    /' || echo "    (none - run 'make docker-build' first)"
 
@@ -194,70 +161,22 @@ run-b: deploy-b ## Run test app on $(IP_B) (usage: make run-b [name] [args...])
 	$(call run_remote,$(IP_B))
 
 # =============================================================================
-# Code quality & Docs
+# Code quality & Docs (run inside the Docker build container)
 # =============================================================================
 
-format: check-clang-format configure ## Format code with clang-format (and cmake-format if available)
-	@echo "Formatting C++ files with clang-format..."
-	cd $(NATIVE_BUILD_DIR) && ninja format
-	@echo "Formatting CMake files..."
-	@if command -v cmake-format > /dev/null 2>&1; then \
-		find . -name CMakeLists.txt -not -path './build/*' -not -path './cmake-build-debug/*' | xargs cmake-format -i; \
-	else \
-		echo "  cmake-format not found, skipping CMake file formatting. Install with: sudo apt install -y cmake-format"; \
-	fi
+format: docker-image ## Format code with clang-format (in Docker)
+	@echo "Running clang-format in Docker..."
+	$(DOCKER_RUN) "cd $(DOCKER_CROSS_BUILD_DIR) && ninja format"
 
-cppcheck: check-cppcheck configure ## Run static analysis with cppcheck
-	@echo "Running cppcheck static analysis..."
-	cd $(NATIVE_BUILD_DIR) && ninja cppcheck
+cppcheck: docker-image ## Run static analysis with cppcheck (in Docker)
+	@echo "Running cppcheck in Docker..."
+	$(DOCKER_RUN) "cd $(DOCKER_CROSS_BUILD_DIR) && ninja cppcheck"
 
-doc: check-doxygen configure ## Generate Doxygen documentation
-	@echo "Generating documentation..."
-	cd $(NATIVE_BUILD_DIR) && ninja doc_doxygen
+doc: docker-image ## Generate Doxygen documentation (in Docker)
+	@echo "Generating documentation in Docker..."
+	$(DOCKER_RUN) "cd $(DOCKER_CROSS_BUILD_DIR) && ninja doc_doxygen"
 
-.PHONY: check-clang-format check-cppcheck check-doxygen
-check-clang-format:
-	@if ! command -v clang-format > /dev/null 2>&1; then \
-		echo "Error: clang-format not found." >&2; \
-		echo "Install with: sudo apt install -y clang-format" >&2; \
-		exit 1; \
-	fi
-
-check-cppcheck:
-	@if ! command -v cppcheck > /dev/null 2>&1; then \
-		echo "Error: cppcheck not found." >&2; \
-		echo "Install with: sudo apt install -y cppcheck" >&2; \
-		exit 1; \
-	fi
-
-check-doxygen:
-	@if ! command -v doxygen > /dev/null 2>&1; then \
-		echo "Error: doxygen not found." >&2; \
-		echo "Install with: sudo apt install -y doxygen graphviz" >&2; \
-		exit 1; \
-	fi
-
-# =============================================================================
-# Packaging (DEB / IPK / RPM)
-# =============================================================================
-
-package-deb: build ## Generate DEB package (native build)
-	@echo "Generating DEB package..."
-	cd $(NATIVE_BUILD_DIR) && cpack -G DEB
-	@echo "Package: $$(ls $(NATIVE_BUILD_DIR)/acadia-hal_*.deb 2>/dev/null | head -1)"
-
-package-rpm: build ## Generate RPM package (requires rpmbuild)
-	@echo "Generating RPM package (requires rpmbuild: sudo apt-get install rpm)..."
-	cd $(NATIVE_BUILD_DIR) && cpack -G RPM
-	@echo "Package: $$(ls $(NATIVE_BUILD_DIR)/acadia-hal-*.rpm 2>/dev/null | head -1)"
-
-package-ipk: build ## Generate IPK package (DEB renamed .ipk)
-	@echo "Generating IPK package..."
-	cd $(NATIVE_BUILD_DIR) && cmake --build . --target package_ipk
-	@echo "Package: $$(ls $(NATIVE_BUILD_DIR)/acadia-hal_*.ipk 2>/dev/null | head -1)"
-
-package: package-deb package-ipk ## Generate DEB + IPK (native build)
-	@echo "All packages generated in $(NATIVE_BUILD_DIR)/"
+# Packaging: the docker-package* targets above cover all packaging (Docker).
 
 # =============================================================================
 # Misc
