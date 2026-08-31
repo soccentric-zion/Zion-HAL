@@ -1,4 +1,3 @@
-# SiliconCentric eSDK installer — copied into docker/ by bootstrap.sh
-# (copy_esdk). Huge file; NEVER commit it.
-*-ext-*.sh
-esdk.sh
+# SiliconCentric SDK installer — copied into docker/ by bootstrap.sh
+# (copy_sdk). Huge file; NEVER commit it.
+sdk.sh
