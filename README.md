@@ -14,16 +14,21 @@ Zion-HAL is the hardware-abstraction and validation library for the Zion Zynq Ul
 |---:|---|---|---|---|
 | 1 | CMake/Make native build | Implemented | Test targets/config present; build not run | [ ] Manual verification required |
 | 2 | ARM64 Docker cross-build | Implemented | Docker path documented; image build unverified | [ ] Manual verification required |
-| 3 | Platform constants and device mappings | Implemented | Unit coverage unknown | [ ] Manual verification required |
-| 4 | CPU and system-memory validation | Implemented | Tests exist; breadth unknown | [ ] Manual verification required |
-| 5 | GPU and deep-learning accelerator adapters | Partial | Hardware-dependent coverage unknown | [ ] Manual verification required |
-| 6 | Camera, display, and video V4L2 paths | Partial | Automated coverage not established | [ ] Manual verification required |
-| 7 | Audio/I2S, GPIO, USB, PCIe, and Ethernet paths | Partial | Test breadth unknown | [ ] Manual verification required |
-| 8 | Storage, thermal, power, and watchdog checks | Partial | Test breadth unknown | [ ] Manual verification required |
-| 9 | Protobuf interface definitions | Implemented | Generation/compile coverage implied; not run | [ ] Manual verification required |
-| 10 | Doxygen documentation configuration | Implemented | Generation not verified | [ ] Manual verification required |
-| 11 | clang-format and cppcheck tooling | Implemented | Tool runs not verified | [ ] Manual verification required |
-| 12 | Deployment/run helpers for Zion targets | Partial | Networked deployment unverified | [ ] Manual verification required |
+| 3 | Platform constants and device mappings (KV260 + Zion, compile-time selection) | Implemented | Unit coverage unknown | [ ] Manual verification required |
+| 4 | Runtime board detection (devicetree model/compatible) | Implemented | tests/platform_detect | [ ] Manual verification required |
+| 5 | CPU and system-memory validation | Implemented | Tests exist; breadth unknown | [ ] Manual verification required |
+| 6 | FPGA/PL fabric: fpga_manager, PL clocks, AMBA enumeration, Kria xclbin/dfx-mgr | Implemented | tests/fpga_fabric; hardware-dependent | [ ] Manual verification required |
+| 7 | RPU (Cortex-R5F): remoteproc state/firmware/mode, rpmsg IPC | Implemented | tests/rpu; hardware-dependent | [ ] Manual verification required |
+| 8 | Live AXI access via /dev/uio mmap (UioAxilBackend) | Implemented | tests/ps_pl_axi (mock + gating) | [ ] Manual verification required |
+| 9 | CAN 2.0B (SocketCAN) validation | Implemented | tests/can_bus; hardware-dependent | [ ] Manual verification required |
+| 10 | GPU and deep-learning accelerator adapters | Partial | Hardware-dependent coverage unknown | [ ] Manual verification required |
+| 11 | Camera, display, and video V4L2 paths | Partial | Automated coverage not established | [ ] Manual verification required |
+| 12 | Audio/I2S, GPIO, USB, PCIe, and Ethernet paths | Partial | Test breadth unknown | [ ] Manual verification required |
+| 13 | Storage, thermal, power, and watchdog checks | Partial | Test breadth unknown | [ ] Manual verification required |
+| 14 | Protobuf interface definitions | Implemented | Generation/compile coverage implied; verified in native build | [ ] Manual verification required |
+| 15 | Doxygen documentation configuration | Implemented | Generation not verified | [ ] Manual verification required |
+| 16 | clang-format and cppcheck tooling | Implemented | Tool runs not verified | [ ] Manual verification required |
+| 17 | Deployment/run helpers for Zion + KV260 targets | Partial | Networked deployment unverified | [ ] Manual verification required |
 
 ## Tests and Commands
 
@@ -33,7 +38,12 @@ make run
 make help
 make format
 make cppcheck
+make deploy-kv260 IP_KV260=<kv260-ip>   # deploy to Kria KV260
+make run-kv260                          # run all HAL modules on the KV260
 ```
+
+Platform selection: `cmake -DHAL_PLATFORM=kv260|zion` (default kv260).
+KV260 platform guide: `doc/platform-kv260.md`.
 
 Inspect `tests/` and the Makefile for exact unit and integration targets.
 

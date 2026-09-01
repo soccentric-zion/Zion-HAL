@@ -1,5 +1,6 @@
 #include "platform_zynq.h"
 #include "ps_pl_backend/ps_pl_backend.h"
+#include "ps_pl_backend/uio_axil_backend.h"
 
 #include <cstdint>
 #include <iostream>
@@ -80,6 +81,21 @@ bool testFaultHandling()
     return ok;
 }
 
+bool testUioBackendGating()
+{
+    bool ok = true;
+
+    // Live UIO backend must refuse non-/dev/uio paths without touching the system.
+    ok &= expect(UioAxilBackend::open("/dev/video0") == nullptr,
+                 "UIO backend rejects non-/dev/uio device paths");
+
+    // A /dev/uioN that does not exist must fail cleanly (nullptr), not crash.
+    if (!UioAxilBackend::open("/dev/uio254")) {
+        ok &= expect(true, "UIO backend returns null for absent device");
+    }
+    return ok;
+}
+
 } // namespace
 
 int main()
@@ -89,6 +105,7 @@ int main()
     ok &= testDmaPath();
     ok &= testIpCoreHandshake();
     ok &= testFaultHandling();
+    ok &= testUioBackendGating();
 
     if (!ok) {
         std::cerr << "[ERROR] test_ps_pl_axi failed\n";

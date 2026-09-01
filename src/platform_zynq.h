@@ -20,6 +20,9 @@ static constexpr double ZYNQ_CPU_TEMP_MAX_C    = 95.0;
 
 // ---------------------------------------------------------------------------
 // GPU / display-adjacent paths (kept generic for distro portability)
+// NOTE: v3d/VideoCore paths are legacy from the Raspberry Pi target and are
+// retained only for backward compatibility of names; on Zynq UltraScale+ MPSoC
+// (incl. Kria KV260) the GPU is Arm Mali-400 MP2 — see platform_kv260.h.
 // ---------------------------------------------------------------------------
 static constexpr int    ZYNQ_GPU_SHADER_CORES  = 1;
 static constexpr double ZYNQ_GPU_MAX_FREQ_MHZ  = 800.0;
@@ -27,8 +30,13 @@ static constexpr double ZYNQ_GPU_MIN_FREQ_MHZ  = 100.0;
 static constexpr double ZYNQ_GPU_TEMP_MAX_C    = 95.0;
 static constexpr const char* ZYNQ_GPU_DEVFREQ_PATH = "/sys/class/devfreq";
 static constexpr const char* ZYNQ_GPU_DEVICE_PATH  = "/sys/devices/platform";
-static constexpr const char* ZYNQ_V3D_DEV_PATH     = "/dev/dri/card0";
-static constexpr const char* ZYNQ_V3D_RENDER_PATH  = "/dev/dri/renderD128";
+static constexpr const char* ZYNQ_V3D_DEV_PATH     = "/dev/dri/card0"; // deprecated alias
+static constexpr const char* ZYNQ_V3D_RENDER_PATH  = "/dev/dri/renderD128"; // deprecated alias
+
+// Correct Zynq UltraScale+ MPSoC GPU constants (Mali-400 MP2, PL/PS GPU core)
+static constexpr const char* ZYNQ_MALI_GPU_AMBA_PATH = "/sys/bus/platform/devices/fd4b0000.gpu";
+static constexpr const char* ZYNQ_MALI_DRM_CARD      = "/dev/dri/card0";
+static constexpr const char* ZYNQ_MALI_DRM_RENDER    = "/dev/dri/renderD128";
 
 // ---------------------------------------------------------------------------
 // DDR assumptions (board-dependent upper bounds)

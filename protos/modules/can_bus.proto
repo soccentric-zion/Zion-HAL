@@ -1,6 +1,9 @@
-// can_bus.proto — CAN bus testing
+// Source: src/can_bus_lib/can_bus_lib.h
+//         (class CanBusTesting : public TestBase)
 //
-// Field-numbering rules: numbers start at 1, never renumber.
+// Field-numbering rules: numbers start at 1, never renumber, mark removed fields reserved.
+// (Old hand-rolled Result/TestDetail fields (status/message/details) were retired when
+//  the module moved to the canonical TestResult plumbing; they remain reserved.)
 
 syntax = "proto3";
 
@@ -8,24 +11,26 @@ package hal.modules.can_bus;
 
 import "common.proto";
 
-// Config for the can_bus module.
+// Config for the can_bus module (SocketCAN on PS CAN 2.0B controllers).
 // Leave test_names empty to run all available tests.
+//
+// Available tests (in declaration order in CanBusTesting):
+//   testCanInterfacePresence
+//   testCanLinkState
+//   testCanSocketOpen
+//   testCanErrorCounters
+//   testCanLoopbackSendReceive
 message Config {
-  hal.common.CommonConfig common     = 1;
-  repeated string         test_names = 2;
+  // Names of individual tests to execute; empty list = run all tests.
+  repeated string test_names = 1;
 }
 
-// Result for the can_bus module.
+// Result from a single can_bus test run.
 message Result {
-  hal.common.TestStatus   status     = 1;
-  string                  message    = 2;
-  repeated TestDetail     details    = 3;
-}
-
-message TestDetail {
-  string name    = 1;
-  bool   passed  = 2;
-  string message = 3;
-  double value   = 4;
-  string unit    = 5;
+  reserved 1;
+  reserved "test_results";
+  reserved 3;
+  reserved 4;
+  reserved 5;
+  repeated hal.common.TestResult results = 2;
 }

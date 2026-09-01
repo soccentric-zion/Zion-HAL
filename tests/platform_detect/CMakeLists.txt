@@ -1,0 +1,7 @@
+# test apps for platform detection (KV260/ZynqMP runtime identification)
+add_executable(test_platform_detect main.cpp)
+target_link_libraries(test_platform_detect PRIVATE hal_platform)
+target_include_directories(test_platform_detect PRIVATE ${CMAKE_SOURCE_DIR}/src)
+add_test(NAME test_platform_detect COMMAND test_platform_detect)
+set_tests_properties(test_platform_detect PROPERTIES TIMEOUT 30)
+install(TARGETS test_platform_detect RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

@@ -1,6 +1,23 @@
 cmake_minimum_required(VERSION 3.10)
 project(ACUFullTest VERSION 1.0 LANGUAGES CXX)
 
+# ---------------------------------------------------------------------------
+# Platform target selection (KV260 | zion)
+# Selects the compile-time platform constants header; runtime detection in
+# src/platform/board_detect.{h,cpp} complements this for actual hardware.
+# ---------------------------------------------------------------------------
+set(HAL_PLATFORM "kv260" CACHE STRING "Target platform: kv260 | zion")
+set_property(CACHE HAL_PLATFORM PROPERTY STRINGS kv260 zion)
+if(HAL_PLATFORM STREQUAL "kv260")
+    set(HAL_PLATFORM_UPPER "KV260")
+elseif(HAL_PLATFORM STREQUAL "zion")
+    set(HAL_PLATFORM_UPPER "ZION")
+else()
+    message(FATAL_ERROR "HAL_PLATFORM must be 'kv260' or 'zion' (got: ${HAL_PLATFORM})")
+endif()
+message(STATUS "[zion-hal] HAL_PLATFORM = ${HAL_PLATFORM}")
+add_compile_definitions(HAL_PLATFORM_${HAL_PLATFORM_UPPER})
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON) # Find threading library
 find_package(Threads REQUIRED)

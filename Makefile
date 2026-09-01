@@ -7,7 +7,7 @@
 .PHONY: package package-deb package-rpm package-ipk
 .PHONY: docker-build docker-configure docker-clean docker-shell docker-install docker-image docker-test
 .PHONY: docker-package docker-package-deb docker-package-rpm docker-package-ipk
-.PHONY: deploy deploy-a deploy-b run-a run-b list setup-completion
+.PHONY: deploy deploy-a deploy-b deploy-kv260 run-a run-b run-kv260 list setup-completion
 
 # Build directories (separate to avoid CMake cache conflicts)
 CROSS_BUILD_DIR := build/cross
@@ -20,10 +20,15 @@ DOCKER_CROSS_BUILD_DIR := /workspace/build/cross
 # Host architecture as shown by file(1) (e.g. x86-64, aarch64)
 HOST_ARCH := $(shell uname -m | sed 's/x86_64/x86-64/')
 
-# IP addresses for Raspberry Pi 5 target devices
+# Target device addresses
+# Zion boards (historical defaults).
 # Override on the command line: make deploy IP_A=<addr> IP_B=<addr>
 IP_A := 192.168.1.3
 IP_B := 192.168.1.13
+
+# Kria KV260 Vision AI Starter Kit target.
+# Override: make deploy-kv260 IP_KV260=<addr>
+IP_KV260 := 192.168.1.60
 
 # User and password for SSH/SCP.
 # Override on the command line or via environment variables:
@@ -159,6 +164,28 @@ run-a: deploy-a ## Run test app on $(IP_A) (usage: make run-a [name] [args...])
 
 run-b: deploy-b ## Run test app on $(IP_B) (usage: make run-b [name] [args...])
 	$(call run_remote,$(IP_B))
+
+# Kria KV260 target — same binary set; board-dependent tests skip themselves
+# when the matching device node/sysfs path is not present.
+deploy-kv260: docker-build ## Deploy lib and bin to KV260 at $(IP_KV260)
+	@echo "Deploying to Kria KV260 ($(IP_KV260))..."
+	$(SSH) $(USER)@$(IP_KV260) "rm -rf /tmp/acu-test && mkdir -p /tmp/acu-test"
+	$(SCP) -r $(CROSS_BUILD_DIR)/lib $(USER)@$(IP_KV260):/tmp/acu-test/
+	$(SCP) -r $(CROSS_BUILD_DIR)/bin $(USER)@$(IP_KV260):/tmp/acu-test/
+
+run-kv260: deploy-kv260 ## Run test app on KV260 (usage: make run-kv260 [name] [args...])
+	@APP="$(word 2, $(MAKECMDGOALS))"; \
+	ARGS="$(wordlist 3, $(words $(MAKECMDGOALS)), $(MAKECMDGOALS))"; \
+	if [ -z "$$APP" ]; then \
+		echo "Running all test applications on KV260 ($(IP_KV260))..."; \
+		for name in $$($(SSH) $(USER)@$(IP_KV260) "ls /tmp/acu-test/bin/"); do \
+			echo "--- Running $$name ---"; \
+			$(SSH) $(USER)@$(IP_KV260) "cd /tmp/acu-test && ./bin/$$name" || true; \
+		done; \
+	else \
+		echo "Running $$APP on KV260 with args: $$ARGS"; \
+		$(SSH) $(USER)@$(IP_KV260) "cd /tmp/acu-test && ./bin/$$APP $$ARGS"; \
+	fi
 
 # =============================================================================
 # Code quality & Docs (run inside the Docker build container)

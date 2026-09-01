@@ -40,6 +40,11 @@
 #include "vision_accelerator_lib/vision_accelerator_lib.h"
 #include "watchdog_and_reset_lib/watchdog_and_reset_lib.h"
 
+// New platform modules (KV260 / ZynqMP support)
+#include "fpga_fabric_lib/fpga_fabric_lib.h"
+#include "rpu_lib/rpu_lib.h"
+#include "can_bus_lib/can_bus_lib.h"
+
 // ============================================================
 // Generated proto headers  (from ${PROTO_BINARY_DIR}/modules/ — via hal_protos include path)
 // ============================================================
@@ -78,6 +83,9 @@
 #include "modules/video_encode_decode.pb.h"
 #include "modules/vision_accelerator.pb.h"
 #include "modules/watchdog_and_reset.pb.h"
+#include "modules/fpga_fabric.pb.h"
+#include "modules/rpu.pb.h"
+#include "modules/can_bus.pb.h"
 
 namespace hal {
 namespace server {
@@ -269,6 +277,25 @@ std::unique_ptr<ModuleRegistry> CreateDefaultRegistry() {
                  WatchdogAndResetTesting, 1,
                  "src/watchdog_and_reset_lib/watchdog_and_reset_lib.h",
                  hal::modules::watchdog_and_reset);
+
+    // -----------------------------------------------------------------
+    // KV260 / Zynq UltraScale+ platform modules
+    // ---------------------------------------------------------------------------
+
+    HAL_REGISTER(reg, "fpga_fabric",
+                 FpgaFabricTesting, 1,
+                 "src/fpga_fabric_lib/fpga_fabric_lib.h",
+                 hal::modules::fpga_fabric);
+
+    HAL_REGISTER(reg, "rpu",
+                 RpuTesting, 1,
+                 "src/rpu_lib/rpu_lib.h",
+                 hal::modules::rpu);
+
+    HAL_REGISTER(reg, "can_bus",
+                 CanBusTesting, 1,
+                 "src/can_bus_lib/can_bus_lib.h",
+                 hal::modules::can_bus);
 
 #undef HAL_REGISTER
 
