@@ -271,7 +271,7 @@ TestOutput CameraInterfacesTesting::testCsi2DphyOperation()
         }
     }
     if (!dphyFound)
-        data.push_back("[INFO] D-PHY sysfs attribute not directly exposed – typical for Orin inrp1ted Unicam");
+        data.push_back("[INFO] D-PHY sysfs attribute not directly exposed – typical for Orin integrated Unicam");
 
     // Check that v4l2 nodes exist (implies camera pipeline including D-PHY subdev is up)
     auto videoDev = getVideoDevices();
@@ -1327,7 +1327,7 @@ TestOutput CameraInterfacesTesting::testDemosaicing()
         }
     }
     if (!ispPresent)
-        data.push_back("[INFO] ISP device not directly listed (may be inrp1ted in unicam)");
+        data.push_back("[INFO] ISP device not directly listed (may be integrated in unicam)");
 
     // Verify that RAW input -> RGB output path exists through V4L2
     auto videoDev = getVideoDevices();

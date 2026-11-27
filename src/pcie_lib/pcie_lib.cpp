@@ -1414,7 +1414,7 @@ TestOutput PcieTesting::testMultiplePcieDeviceEnumeration()
 /**
  * @brief Implementation of testPcieSwitchCompatibility
  * @details Scans sysfs for PCI bridge devices (class 0x0604) which represent
- *          PCIe switch upstream/downstream ports and root-complex inrp1ted
+ *          PCIe switch upstream/downstream ports and root-complex integrated
  *          bridges.  Known PCIe switch vendor IDs are flagged.  Also captures
  *          lspci output to enumerate bridge devices by description.
  * @return TestOutput with pass/fail and data
